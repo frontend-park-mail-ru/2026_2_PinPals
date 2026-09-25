@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Вход в систему</title>
+    <link rel="stylesheet" href="/public/css/login.css">
+</head>
+
+<body>
+    <div class="login-box">
+        <h2>Войдите в систему</h2>
+
+        {{#if error}}
+            <p class="error-msg">{{error}}</p>
+        {{/if}}
+
+        <form action="/login" method="POST">
+
+            <label for="username">Логин:</label>
+            <input type="text" id="username" name="username" placeholder="Введите логин" required>
+
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" name="password" placeholder="Введите пароль" required>
+
+            <button type="submit">Войти</button>
+        </form>
+    </div>
+</body>
+</html>
