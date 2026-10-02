@@ -1,0 +1,76 @@
+.sign-up-page,
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #FFFFFC;
+}
+
+/* Карточка формы*/
+.sign-up-box,
+.login-box {
+    background-color: #ffffff;
+    border: 2px solid #C9E3D8;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(102, 81, 64, 0.05);
+    box-sizing: border-box;
+}
+
+/* Шапка карточки */
+.box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-img {
+    height: 75px;
+    object-fit: contain;
+}
+
+.logo-text {
+    font-family: 'Unkempt', cursive;
+    font-size: 35px;
+    font-weight: bold;
+    color: #665140;
+}
+
+/* Крестик */
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #665140;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+}
+
+.close-btn:hover {
+    color: #b03a2e;
+}
+
+/* Заголовок "Добро пожаловать" */
+.welcome-title {
+    font-family: 'Palanquin', sans-serif;
+    font-size: 27px;
+    color: #665140;
+    margin: 0 0 20px 0;
+    font-weight: normal;
+}
+
+/* Контейнер для формы */
+.form-container {
+    margin-bottom: 0;
+}

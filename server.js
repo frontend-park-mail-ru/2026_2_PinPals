@@ -30,3 +30,22 @@ app.post('/api/signup', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Сервер запущен на порте ${PORT}`);
 });
+
+// API: авторизация
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Заполните все поля' });
+    }
+    if (password.length < 6) {
+        return res.status(400).json({ error: 'Пароль минимум 6 символов' });
+    }
+
+    // Пока заглушка
+    if (username !== 'admin' || password !== '123456') {
+        return res.status(401).json({ error: 'Неверный логин или пароль' });
+    }
+
+    res.json({ success: true, message: 'Вы успешно вошли в систему' });
+});

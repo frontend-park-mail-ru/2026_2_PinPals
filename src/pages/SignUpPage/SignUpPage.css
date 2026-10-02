@@ -1,69 +1,43 @@
-.sign-up-page {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #FFFFFC;
-    font-family: 'Palanquin', sans-serif;
-    margin: 0;
+/* Ссылка "Уже есть аккаунт?" */
+.login-link-container {
+    text-align: center;
+    margin-top: 16px;
 }
 
-/* Карточка формы */
-.sign-up-box {
-    background-color: #ffffff;
-    border: 2px solid #C9E3D8;
-    border-radius: 20px;
+.login-link {
+    color: #608372;
+    text-decoration: underline;
+    font-size: 14px;
+    font-family: 'Palanquin', sans-serif;
+    transition: color 0.2s ease;
+}
+
+.login-link:hover {
+    color: #665140;
+}
+
+.sign-up-box .form-container button[type="submit"] {
     width: 100%;
-    max-width: 440px;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(102, 81, 64, 0.05);
-    box-sizing: border-box;
-}
-
-.box-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 12px;
-    padding: 8px 12px;
-    margin-bottom: 24px;
-}
-
-.logo-area {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.logo-img {
-    width: 55px;
-    height: 55px;
-    object-fit: contain;
-}
-
-.logo-text {
-    font-family: 'Unkempt', cursive;
-    font-size: 25px;
-    font-weight: bold;
-    color: #665140;
-}
-
-/* Кнопка-крестик */
-.close-btn {
-    background: none;
+    background-color: #665140;
+    color: #ffffff;
     border: none;
-    font-size: 28px;
-    color: #665140;
+    border-radius: 25px;
+    font-size: 20px;
+    padding: 8px 32px;
+    font-weight: 500;
+    font-family: 'Palanquin', sans-serif;
     cursor: pointer;
-    padding-left: 12px;
-    line-height: 1;
+    margin-top: 8px;
+    transition: background-color 0.2s ease;
 }
 
-/* Заголовок "Добро пожаловать" */
-.welcome-title {
-    font-family: 'Palanquin', sans-serif;
-    font-size: 27px;
-    color: #665140;
-    margin: 0 0 20px 0;
-    font-weight: normal;
+.sign-up-box .form-container button[type="submit"]:hover {
+    background-color: #524030;
+}
+
+.sign-up-box .form-container button[type="submit"]:disabled {
+    margin-top: 0;
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
 }

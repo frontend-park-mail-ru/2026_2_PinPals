@@ -61,15 +61,15 @@ export class SignUpPage {
             eyeImg.addEventListener('click', () => {
                 if (passInputField.type === 'password') {
                     passInputField.type = 'text';
-                    eyeImg.src = '/public/img/eye-closed.png'; // Путь к картинке закрытого глаза
+                    eyeImg.src = '/public/img/eye-open.png'; // Путь к картинке закрытого глаза
                 } else {
                     passInputField.type = 'password';
-                    eyeImg.src = '/public/img/eye-open.png';   // Путь к картинке открытого глаза
+                    eyeImg.src = '/public/img/eye-closed.png';   // Путь к картинке открытого глаза
                 }
             });
         }
 
-        // КРЕСТИКА: Очищаем и скрываем форму
+        // КРЕСТИК: Очищаем и скрываем форму
         const closeBtn = wrapper.querySelector('.close-btn');
         closeBtn.addEventListener('click', () => {
             wrapper.style.display = 'none';
