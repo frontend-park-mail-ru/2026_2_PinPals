@@ -1,0 +1,63 @@
+/* Ссылка "Забыли пароль?" */
+.forgot-link {
+    display: block;
+    text-align: left;
+    color: #608372;
+    font-size: 14px;
+    text-decoration: underline;
+    margin-top: 8px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    font-family: 'Palanquin', sans-serif;
+}
+
+.forgot-link:hover {
+    color: #665140;
+}
+
+/* Контейнер для двух кнопок */
+.buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+/* Кнопка "Вход" */
+.btn-login {
+    font-family: 'Palanquin', sans-serif;
+    background-color: #665140;
+    color: #ffffff;
+    border: none;
+    border-radius: 25px;
+    font-size: 20px;
+    padding: 8px 32px;
+    cursor: pointer;
+    font-weight: 500;
+    width: 100%;
+    transition: background-color 0.2s ease;
+}
+
+.btn-login:hover {
+    background-color: #524030;
+}
+
+/* Кнопка "Регистрация" */
+.btn-register {
+    font-family: 'Palanquin', sans-serif;
+    background-color: #ffffff;
+    color: #608372;
+    border: 2px solid #C9E3D8;
+    border-radius: 25px;
+    font-size: 20px;
+    padding: 8px 32px;
+    cursor: pointer;
+    font-weight: 500;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.btn-register:hover {
+    background-color: #C9E3D8;
+    color: #665140;
+}
