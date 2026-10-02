@@ -1,0 +1,23 @@
+{
+  "name": "myapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build:templates": "globstar -- handlebars \"src/**/*.hbs\" -f public/templates-precompiled.js"
+  },
+
+  "dependencies": {
+    "express": "^5.2.1",
+    "handlebars": "^4.7.9"
+  },
+  "devDependencies": {
+    "glob": "^13.0.6",
+    "globstar": "^1.0.0"
+  }
+}

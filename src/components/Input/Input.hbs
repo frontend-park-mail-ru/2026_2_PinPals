@@ -1,0 +1,10 @@
+<div class="input-wrapper">
+    <label for="{{name}}">{{label}}</label>
+    <input type="{{type}}" id="{{name}}" name="{{name}}" placeholder="{{placeholder}}">
+
+    {{#if (isPassword type)}}
+        <img src="/public/img/eye-open.png" alt="Показать пароль" class="eye-icon-img">
+    {{/if}}
+
+    <span class="error-msg">{{error}}</span>
+</div>

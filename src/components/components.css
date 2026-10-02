@@ -1,0 +1,90 @@
+.input-wrapper {
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.input-wrapper label {
+    display: none;
+}
+
+.input-wrapper input {
+    width: 100%;
+    background-color: #C9E3D8;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 18px;
+    color: #665140;
+    box-sizing: border-box;
+    transition: background-color 0.2s;
+}
+
+/* Подсказка внутри инпута чуть темнее фона */
+.input-wrapper input::placeholder {
+    color: #608372;
+}
+
+.input-wrapper input:focus {
+    outline: none;
+    background-color: #bad6cb;
+}
+
+/* Картинка глаза */
+.eye-icon-img {
+    position: absolute;
+    right: 16px;
+    top: 26px;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Календарь */
+.input-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: sepia(50%) hue-rotate(10deg) saturate(200%) brightness(0.4);
+}
+
+/* Подсказка под паролем */
+.field-hint {
+    font-size: 14px;
+    color: #608372; /* Зеленый акцент для подписей */
+    text-align: right;
+    text-decoration: underline;
+    margin-top: -10px;
+    margin-bottom: 16px;
+}
+
+/* Кнопка "Войти" */
+.sign-up-box button[type="submit"] {
+    font-family: 'Palanquin', sans-serif;
+    background-color: #ffffff;
+    border: 2px solid #665140;
+    border-radius: 12px;
+    color: #665140;
+    font-size: 20px;
+    padding: 8px 32px;
+    cursor: pointer;
+    font-weight: normal;
+    width: auto;
+    display: inline-block;
+    transition: all 0.2s ease;
+}
+
+.sign-up-box button[type="submit"]:hover {
+    background-color: #665140;
+    color: #ffffff;
+    border-color: #665140;
+}
+
+/* Ошибки валидации */
+.error-msg {
+    display: block;
+    color: #b03a2e;
+    font-size: 12px;
+    margin-top: 2px;
+    padding-left: 8px;
+    min-height: 14px;
+}
