@@ -15,18 +15,16 @@ export class SignUpPage {
             label: '', type: 'text', name: 'nickname',
             placeholder: 'Придумайте ник', validator: validateRequired
         });
-        // Оставляем type: 'password', чтобы сработал хелпер в шаблоне
         this.passInput = new Input({
             label: '', type: 'password', name: 'password',
             placeholder: 'Создайте пароль', validator: validatePassword
         });
-        // Ставим тип 'date' для вызова стандартного календаря браузера
         this.dateInput = new Input({
             label: '', type: 'date', name: 'birthdate',
             placeholder: '', validator: validateRequired
         });
 
-        this.submitBtn = new Button({ title: 'Войти' });
+        this.submitBtn = new Button({ title: 'Зарегистрироваться' });
     }
 
     render() {
@@ -38,13 +36,10 @@ export class SignUpPage {
         wrapper.innerHTML = html;
 
         const formContainer = wrapper.querySelector('.form-container');
-
-        // Вставляем все компоненты по очереди
         formContainer.append(this.loginInput.render());
         formContainer.append(this.nicknameInput.render());
         formContainer.append(this.passInput.render());
 
-        // Добавляем текстовую подсказку под паролем
         const passHint = document.createElement('div');
         passHint.className = 'field-hint';
         passHint.textContent = 'Не менее 6 символов';
@@ -53,7 +48,7 @@ export class SignUpPage {
         formContainer.append(this.dateInput.render());
         formContainer.append(this.submitBtn.render());
 
-        // ГЛАЗА: Работа с картинкой
+        // Глаз
         const eyeImg = wrapper.querySelector('.eye-icon-img');
         const passInputField = this.passInput.element.querySelector('input');
 
@@ -61,18 +56,18 @@ export class SignUpPage {
             eyeImg.addEventListener('click', () => {
                 if (passInputField.type === 'password') {
                     passInputField.type = 'text';
-                    eyeImg.src = '/public/img/eye-open.png'; // Путь к картинке закрытого глаза
+                    eyeImg.src = '/public/img/eye-open.png';
                 } else {
                     passInputField.type = 'password';
-                    eyeImg.src = '/public/img/eye-closed.png';   // Путь к картинке открытого глаза
+                    eyeImg.src = '/public/img/eye-closed.png';
                 }
             });
         }
 
-        // КРЕСТИК: Очищаем и скрываем форму
+        // Крестик — закрыть модалку
         const closeBtn = wrapper.querySelector('.close-btn');
         closeBtn.addEventListener('click', () => {
-            wrapper.style.display = 'none';
+            window.location.hash = '#/home';
         });
 
         this.submitBtn.element.addEventListener('click', (e) => this.handleSubmit(e));
@@ -87,18 +82,21 @@ export class SignUpPage {
         const isNickValid = this.nicknameInput.validate();
         const isPassValid = this.passInput.validate();
         const isDateValid = this.dateInput.validate();
-
         if (!isLoginValid || !isNickValid || !isPassValid || !isDateValid) return;
 
         try {
             this.submitBtn.element.disabled = true;
             const result = await signUpUser(
-                this.loginInput.getValue(),      // username
-                this.nicknameInput.getValue(),   // nickname
-                this.passInput.getValue(),       // password
-                this.dateInput.getValue()        // birthdate
+                this.loginInput.getValue(),
+                this.nicknameInput.getValue(),
+                this.passInput.getValue(),
+                this.dateInput.getValue()
             );
+            localStorage.setItem('isAuth', 'true');
+            localStorage.setItem('userName', this.nicknameInput.getValue());
             alert(result.message);
+
+            window.location.hash = '#/home';
         } catch (error) {
             alert('Ошибка: ' + error.message);
         } finally {

@@ -1,0 +1,63 @@
+<div class="home-page">
+    <header class="home-header">
+        <div class="header-left">
+            {{#if isAuth}}
+                <img src="/public/img/logo_reg.png" alt="Logo" class="logo-img-small">
+            {{else}}
+                <img src="/public/img/logo_no_reg.png" alt="Logo" class="logo-img-small">
+            {{/if}}
+            <span class="logo-text-small">PicKing</span>
+        </div>
+
+        <div class="header-center">
+            <div class="search-container">
+                <img src="/public/img/search.png" alt="Search" class="search-icon">
+                <input type="text" placeholder="Поиск" class="search-input">
+            </div>
+        </div>
+
+        <div class="header-right">
+            {{#if isAuth}}
+                <div class="user-menu-wrapper">
+                    <div class="user-avatar" id="userAvatar" title="Профиль"></div>
+                    <div class="user-dropdown">
+                        <div class="user-name">{{userName}}</div>
+                        <button class="btn-logout" id="logoutBtn" type="button">Выйти</button>
+                    </div>
+                </div>
+            {{else}}
+                <button class="btn-header btn-login-header" id="headerLoginBtn" type="button">Вход</button>
+                <button class="btn-header btn-register-header" id="headerRegisterBtn" type="button">Регистрация</button>
+            {{/if}}
+        </div>
+    </header>
+
+    <aside class="home-sidebar" id="homeSidebar">
+        <nav class="sidebar-nav">
+            <a class="sidebar-item" href="#/home" title="Главная">
+                <img src="/public/img/home.png" alt="Главная" class="sidebar-icon">
+                <span class="sidebar-label">Главная</span>
+            </a>
+            <a class="sidebar-item" href="#" data-action="create" title="Создать">
+                <img src="/public/img/plus.png" alt="Создать" class="sidebar-icon">
+                <span class="sidebar-label">Создать</span>
+            </a>
+            <a class="sidebar-item" href="#" data-action="chat" title="Чат">
+                <img src="/public/img/chat.png" alt="Чат" class="sidebar-icon">
+                <span class="sidebar-label">Чат</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="home-content">
+        <div class="pins-grid">
+            {{#each pins}}
+                <div class="pin-card"><img src="{{this}}" alt="Pin"></div>
+            {{/each}}
+        </div>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" title="Меню">
+        <img src="/public/img/toggle.png" alt="Меню">
+    </button>
+</div>

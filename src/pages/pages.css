@@ -1,13 +1,22 @@
+/* ========================================= */
+/* Модальное окно авторизации / регистрации  */
+/* ========================================= */
 .sign-up-page,
 .login-page {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    background-color: #FFFFFC;
+    background-color: rgba(0, 0, 0, 0.55);
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-/* Карточка формы*/
+/* ========================================= */
+/* Карточка формы (белый бокс)               */
+/* ========================================= */
 .sign-up-box,
 .login-box {
     background-color: #ffffff;
@@ -16,8 +25,10 @@
     width: 100%;
     max-width: 440px;
     padding: 24px;
-    box-shadow: 0 10px 30px rgba(102, 81, 64, 0.05);
+    box-shadow: 0 10px 30px rgba(102, 81, 64, 0.15);
     box-sizing: border-box;
+    position: relative;
+    z-index: 1001;
 }
 
 /* Шапка карточки */
@@ -61,7 +72,7 @@
     color: #b03a2e;
 }
 
-/* Заголовок "Добро пожаловать" */
+/* Заголовок */
 .welcome-title {
     font-family: 'Palanquin', sans-serif;
     font-size: 27px;
@@ -70,7 +81,7 @@
     font-weight: normal;
 }
 
-/* Контейнер для формы */
+/* Контейнер формы */
 .form-container {
     margin-bottom: 0;
 }

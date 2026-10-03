@@ -28,7 +28,7 @@ export class LoginPage {
         formContainer.append(this.loginInput.render());
         formContainer.append(this.passInput.render());
 
-        // Глаз — переключаем пароль
+        // Глаз
         const eyeImg = wrapper.querySelector('.eye-icon-img');
         const passInputField = this.passInput.element.querySelector('input');
 
@@ -44,23 +44,23 @@ export class LoginPage {
             });
         }
 
-        // Крестик — скрыть форму
+        // Крестик — закрыть модалку
         const closeBtn = wrapper.querySelector('.close-btn');
         closeBtn.addEventListener('click', () => {
-            wrapper.style.display = 'none';
+            window.location.hash = '#/home';
         });
 
         // Кнопка "Вход"
         const loginBtn = wrapper.querySelector('.btn-login');
         loginBtn.addEventListener('click', (e) => this.handleSubmit(e));
 
-        // Кнопка "Регистрация" — переход на страницу регистрации
+        // Кнопка "Регистрация"
         const registerBtn = wrapper.querySelector('.btn-register');
         registerBtn.addEventListener('click', () => {
             window.location.hash = '#/signup';
         });
 
-        // Ссылка "Забыли пароль?"
+        // Забыли пароль
         const forgotLink = wrapper.querySelector('.forgot-link');
         forgotLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -75,7 +75,6 @@ export class LoginPage {
 
         const isLoginValid = this.loginInput.validate();
         const isPassValid = this.passInput.validate();
-
         if (!isLoginValid || !isPassValid) return;
 
         try {
@@ -83,7 +82,12 @@ export class LoginPage {
                 this.loginInput.getValue(),
                 this.passInput.getValue()
             );
+
+            localStorage.setItem('isAuth', 'true');
+            localStorage.setItem('userName', this.loginInput.getValue());
             alert(result.message);
+
+            window.location.hash = '#/home';
         } catch (error) {
             alert('Ошибка: ' + error.message);
         }
