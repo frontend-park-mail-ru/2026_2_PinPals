@@ -20,11 +20,31 @@ app.post('/api/signup', (req, res) => {
     if (!username || !nickname || !password || !birthdate) {
         return res.status(400).json({ error: 'Заполните все поля' });
     }
-    if (password.length < 6) {
-        return res.status(400).json({ error: 'Пароль минимум 6 символов' });
+    if (password.length < 8) {
+        return res.status(400).json({ error: 'Пароль минимум 8 символов' });
+    }
+
+    const parsedDate = new Date(birthdate);
+    // Проверка на Invalid Date
+    if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({ error: 'Некорректный формат даты' });
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - parsedDate.getFullYear();
+    if (today.getMonth() < parsedDate.getMonth() ||
+        (today.getMonth() === parsedDate.getMonth() && today.getDate() < parsedDate.getDate())) {
+        age--;
+    }
+    if (age > 120) {
+        return res.status(400).json({ error: 'Указан недопустимый возраст' });
     }
 
     res.json({ success: true, message: 'Вы успешно зарегистрировались' });
+});
+
+app.get('*any', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 app.listen(PORT, () => {
@@ -38,12 +58,12 @@ app.post('/api/login', (req, res) => {
     if (!username || !password) {
         return res.status(400).json({ error: 'Заполните все поля' });
     }
-    if (password.length < 6) {
-        return res.status(400).json({ error: 'Пароль минимум 6 символов' });
+    if (password.length < 8) {
+        return res.status(400).json({ error: 'Пароль минимум 8 символов' });
     }
 
     // Пока заглушка
-    if (username !== 'admin' || password !== '123456') {
+    if (username !== 'admin' || password !== '12345678') {
         return res.status(401).json({ error: 'Неверный логин или пароль' });
     }
 

@@ -1,0 +1,5 @@
+@import "/src/components/components.css";
+@import "/src/pages/pages.css";
+@import "/src/pages/SignUpPage/SignUpPage.css";
+@import "/src/pages/LoginPage/LoginPage.css";
+@import "/src/pages/HomePage/HomePage.css";

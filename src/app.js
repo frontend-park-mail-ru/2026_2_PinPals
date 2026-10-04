@@ -7,20 +7,40 @@ import { HomePage } from "./pages/HomePage/HomePage.js";
 const root = document.getElementById("root");
 
 function renderPage() {
+
     root.innerHTML = '';
+    const path = window.location.pathname;
 
-    const page = new HomePage();
-    root.append(page.render());
+    const homePage = new HomePage();
+    root.append(homePage.render());
 
-    const hash = window.location.hash;
-    if (hash === '#/signup') {
-        const page = new SignUpPage();
-        root.append(page.render());
-    } else if (hash === '#/login') {
-        const page = new LoginPage();
-        root.append(page.render());
+    if (path === '/signup') {
+        const signUpPage = new SignUpPage();
+        root.append(signUpPage.render());
+    } else if (path === '/login') {
+        const loginPage = new LoginPage();
+        root.append(loginPage.render());
     }
 }
 
+// Переход между страницами без перезагрузки
+export function navigateTo(url) {
+    window.history.pushState(null, null, url);
+    renderPage();
+}
+
+window.addEventListener('click', (e) => {
+    const targetLink = e.target.closest('a');
+
+    // Проверяем, локальная ли это ссылка (начинается с /)
+    if (targetLink && targetLink.href && targetLink.getAttribute('href').startsWith('/')) {
+        e.preventDefault(); // Запрещаем браузеру перезагружать страницу
+        navigateTo(targetLink.getAttribute('href'));
+    }
+});
+
+// Слушаем кнопки "Назад/Вперед" в браузере
+window.addEventListener('popstate', renderPage);
+
+// Первый рендер при загрузке страницы
 renderPage();
-window.addEventListener('hashchange', renderPage);

@@ -1,8 +1,9 @@
 import { Input } from "../../components/Input/Input.js";
 import { loginUser } from "../../api/user.js";
+import { navigateTo } from "../../app.js";
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
-const validatePassword = (val) => val.length >= 6 ? '' : 'Пароль минимум 6 символов';
+const validatePassword = (val) => val.length >= 8 ? '' : 'Пароль минимум 8 символов';
 
 export class LoginPage {
     constructor() {
@@ -28,26 +29,10 @@ export class LoginPage {
         formContainer.append(this.loginInput.render());
         formContainer.append(this.passInput.render());
 
-        // Глаз
-        const eyeImg = wrapper.querySelector('.eye-icon-img');
-        const passInputField = this.passInput.element.querySelector('input');
-
-        if (eyeImg) {
-            eyeImg.addEventListener('click', () => {
-                if (passInputField.type === 'password') {
-                    passInputField.type = 'text';
-                    eyeImg.src = '/public/img/eye-open.png';
-                } else {
-                    passInputField.type = 'password';
-                    eyeImg.src = '/public/img/eye-closed.png';
-                }
-            });
-        }
-
         // Крестик — закрыть модалку
         const closeBtn = wrapper.querySelector('.close-btn');
         closeBtn.addEventListener('click', () => {
-            window.location.hash = '#/home';
+            navigateTo('/home');
         });
 
         // Кнопка "Вход"
@@ -57,7 +42,7 @@ export class LoginPage {
         // Кнопка "Регистрация"
         const registerBtn = wrapper.querySelector('.btn-register');
         registerBtn.addEventListener('click', () => {
-            window.location.hash = '#/signup';
+            navigateTo('/signup');
         });
 
         // Забыли пароль
@@ -78,6 +63,8 @@ export class LoginPage {
         if (!isLoginValid || !isPassValid) return;
 
         try {
+            this.submitBtn.setDisabled(true);
+
             const result = await loginUser(
                 this.loginInput.getValue(),
                 this.passInput.getValue()
@@ -87,9 +74,12 @@ export class LoginPage {
             localStorage.setItem('userName', this.loginInput.getValue());
             alert(result.message);
 
-            window.location.hash = '#/home';
+            navigateTo('/home');
         } catch (error) {
             alert('Ошибка: ' + error.message);
+        } finally {
+            this.submitBtn.setDisabled(false);
         }
     }
+
 }

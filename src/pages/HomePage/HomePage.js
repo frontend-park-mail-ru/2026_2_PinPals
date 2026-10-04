@@ -1,11 +1,17 @@
+import { navigateTo } from "../../app.js";
+
 export class HomePage {
     render() {
         const isAuth = localStorage.getItem('isAuth') === 'true';
         const userName = localStorage.getItem('userName') || 'Пользователь';
 
+        const localImages = [
+            '/public/img/logo_straight.png', // временно используем логотипы для теста
+            '/public/img/main_logo.png'
+        ];
+
         const pins = Array.from({ length: 30 }, (_, i) => {
-            const height = 300 + (i * 53) % 250;
-            return `https://picsum.photos/300/${height}?random=${i + 1}`;
+            return localImages[i % localImages.length];
         });
 
         const template = Handlebars.templates['HomePage.hbs'];
@@ -17,14 +23,14 @@ export class HomePage {
         const headerLoginBtn = wrapper.querySelector('#headerLoginBtn');
         if (headerLoginBtn) {
             headerLoginBtn.addEventListener('click', () => {
-                window.location.hash = '#/login';
+                navigateTo('/login');
             });
         }
 
         const headerRegisterBtn = wrapper.querySelector('#headerRegisterBtn');
         if (headerRegisterBtn) {
             headerRegisterBtn.addEventListener('click', () => {
-                window.location.hash = '#/signup';
+                navigateTo('/signup');
             });
         }
 
@@ -33,7 +39,7 @@ export class HomePage {
             logoutBtn.addEventListener('click', () => {
                 localStorage.removeItem('isAuth');
                 localStorage.removeItem('userName');
-                window.location.reload();
+                navigateTo('/');
             });
         }
 

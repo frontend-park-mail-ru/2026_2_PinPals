@@ -1,16 +1,18 @@
 (function() {
   var template = Handlebars.template, templates = Handlebars.templates = Handlebars.templates || {};
 templates["Button.hbs"] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
-    var helper, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
         if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
           return parent[propertyName];
         }
         return undefined
     };
 
-  return "<button type=\"submit\">"
-    + container.escapeExpression(((helper = (helper = lookupProperty(helpers,"title") || (depth0 != null ? lookupProperty(depth0,"title") : depth0)) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"title","hash":{},"data":data,"loc":{"start":{"line":1,"column":22},"end":{"line":1,"column":31}}}) : helper)))
-    + "</button>";
+  return "<button type=\""
+    + alias4(((helper = (helper = lookupProperty(helpers,"type") || (depth0 != null ? lookupProperty(depth0,"type") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"type","hash":{},"data":data,"loc":{"start":{"line":1,"column":14},"end":{"line":1,"column":22}}}) : helper)))
+    + "\">"
+    + alias4(((helper = (helper = lookupProperty(helpers,"title") || (depth0 != null ? lookupProperty(depth0,"title") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data,"loc":{"start":{"line":1,"column":24},"end":{"line":1,"column":33}}}) : helper)))
+    + "</button>\r\n";
 },"useData":true});
 templates["Input.hbs"] = template({"0":function(container,depth0,helpers,partials,data) {
     return "            <img src=\"/public/img/eye-closed.png\" alt=\"Показать пароль\" class=\"eye-icon-img\">\r\n";
@@ -81,6 +83,6 @@ templates["LoginPage.hbs"] = template({"compiler":[8,">= 4.3.0"],"main":function
     return "<div class=\"login-box\">\r\n    <div class=\"box-header\">\r\n        <div class=\"logo-area\">\r\n            <img src=\"/public/img/logo_straight.png\" class=\"logo-img\" alt=\"logo\">\r\n            <span class=\"logo-text\">PicKing</span>\r\n        </div>\r\n        <button class=\"close-btn\" type=\"button\">×</button>\r\n    </div>\r\n\r\n    <h2 class=\"welcome-title\">Добро пожаловать</h2>\r\n\r\n    <div class=\"form-container\"></div>\r\n\r\n    <a href=\"#\" class=\"forgot-link\">Забыли пароль?</a>\r\n\r\n    <div class=\"buttons-container\">\r\n        <button type=\"button\" class=\"btn-login\">Вход</button>\r\n        <button type=\"button\" class=\"btn-register\">Регистрация</button>\r\n    </div>\r\n</div>";
 },"useData":true});
 templates["SignUpPage.hbs"] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
-    return "<div class=\"sign-up-box\">\r\n    <div class=\"box-header\">\r\n        <div class=\"logo-area\">\r\n            <img src=\"/public/img/logo_straight.png\" alt=\"Logo\" class=\"logo-img\">\r\n            <span class=\"logo-text\">PicKing</span>\r\n        </div>\r\n        <button type=\"button\" class=\"close-btn\">×</button>\r\n    </div>\r\n\r\n    <h2 class=\"welcome-title\">Добро пожаловать</h2>\r\n\r\n    <div class=\"form-container\"></div>\r\n\r\n    <div class=\"login-link-container\">\r\n        <a href=\"#/login\" class=\"login-link\">Уже есть аккаунт? Войти</a>\r\n    </div>\r\n</div>\r\n";
+    return "<div class=\"sign-up-box\">\r\n    <div class=\"box-header\">\r\n        <div class=\"logo-area\">\r\n            <img src=\"/public/img/logo_straight.png\" alt=\"Logo\" class=\"logo-img\">\r\n            <span class=\"logo-text\">PicKing</span>\r\n        </div>\r\n        <button type=\"button\" class=\"close-btn\">×</button>\r\n    </div>\r\n\r\n    <h2 class=\"welcome-title\">Добро пожаловать</h2>\r\n\r\n    <div class=\"form-container\"></div>\r\n\r\n    <div class=\"login-link-container\">\r\n        <a href=\"/login\" class=\"login-link\">Уже есть аккаунт? Войти</a>\r\n    </div>\r\n</div>\r\n";
 },"useData":true});
 })();

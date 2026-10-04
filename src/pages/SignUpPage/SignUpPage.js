@@ -1,9 +1,29 @@
 import { Input } from "../../components/Input/Input.js";
 import { Button } from "../../components/Button/Button.js";
 import { signUpUser } from "../../api/user.js";
+import { navigateTo } from "../../app.js";
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
-const validatePassword = (val) => val.length >= 6 ? '' : 'Пароль слишком короткий';
+const validatePassword = (val) => val.length >= 8 ? '' : 'Пароль слишком короткий';
+const validateBirthdate = (val) => {
+    if (!val.trim()) return 'Поле обязательно';
+
+    const selectedDate = new Date(val);
+    const today = new Date();
+
+    if (selectedDate > today) {
+        return 'Дата рождения не может быть в будущем';
+    }
+
+    // Защита от слишком старых дат
+    const minDate = new Date();
+    minDate.setFullYear(today.getFullYear() - 120);
+    if (selectedDate < minDate) {
+        return 'Пожалуйста, укажите корректную дату';
+    }
+
+    return '';
+};
 
 export class SignUpPage {
     constructor() {
@@ -19,12 +39,13 @@ export class SignUpPage {
             label: '', type: 'password', name: 'password',
             placeholder: 'Создайте пароль', validator: validatePassword
         });
+
         this.dateInput = new Input({
             label: '', type: 'date', name: 'birthdate',
-            placeholder: '', validator: validateRequired
+            placeholder: '', validator: validateBirthdate
         });
 
-        this.submitBtn = new Button({ title: 'Зарегистрироваться' });
+        this.submitBtn = new Button({ title: 'Зарегистрироваться', type: 'submit' });
     }
 
     render() {
@@ -42,32 +63,33 @@ export class SignUpPage {
 
         const passHint = document.createElement('div');
         passHint.className = 'field-hint';
-        passHint.textContent = 'Не менее 6 символов';
+        passHint.textContent = 'Не менее 8 символов';
         formContainer.append(passHint);
 
         formContainer.append(this.dateInput.render());
-        formContainer.append(this.submitBtn.render());
 
-        // Глаз
-        const eyeImg = wrapper.querySelector('.eye-icon-img');
-        const passInputField = this.passInput.element.querySelector('input');
+        // Ограничиваем выбор в самом календаре браузера
+        const dateInputElement = this.dateInput.element.querySelector('input');
+        if (dateInputElement) {
+            const today = new Date();
 
-        if (eyeImg) {
-            eyeImg.addEventListener('click', () => {
-                if (passInputField.type === 'password') {
-                    passInputField.type = 'text';
-                    eyeImg.src = '/public/img/eye-open.png';
-                } else {
-                    passInputField.type = 'password';
-                    eyeImg.src = '/public/img/eye-closed.png';
-                }
-            });
+            // Максимальная дата - сегодняшний день
+            const maxDateStr = today.toISOString().split('T')[0];
+
+            // Максимальный возраст - 120
+            const minYear = today.getFullYear() - 120;
+            const minDateStr = `${minYear}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            dateInputElement.setAttribute('max', maxDateStr);
+            dateInputElement.setAttribute('min', minDateStr);
         }
+
+        formContainer.append(this.submitBtn.render());
 
         // Крестик — закрыть модалку
         const closeBtn = wrapper.querySelector('.close-btn');
         closeBtn.addEventListener('click', () => {
-            window.location.hash = '#/home';
+            navigateTo('/home');
         });
 
         this.submitBtn.element.addEventListener('click', (e) => this.handleSubmit(e));
@@ -85,22 +107,27 @@ export class SignUpPage {
         if (!isLoginValid || !isNickValid || !isPassValid || !isDateValid) return;
 
         try {
-            this.submitBtn.element.disabled = true;
+            this.submitBtn.setDisabled(true);
+
+            const rawDate = this.dateInput.getValue();
+            const formattedDate = rawDate ? `${rawDate}T00:00:00Z` : '';
+
             const result = await signUpUser(
                 this.loginInput.getValue(),
                 this.nicknameInput.getValue(),
                 this.passInput.getValue(),
-                this.dateInput.getValue()
+                formattedDate
             );
             localStorage.setItem('isAuth', 'true');
             localStorage.setItem('userName', this.nicknameInput.getValue());
             alert(result.message);
 
-            window.location.hash = '#/home';
+            navigateTo('/home');
         } catch (error) {
             alert('Ошибка: ' + error.message);
         } finally {
-            this.submitBtn.element.disabled = false;
+            this.submitBtn.setDisabled(false);
         }
     }
+
 }
