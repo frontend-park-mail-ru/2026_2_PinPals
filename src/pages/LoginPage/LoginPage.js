@@ -60,7 +60,6 @@ export class LoginPage {
         const isPassValid = this.passInput.validate();
         if (!isLoginValid || !isPassValid) return;
 
-        // Находим контейнер ошибки и очищаем его перед новым запросом
         const errorContainer = this.element.querySelector('#serverError');
         if (errorContainer) errorContainer.textContent = '';
 
@@ -72,8 +71,10 @@ export class LoginPage {
                 this.passInput.getValue()
             );
 
+            // Сохраняем сессию и JWT-токен, пришедшие с бэкенда
             localStorage.setItem('isAuth', 'true');
-            localStorage.setItem('userName', this.loginInput.getValue());
+            localStorage.setItem('token', result.token);
+            localStorage.setItem('userName', result.user.name);
 
             navigateTo('/home');
         } catch (error) {

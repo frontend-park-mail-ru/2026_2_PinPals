@@ -111,7 +111,6 @@ export class SignUpPage {
         const isDateValid = this.dateInput.validate();
         if (!isLoginValid || !isNickValid || !isPassValid || !isDateValid) return;
 
-        // Находим контейнер для серверной ошибки и очищаем его перед запросом
         const errorContainer = this.element.querySelector('#serverError');
         if (errorContainer) errorContainer.textContent = '';
 
@@ -119,22 +118,28 @@ export class SignUpPage {
             this.submitBtn.setDisabled(true);
 
             const rawDate = this.dateInput.getValue();
-            const formattedDate = rawDate ? `${rawDate}T00:00:00Z` : '';
 
-            const result = await signUpUser(
+            // Отправляем запрос на регистрацию
+            await signUpUser(
                 this.loginInput.getValue(),
                 this.nicknameInput.getValue(),
                 this.passInput.getValue(),
-                formattedDate
+                rawDate
             );
 
-            // Сохраняем сессию
+            // Сразу же автоматически авторизуем пользователя
+            const loginResult = await loginUser(
+                this.loginInput.getValue(),
+                this.passInput.getValue()
+            );
+
+            // Сохраняем данные авторизации
             localStorage.setItem('isAuth', 'true');
-            localStorage.setItem('userName', this.nicknameInput.getValue());
+            localStorage.setItem('token', loginResult.token);
+            localStorage.setItem('userName', loginResult.user.name);
 
             navigateTo('/home');
         } catch (error) {
-            // Выводим ошибку бэкенда текстом прямо в интерфейс формы
             if (errorContainer) {
                 errorContainer.textContent = error.message;
             }
@@ -142,4 +147,5 @@ export class SignUpPage {
             this.submitBtn.setDisabled(false);
         }
     }
+
 }
