@@ -1,7 +1,15 @@
-import { navigateTo } from "../../app.js";
-import { fetchPins } from "../../api/user.js"; // Импортируем метод запроса пинов
+import { navigateTo } from '../../app.js';
+import { fetchPins } from '../../api/user.js'; // Импортируем метод запроса пинов
 
+/**
+ * Класс, управляющий отображением главной страницы и бесконечной ленты.
+ */
 export class HomePage {
+    /**
+     * Рендерит разметку главной страницы и загружает пины с бэкенда.
+     *
+     * @returns {HTMLElement} Корневой элемент страницы.
+     */
     render() {
         const isAuth = localStorage.getItem('isAuth') === 'true';
         const userName = localStorage.getItem('userName') || 'Пользователь';
@@ -27,7 +35,7 @@ export class HomePage {
                 }
             })
             .catch(err => {
-                console.error("Не удалось загрузить пины с бэкенда:", err);
+                console.error('Не удалось загрузить пины с бэкенда:', err);
             });
 
         // Кнопка логаута (очищаем токен тоже)

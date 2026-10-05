@@ -2,10 +2,17 @@ const BASE_URL = '';
 /**
  * Регистрация нового пользователя
  * Ожидает от Go: POST /api/v1/auth/register
+ *
+ * @async
+ * @param {string} username - Логин (тег).
+ * @param {string} nickname - Имя пользователя.
+ * @param {string} password - Пароль.
+ * @param {string} birthdate - Дата рождения.
+ * @returns {Promise<Object>} Данные созданного профиля.
  */
 export async function signUpUser(username, nickname, password, birthdate) {
     // Приводим дату к формату RFC3339 ISO строки ("2005-03-14T00:00:00Z"), которую ждет Go time.Time
-    const formattedDate = birthdate ? new Date(birthdate).toISOString() : "";
+    const formattedDate = birthdate ? new Date(birthdate).toISOString() : '';
 
     const response = await fetch(`${BASE_URL}/api/v1/auth/register`, {
         method: 'POST',
@@ -28,6 +35,11 @@ export async function signUpUser(username, nickname, password, birthdate) {
 /**
  * Авторизация пользователя
  * Ожидает от Go: POST /api/v1/auth/login
+ *
+ * @async
+ * @param {string} username - Логин.
+ * @param {string} password - Пароль.
+ * @returns {Promise<Object>} Токен и данные пользователя.
  */
 export async function loginUser(username, password) {
     const response = await fetch(`${BASE_URL}/api/v1/auth/login`, {
@@ -49,6 +61,11 @@ export async function loginUser(username, password) {
 /**
  * Получение списка пинов с пагинацией
  * Ожидает от Go: POST /api/v1/v1/pins/search
+ *
+ * @async
+ * @param {number} [limit=20] - Лимит пинов.
+ * @param {Object|null} [cursor=null] - Курсор пагинации.
+ * @returns {Promise<Object>} Объект с массивом пинов.
  */
 export async function fetchPins(limit = 20, cursor = null) {
     const response = await fetch(`${BASE_URL}/api/v1/pins/search`, {

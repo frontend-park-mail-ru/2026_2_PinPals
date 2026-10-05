@@ -1,11 +1,14 @@
 Handlebars.registerHelper('isPassword', (type) => type === 'password');
 
-import { SignUpPage } from "./pages/SignUpPage/SignUpPage.js";
-import { LoginPage } from "./pages/LoginPage/LoginPage.js";
-import { HomePage } from "./pages/HomePage/HomePage.js";
+import { SignUpPage } from './pages/SignUpPage/SignUpPage.js';
+import { LoginPage } from './pages/LoginPage/LoginPage.js';
+import { HomePage } from './pages/HomePage/HomePage.js';
 
-const root = document.getElementById("root");
+const root = document.getElementById('root');
 
+/**
+ * Выполняет SPA-маршрутизацию и рендерит экраны.
+ */
 function renderPage() {
 
     root.innerHTML = '';
@@ -23,7 +26,11 @@ function renderPage() {
     }
 }
 
-// Переход между страницами без перезагрузки
+/**
+ * Переход между страницами без перезагрузки.
+ *
+ * @param {string} url - Ссылка перехода.
+ */
 export function navigateTo(url) {
     window.history.pushState(null, null, url);
     renderPage();

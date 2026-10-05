@@ -1,12 +1,18 @@
-import { Input } from "../../components/Input/Input.js";
-import { Button } from "../../components/Button/Button.js"; // ← добавили
-import { loginUser } from "../../api/user.js";
-import { navigateTo } from "../../app.js";
+import { Input } from '../../components/Input/Input.js';
+import { Button } from '../../components/Button/Button.js';
+import { loginUser } from '../../api/user.js';
+import { navigateTo } from '../../app.js';
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
 const validatePassword = (val) => val.length >= 8 ? '' : 'Пароль минимум 8 символов';
 
+/**
+ * Класс, управляющий отображением и логикой работы страницы авторизации (входа) пользователя.
+ */
 export class LoginPage {
+    /**
+     * Создает экземпляр страницы LoginPage и инициализирует дочерние компоненты ввода и кнопок.
+     */
     constructor() {
         this.loginInput = new Input({
             label: '', type: 'text', name: 'username',
@@ -20,6 +26,11 @@ export class LoginPage {
         this.registerBtn = new Button({ title: 'Регистрация', type: 'button', className: 'btn btn-second' });
     }
 
+    /**
+     * Рендерит DOM-структуру страницы логина, внедряет компоненты инпутов/кнопок и навешивает события взаимодействия.
+     *
+     * @returns {HTMLElement} Корневой DOM-элемент страницы авторизации.
+     */
     render() {
         const template = Handlebars.templates['LoginPage.hbs'];
         const html = template({});
@@ -36,6 +47,7 @@ export class LoginPage {
         buttonsContainer.append(this.loginBtn.render());
         buttonsContainer.append(this.registerBtn.render());
 
+        // Крестик — закрыть модалку
         wrapper.querySelector('.close-btn').addEventListener('click', () => {
             navigateTo('/home');
         });
@@ -43,6 +55,7 @@ export class LoginPage {
         this.loginBtn.element.addEventListener('click', (e) => this.handleSubmit(e));
         this.registerBtn.element.addEventListener('click', () => navigateTo('/signup'));
 
+        // Забыли пароль
         const forgotLink = wrapper.querySelector('.forgot-link');
         forgotLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -53,6 +66,14 @@ export class LoginPage {
         return wrapper;
     }
 
+    /**
+     * Обрабатывает событие отправки формы авторизации на Go-бэкенд.
+     * Проводит клиентскую валидацию, отправляет запрос, сохраняет JWT сессию при успехе.
+     *
+     * @async
+     * @param {Event} e - Объект события отправки (клик/submit).
+     * @returns {Promise<void>}
+     */
     async handleSubmit(e) {
         e.preventDefault();
 
@@ -60,6 +81,7 @@ export class LoginPage {
         const isPassValid = this.passInput.validate();
         if (!isLoginValid || !isPassValid) return;
 
+        // Находим контейнер ошибки и очищаем его перед новым запросом
         const errorContainer = this.element.querySelector('#serverError');
         if (errorContainer) errorContainer.textContent = '';
 
