@@ -1,7 +1,7 @@
-import { Input } from "../../components/Input/Input.js";
-import { Button } from "../../components/Button/Button.js";
-import { signUpUser } from "../../api/user.js";
-import { navigateTo } from "../../app.js";
+import { Input } from '../../components/Input/Input.js';
+import { Button } from '../../components/Button/Button.js';
+import { signUpUser, loginUser } from '../../api/user.js';
+import { navigateTo } from '../../app.js';
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
 const validatePassword = (val) => val.length >= 8 ? '' : 'Пароль слишком короткий';
@@ -25,7 +25,13 @@ const validateBirthdate = (val) => {
     return '';
 };
 
+/**
+ * Класс, управляющий отображением и логикой работы страницы создания учетной записи (регистрации).
+ */
 export class SignUpPage {
+    /**
+     * Создает экземпляр SignUpPage и инициализирует поля ввода данных профиля.
+     */
     constructor() {
         this.loginInput = new Input({
             label: '', type: 'text', name: 'username',
@@ -52,6 +58,11 @@ export class SignUpPage {
         });
     }
 
+    /**
+     * Рендерит форму регистрации, навешивает ограничения браузерного календаря и инициализирует слушатели кликов.
+     *
+     * @returns {HTMLElement} Корневой DOM-элемент страницы регистрации.
+     */
     render() {
         const template = Handlebars.templates['SignUpPage.hbs'];
         const html = template({});
@@ -102,6 +113,14 @@ export class SignUpPage {
         return wrapper;
     }
 
+    /**
+     * Обрабатывает отправку данных на регистрацию.
+     * После успешной регистрации выполняет автоматическую авторизацию пользователя (логин) для сохранения сессии.
+     *
+     * @async
+     * @param {Event} e - Объект события клика.
+     * @returns {Promise<void>}
+     */
     async handleSubmit(e) {
         e.preventDefault();
 
@@ -111,6 +130,7 @@ export class SignUpPage {
         const isDateValid = this.dateInput.validate();
         if (!isLoginValid || !isNickValid || !isPassValid || !isDateValid) return;
 
+        // Находим контейнер для серверной ошибки и очищаем его перед запросом
         const errorContainer = this.element.querySelector('#serverError');
         if (errorContainer) errorContainer.textContent = '';
 
@@ -140,6 +160,7 @@ export class SignUpPage {
 
             navigateTo('/home');
         } catch (error) {
+            // Выводим ошибку бэкенда текстом прямо в интерфейс формы
             if (errorContainer) {
                 errorContainer.textContent = error.message;
             }
@@ -147,5 +168,4 @@ export class SignUpPage {
             this.submitBtn.setDisabled(false);
         }
     }
-
 }
