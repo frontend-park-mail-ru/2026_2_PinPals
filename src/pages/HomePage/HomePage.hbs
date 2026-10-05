@@ -26,15 +26,15 @@
                     </div>
                 </div>
             {{else}}
-                <button class="btn-header btn-login-header" id="headerLoginBtn" type="button">Вход</button>
-                <button class="btn-header btn-register-header" id="headerRegisterBtn" type="button">Регистрация</button>
+                <a class="btn-header btn-login-header" href="/login" style="display: flex; align-items: center; text-decoration: none;">Вход</a>
+                <a class="btn-header btn-register-header" href="/signup" style="display: flex; align-items: center; text-decoration: none;">Регистрация</a>
             {{/if}}
         </div>
     </header>
 
     <aside class="home-sidebar" id="homeSidebar">
         <nav class="sidebar-nav">
-            <a class="sidebar-item" href="#/home" title="Главная">
+            <a class="sidebar-item" href="/home" title="Главная">
                 <img src="/public/img/home.png" alt="Главная" class="sidebar-icon">
                 <span class="sidebar-label">Главная</span>
             </a>

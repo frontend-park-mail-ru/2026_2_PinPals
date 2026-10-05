@@ -4,12 +4,45 @@
 @import "/src/pages/LoginPage/LoginPage.css";
 @import "/src/pages/HomePage/HomePage.css";
 
+/* Подключение локального шрифта Unkempt */
+@font-face {
+    font-family: 'Unkempt';
+    src: url('/public/fonts/Unkempt-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Unkempt';
+    src: url('/public/fonts/Unkempt-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Подключение локального шрифта Palanquin */
+@font-face {
+    font-family: 'Palanquin';
+    src: url('/public/fonts/Palanquin-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Palanquin';
+    src: url('/public/fonts/Palanquin-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
 
 :root {
 
     --color-back:            #FFFFFC;   /* основной фон */
     --color-input:           #DBF1E7;   /* светло-зелёный (рамки, инпуты) */
-    --color-search:          #C9E3D8; /* зелёный при фокусе */
+    --color-search:          #C9E3D8;   /* зелёный при фокусе */
     --color-accent:          #85A696;   /* тёмно-зелёный (текст, ссылки) */
     --color-text:            #665140;   /* коричневый (лого, кнопки) */
     --color-active:          #46382C;   /* коричневый hover */

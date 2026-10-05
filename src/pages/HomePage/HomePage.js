@@ -20,20 +20,6 @@ export class HomePage {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
 
-        const headerLoginBtn = wrapper.querySelector('#headerLoginBtn');
-        if (headerLoginBtn) {
-            headerLoginBtn.addEventListener('click', () => {
-                navigateTo('/login');
-            });
-        }
-
-        const headerRegisterBtn = wrapper.querySelector('#headerRegisterBtn');
-        if (headerRegisterBtn) {
-            headerRegisterBtn.addEventListener('click', () => {
-                navigateTo('/signup');
-            });
-        }
-
         const logoutBtn = wrapper.querySelector('#logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {

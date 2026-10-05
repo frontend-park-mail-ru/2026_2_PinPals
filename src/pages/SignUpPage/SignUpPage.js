@@ -98,6 +98,7 @@ export class SignUpPage {
 
         this.submitBtn.element.addEventListener('click', (e) => this.handleSubmit(e));
 
+        this.element = wrapper;
         return wrapper;
     }
 
@@ -109,6 +110,10 @@ export class SignUpPage {
         const isPassValid = this.passInput.validate();
         const isDateValid = this.dateInput.validate();
         if (!isLoginValid || !isNickValid || !isPassValid || !isDateValid) return;
+
+        // Находим контейнер для серверной ошибки и очищаем его перед запросом
+        const errorContainer = this.element.querySelector('#serverError');
+        if (errorContainer) errorContainer.textContent = '';
 
         try {
             this.submitBtn.setDisabled(true);
@@ -122,16 +127,19 @@ export class SignUpPage {
                 this.passInput.getValue(),
                 formattedDate
             );
+
+            // Сохраняем сессию
             localStorage.setItem('isAuth', 'true');
             localStorage.setItem('userName', this.nicknameInput.getValue());
-            alert(result.message);
 
             navigateTo('/home');
         } catch (error) {
-            alert('Ошибка: ' + error.message);
+            // Выводим ошибку бэкенда текстом прямо в интерфейс формы
+            if (errorContainer) {
+                errorContainer.textContent = error.message;
+            }
         } finally {
             this.submitBtn.setDisabled(false);
         }
     }
-
 }

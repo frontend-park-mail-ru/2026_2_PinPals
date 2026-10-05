@@ -49,6 +49,7 @@ export class LoginPage {
             alert('Функция восстановления пароля будет добавлена позже');
         });
 
+        this.element = wrapper;
         return wrapper;
     }
 
@@ -58,6 +59,10 @@ export class LoginPage {
         const isLoginValid = this.loginInput.validate();
         const isPassValid = this.passInput.validate();
         if (!isLoginValid || !isPassValid) return;
+
+        // Находим контейнер ошибки и очищаем его перед новым запросом
+        const errorContainer = this.element.querySelector('#serverError');
+        if (errorContainer) errorContainer.textContent = '';
 
         try {
             this.loginBtn.setDisabled(true);
@@ -69,11 +74,12 @@ export class LoginPage {
 
             localStorage.setItem('isAuth', 'true');
             localStorage.setItem('userName', this.loginInput.getValue());
-            alert(result.message);
 
             navigateTo('/home');
         } catch (error) {
-            alert('Ошибка: ' + error.message);
+            if (errorContainer) {
+                errorContainer.textContent = error.message;
+            }
         } finally {
             this.loginBtn.setDisabled(false);
         }
