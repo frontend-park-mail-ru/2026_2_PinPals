@@ -2,9 +2,9 @@
 /* Основной контейнер                        */
 /* ========================================= */
 .home-page {
-    background-color: #FFFFFC;
+    background-color: var(--color-back);
     min-height: 100vh;
-    font-family: 'Palanquin', sans-serif;
+    font-family: var(--font-main);
     position: relative;
     padding-top: 83px;
 }
@@ -17,13 +17,13 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 83px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
-    background-color: #FFFFFC;
-    border-bottom: 3px solid #C9E3D8; /* зелёный барьер вместо тени */
+    padding: 0 10px;
+    background-color: var(--color-back);
+    border-bottom: 3px solid var(--color-accent);
     box-sizing: border-box;
     z-index: 100;
 }
@@ -37,22 +37,22 @@
 }
 
 .logo-img-small {
-    height: 77px;
+    height: 48px;
     object-fit: contain;
 }
 
 .logo-text-small {
-    font-family: 'Unkempt', cursive;
-    font-size: 64px;
-    font-weight: bold;
-    color: #665140;
+    font-family: var(--font-logo);
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--color-text);
 }
 
 .header-center {
     flex: 1;
     display: flex;
     justify-content: center;
-    padding: 15px 10px;
+    padding: 0 20px ;
     min-width: 0;
 }
 
@@ -67,7 +67,7 @@
     position: absolute;
     left: 16px;
     top: 50%;
-    height: 40px;
+    height: 20px;
     transform: translateY(-50%);
     pointer-events: none;
 }
@@ -75,12 +75,12 @@
 .search-input {
     width: 100%;
     height: 58px;
-    padding: 16px 10px 16px 56px;
-    border-radius: 20px;
-    border: 3px solid #C9E3D8;
-    background-color: #FFFFFC;
-    color: #608372;
-    font-size: 36px;
+    padding: 0 40px ;
+    border-radius: 16px;
+    border: none;
+    background-color: var(--color-search);
+    color: var(--color-text);
+    font-size: 20px;
     font-family: 'Palanquin', sans-serif;
     font-weight: 200;
     outline: none;
@@ -89,7 +89,8 @@
 }
 
 .search-input::placeholder {
-    color: #C9E3D8;
+    color: var(--color-accent);
+    font-weight: 200;
 }
 
 .search-input:focus {
@@ -100,62 +101,57 @@
 .header-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     flex-shrink: 0;
 }
 
 .btn-header {
     font-family: 'Palanquin', sans-serif;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 500;
-    padding: 8px 20px;
-    border-radius: 20px;
+    padding: 0 10px;
+    height: 48px;
+    border-radius: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
 }
 
 .btn-login-header {
-    background-color: #665140;
-    color: #ffffff;
+    background-color: var(--color-text);
+    color: var(--color-back);
 }
 
 .btn-login-header:hover {
-    background-color: #524030;
+    background-color: var(--color-active);
 }
 
 .btn-register-header {
     background-color: transparent;
-    color: #608372;
-    border: 1px solid #C9E3D8;
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
 }
 
 .btn-register-header:hover {
-    background-color: #C9E3D8;
-    color: #665140;
+    background-color: var(--color-input);
 }
 /* ========================================= */
 /* Аватарка и выпадающее меню                */
 /* ========================================= */
 .user-menu-wrapper {
     position: relative;
-    /* Мостик, чтобы курсор не терялся между аватаркой и меню */
     padding-bottom: 10px;
     margin-bottom: -10px;
 }
 
 .user-avatar {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background-color: #C9E3D8;
     cursor: pointer;
     border: 2px solid transparent;
     transition: border-color 0.2s ease;
-}
-
-.user-avatar:hover {
-    border-color: #665140;
 }
 
 /* Выпадающее меню */
@@ -187,10 +183,10 @@
 }
 
 .user-name {
-    font-family: 'Palanquin', sans-serif;
-    font-size: 16px;
+    font-family: var(--font-main);
+    font-size: 20px;
     font-weight: 600;
-    color: #665140;
+    color: var(--color-text);
     text-align: center;
     padding: 4px 6px 10px;
     border-bottom: 1px solid #f0f0f0;
@@ -218,7 +214,7 @@
 /* Лента (полная ширина, цикл)               */
 /* ========================================= */
 .home-content {
-    padding: 24px;
+    padding: 16px;
     width: 100%;
     box-sizing: border-box;
 }
@@ -234,10 +230,8 @@
     width: 100%;
     margin-bottom: 16px;
     break-inside: avoid;
-    border-radius: 20px;
     overflow: hidden;
-    background-color: #f0f0f0;
-    /* Без анимации при наведении и т.п. */
+    background-color: var(--color-back);
 }
 
 .pin-card img {
@@ -251,19 +245,16 @@
 /* ========================================= */
 .home-sidebar {
     position: fixed;
-    top: 85px; /* 83 + 2 (border) */
+    top: 82px;
     left: 0;
     bottom: 0;
     width: 90px;
-    background-color: rgba(255, 255, 252, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-right: 1px solid rgba(201, 227, 216, 0.6);
+    background-color: var(--overlay-menu);
     z-index: 90;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 20px;
+    padding-top: 30px;
     box-sizing: border-box;
     transition: transform 0.3s ease;
 }
@@ -276,7 +267,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 30px;
     width: 100%;
 }
 
@@ -287,21 +278,19 @@
     justify-content: center;
     width: 60px;
     height: 60px;
-    border-radius: 14px;
-    border: 2px solid transparent;
+    border-radius: 16px;
     text-decoration: none;
     cursor: pointer;
     transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .sidebar-item:hover {
-    border-color: #665140;
-    background-color: rgba(102, 81, 64, 0.06);
+    background-color: var(--overlay-menu-active);
 }
 
 .sidebar-icon {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
 }
 
@@ -311,10 +300,10 @@
     left: calc(100% + 14px);
     top: 50%;
     transform: translateY(-50%);
-    background-color: #665140;
-    color: #ffffff;
+    background-color: var(--color-text);
+    color: var(--color-back);
     font-size: 14px;
-    font-family: 'Palanquin', sans-serif;
+    font-family: var(--font-main);
     padding: 6px 14px;
     border-radius: 8px;
     white-space: nowrap;
@@ -322,7 +311,7 @@
     pointer-events: none;
     transition: opacity 0.2s ease;
     z-index: 95;
-    box-shadow: 0 4px 12px rgba(102, 81, 64, 0.15);
+    box-shadow: 0;
 }
 
 .sidebar-item:hover .sidebar-label {
@@ -339,9 +328,9 @@
     transform: translateY(-50%);
     width: 44px;
     height: 44px;
-    border: 1px solid #C9E3D8;
+    border: 1px solid var(--color-search);
     border-radius: 50%;
-    background-color: #ffffff;
+    background-color: var(--color-back);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -353,7 +342,7 @@
 }
 
 .sidebar-toggle:hover {
-    background-color: #C9E3D8;
+    background-color: var(--color-input);
 }
 
 .sidebar-toggle img {

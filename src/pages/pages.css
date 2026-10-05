@@ -9,7 +9,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: var(--overlay-shadow);
     padding: 20px;
     box-sizing: border-box;
 }
@@ -19,13 +19,11 @@
 /* ========================================= */
 .sign-up-box,
 .login-box {
-    background-color: #ffffff;
-    border: 2px solid #C9E3D8;
-    border-radius: 20px;
+    background-color: var(--color-back);
+    border-radius: 30px;
     width: 100%;
     max-width: 440px;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(102, 81, 64, 0.15);
+    padding: 20px;
     box-sizing: border-box;
     position: relative;
     z-index: 1001;
@@ -36,7 +34,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .logo-area {
@@ -46,42 +44,58 @@
 }
 
 .logo-img {
-    height: 75px;
+    height: 48px;
     object-fit: contain;
 }
 
 .logo-text {
-    font-family: 'Unkempt', cursive;
-    font-size: 35px;
+    font-family: var(--font-logo);
+    font-size: 40px;
     font-weight: bold;
-    color: #665140;
+    color: var(--color-text);
 }
 
-/* Крестик */
 .close-btn {
     background: none;
     border: none;
-    font-size: 28px;
-    color: #665140;
+    font-size: 40px;
+    color: var(--color-text);
     cursor: pointer;
     line-height: 1;
     padding: 0;
 }
 
 .close-btn:hover {
-    color: #b03a2e;
+    color: var(--color-active);
 }
 
 /* Заголовок */
 .welcome-title {
-    font-family: 'Palanquin', sans-serif;
-    font-size: 27px;
-    color: #665140;
-    margin: 0 0 20px 0;
-    font-weight: normal;
+    font-family: var(--font-main);
+    font-size: 32px;
+    color: var(--color-text);
+    font-weight: 400;
 }
 
 /* Контейнер формы */
 .form-container {
     margin-bottom: 0;
+}
+
+/* Ссылки */
+.forgot-link, .login-link {
+    display: block;
+    text-align: left;
+    padding: 0px 10px;
+    color: var(--color-accent);
+    font-size: 15px;
+    text-decoration: underline;
+    margin-top: 10px;
+    margin-bottom: 0;
+    cursor: pointer;
+    font-family: var(--font-main);
+}
+
+.forgot-link:hover ,.login-link:hover{
+    color: var(--color-text);
 }

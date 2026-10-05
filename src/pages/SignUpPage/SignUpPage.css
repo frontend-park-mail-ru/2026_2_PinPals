@@ -1,43 +1,5 @@
 /* Ссылка "Уже есть аккаунт?" */
 .login-link-container {
     text-align: center;
-    margin-top: 16px;
-}
-
-.login-link {
-    color: #608372;
-    text-decoration: underline;
-    font-size: 14px;
-    font-family: 'Palanquin', sans-serif;
-    transition: color 0.2s ease;
-}
-
-.login-link:hover {
-    color: #665140;
-}
-
-.sign-up-box .form-container button[type="submit"] {
-    width: 100%;
-    background-color: #665140;
-    color: #ffffff;
-    border: none;
-    border-radius: 25px;
-    font-size: 20px;
-    padding: 8px 32px;
-    font-weight: 500;
-    font-family: 'Palanquin', sans-serif;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: background-color 0.2s ease;
-}
-
-.sign-up-box .form-container button[type="submit"]:hover {
-    background-color: #524030;
-}
-
-.sign-up-box .form-container button[type="submit"]:disabled {
-    margin-top: 0;
-    background-color: #ccc;
-    color: #666;
-    cursor: not-allowed;
+    margin-top: 10px;
 }

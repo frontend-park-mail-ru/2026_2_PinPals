@@ -1,4 +1,5 @@
 import { Input } from "../../components/Input/Input.js";
+import { Button } from "../../components/Button/Button.js"; // ← добавили
 import { loginUser } from "../../api/user.js";
 import { navigateTo } from "../../app.js";
 
@@ -15,6 +16,8 @@ export class LoginPage {
             label: '', type: 'password', name: 'password',
             placeholder: 'Пароль', validator: validatePassword
         });
+        this.loginBtn = new Button({ title: 'Вход', type: 'button', className: 'btn btn-first' });
+        this.registerBtn = new Button({ title: 'Регистрация', type: 'button', className: 'btn btn-second' });
     }
 
     render() {
@@ -29,23 +32,17 @@ export class LoginPage {
         formContainer.append(this.loginInput.render());
         formContainer.append(this.passInput.render());
 
-        // Крестик — закрыть модалку
-        const closeBtn = wrapper.querySelector('.close-btn');
-        closeBtn.addEventListener('click', () => {
+        const buttonsContainer = wrapper.querySelector('.buttons-container');
+        buttonsContainer.append(this.loginBtn.render());
+        buttonsContainer.append(this.registerBtn.render());
+
+        wrapper.querySelector('.close-btn').addEventListener('click', () => {
             navigateTo('/home');
         });
 
-        // Кнопка "Вход"
-        const loginBtn = wrapper.querySelector('.btn-login');
-        loginBtn.addEventListener('click', (e) => this.handleSubmit(e));
+        this.loginBtn.element.addEventListener('click', (e) => this.handleSubmit(e));
+        this.registerBtn.element.addEventListener('click', () => navigateTo('/signup'));
 
-        // Кнопка "Регистрация"
-        const registerBtn = wrapper.querySelector('.btn-register');
-        registerBtn.addEventListener('click', () => {
-            navigateTo('/signup');
-        });
-
-        // Забыли пароль
         const forgotLink = wrapper.querySelector('.forgot-link');
         forgotLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -63,7 +60,7 @@ export class LoginPage {
         if (!isLoginValid || !isPassValid) return;
 
         try {
-            this.submitBtn.setDisabled(true);
+            this.loginBtn.setDisabled(true);
 
             const result = await loginUser(
                 this.loginInput.getValue(),
@@ -78,8 +75,7 @@ export class LoginPage {
         } catch (error) {
             alert('Ошибка: ' + error.message);
         } finally {
-            this.submitBtn.setDisabled(false);
+            this.loginBtn.setDisabled(false);
         }
     }
-
 }

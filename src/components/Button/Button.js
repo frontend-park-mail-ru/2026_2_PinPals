@@ -1,14 +1,19 @@
 export class Button {
-    constructor({ title, type = 'button', onClick }) {
+    constructor({ title, type = 'button', onClick, className = 'btn btn-primary' }) {
         this.title = title;
         this.type = type;
         this.onClick = onClick;
+        this.className = className;
         this.element = null;
     }
 
     render() {
         const template = Handlebars.templates['Button.hbs'];
-        const html = template({ title: this.title, type: this.type });
+        const html = template({
+            title: this.title,
+            type: this.type,
+            className: this.className 
+        });
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;

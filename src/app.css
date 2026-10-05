@@ -3,3 +3,26 @@
 @import "/src/pages/SignUpPage/SignUpPage.css";
 @import "/src/pages/LoginPage/LoginPage.css";
 @import "/src/pages/HomePage/HomePage.css";
+
+
+:root {
+
+    --color-back:            #FFFFFC;   /* основной фон */
+    --color-input:           #DBF1E7;   /* светло-зелёный (рамки, инпуты) */
+    --color-search:          #C9E3D8; /* зелёный при фокусе */
+    --color-accent:          #85A696;   /* тёмно-зелёный (текст, ссылки) */
+    --color-text:            #665140;   /* коричневый (лого, кнопки) */
+    --color-active:          #46382C;   /* коричневый hover */
+    --color-error:           #FF3F3F;   /* ошибки, крестик hover */
+
+    --color-gray-light:      #F0F0F0;   /* заглушка картинки */
+
+    --overlay-shadow:        rgba(0, 0, 0, 0.50);   /* затемнение модалок */
+    --overlay-menu:          rgba(255, 255, 252, 0.8); /* фон сайдбара */
+    --overlay-menu-active:   rgba(70, 56, 44, 0.35);
+
+    --font-main:             'Palanquin', sans-serif;
+    --font-logo:             'Unkempt', cursive;
+
+
+}

@@ -10,8 +10,10 @@ templates["Button.hbs"] = template({"compiler":[8,">= 4.3.0"],"main":function(co
 
   return "<button type=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"type") || (depth0 != null ? lookupProperty(depth0,"type") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"type","hash":{},"data":data,"loc":{"start":{"line":1,"column":14},"end":{"line":1,"column":22}}}) : helper)))
+    + "\" class=\""
+    + alias4(((helper = (helper = lookupProperty(helpers,"className") || (depth0 != null ? lookupProperty(depth0,"className") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"className","hash":{},"data":data,"loc":{"start":{"line":1,"column":31},"end":{"line":1,"column":44}}}) : helper)))
     + "\">"
-    + alias4(((helper = (helper = lookupProperty(helpers,"title") || (depth0 != null ? lookupProperty(depth0,"title") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data,"loc":{"start":{"line":1,"column":24},"end":{"line":1,"column":33}}}) : helper)))
+    + alias4(((helper = (helper = lookupProperty(helpers,"title") || (depth0 != null ? lookupProperty(depth0,"title") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data,"loc":{"start":{"line":1,"column":46},"end":{"line":1,"column":55}}}) : helper)))
     + "</button>\r\n";
 },"useData":true});
 templates["Input.hbs"] = template({"0":function(container,depth0,helpers,partials,data) {
@@ -80,7 +82,7 @@ templates["HomePage.hbs"] = template({"0":function(container,depth0,helpers,part
     + "        </div>\r\n    </main>\r\n\r\n    <button class=\"sidebar-toggle\" id=\"sidebarToggle\" type=\"button\" title=\"Меню\">\r\n        <img src=\"/public/img/toggle.png\" alt=\"Меню\">\r\n    </button>\r\n</div>\r\n";
 },"useData":true});
 templates["LoginPage.hbs"] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
-    return "<div class=\"login-box\">\r\n    <div class=\"box-header\">\r\n        <div class=\"logo-area\">\r\n            <img src=\"/public/img/logo_straight.png\" class=\"logo-img\" alt=\"logo\">\r\n            <span class=\"logo-text\">PicKing</span>\r\n        </div>\r\n        <button class=\"close-btn\" type=\"button\">×</button>\r\n    </div>\r\n\r\n    <h2 class=\"welcome-title\">Добро пожаловать</h2>\r\n\r\n    <div class=\"form-container\"></div>\r\n\r\n    <a href=\"#\" class=\"forgot-link\">Забыли пароль?</a>\r\n\r\n    <div class=\"buttons-container\">\r\n        <button type=\"button\" class=\"btn-login\">Вход</button>\r\n        <button type=\"button\" class=\"btn-register\">Регистрация</button>\r\n    </div>\r\n</div>";
+    return "<div class=\"login-box\">\r\n    <div class=\"box-header\">\r\n        <div class=\"logo-area\">\r\n            <img src=\"/public/img/logo_straight.png\" class=\"logo-img\" alt=\"logo\">\r\n            <span class=\"logo-text\">PicKing</span>\r\n        </div>\r\n        <button class=\"close-btn\" type=\"button\">×</button>\r\n    </div>\r\n\r\n    <h2 class=\"welcome-title\">Добро пожаловать</h2>\r\n\r\n    <div class=\"form-container\"></div>\r\n    <a href=\"#\" class=\"forgot-link\">Забыли пароль?</a>\r\n    <div class=\"buttons-container\"></div>\r\n</div>\r\n";
 },"useData":true});
 templates["SignUpPage.hbs"] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     return "<div class=\"sign-up-box\">\r\n    <div class=\"box-header\">\r\n        <div class=\"logo-area\">\r\n            <img src=\"/public/img/logo_straight.png\" alt=\"Logo\" class=\"logo-img\">\r\n            <span class=\"logo-text\">PicKing</span>\r\n        </div>\r\n        <button type=\"button\" class=\"close-btn\">×</button>\r\n    </div>\r\n\r\n    <h2 class=\"welcome-title\">Добро пожаловать</h2>\r\n\r\n    <div class=\"form-container\"></div>\r\n\r\n    <div class=\"login-link-container\">\r\n        <a href=\"/login\" class=\"login-link\">Уже есть аккаунт? Войти</a>\r\n    </div>\r\n</div>\r\n";

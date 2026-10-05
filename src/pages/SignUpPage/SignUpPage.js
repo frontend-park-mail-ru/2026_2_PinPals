@@ -45,7 +45,11 @@ export class SignUpPage {
             placeholder: '', validator: validateBirthdate
         });
 
-        this.submitBtn = new Button({ title: 'Зарегистрироваться', type: 'submit' });
+        this.submitBtn = new Button({
+            title: 'Зарегистрироваться',
+            type: 'button',
+            className: 'btn btn-first'
+        });
     }
 
     render() {

@@ -1,6 +1,4 @@
-.input-wrapper {
-    margin-bottom: 8px;
-}
+
 
 .input-wrapper label {
     display: none;
@@ -8,31 +6,31 @@
 
 .input-wrapper input {
     width: 100%;
-    background-color: #C9E3D8;
+    background-color: var(--color-input);
     border: none;
-    border-radius: 25px;
-    padding: 14px 24px;
+    border-radius: 16px;
+    height: 48px;
+    padding: 0px 20px;
     font-size: 20px;
-    color: #665140;
+    font-weight: 100;
+    margin-bottom: 0px;
+    color: var(--color-text);
     box-sizing: border-box;
     transition: background-color 0.2s;
 }
 
 
-/* Дополнительный правый отступ для полей пароля, чтобы текст не налезал на иконку глаза */
-.input-wrapper input[type="password"],
-.input-wrapper input[type="text"] {
+.input-wrapper input[type="password"]{
     padding-right: 50px;
 }
 
 .input-wrapper input::placeholder {
-    color: #608372;
-    opacity: 0.7;
+    color: var(--color-accent);
 }
 
 .input-wrapper input:focus {
     outline: none;
-    background-color: #bad6cb;
+    background-color: var(--color-search);
 }
 
 /* Иконка глазика внутри поля */
@@ -41,8 +39,8 @@
     right: 20px;
     top: 50%;
     transform: translateY(-50%);
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 26px;
     cursor: pointer;
     user-select: none;
     opacity: 0.7;
@@ -50,27 +48,66 @@
 
 /* Стили для подсказок под полями */
 .field-hint {
-    font-size: 16px;
-    color: #608372;
+    font-size: 20px;
+    color: var(--color-accent);
     text-align: left;
     text-decoration: none;
-    margin-bottom: 12px;
+    margin-bottom: 0px;
     padding-left: 20px;
 }
 
 .error-msg {
-    font-family: 'Palanquin', sans-serif;
+    font-family: var(--font-main);
     display: block;
-    color: #b03a2e;
-    font-size: 13px;
-    margin-top: 6px;
-    margin-bottom: 8px;
-    padding-left: 24px;
-    min-height: 15px;
+    color: var(--color-error);
+    font-size: 14px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 20px;
+    min-height: 14px;
 }
 
 
 .input-field-container {
     position: relative;
     width: 100%;
+}
+
+
+.btn {
+    font-family: var(--font-main);
+    font-size: 20px;
+    font-weight: 500;
+    height: 48px;
+    padding: 0 10px;
+    width: 100%;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-first {
+    background-color: var(--color-text);
+    color: var(--color-back);
+    border: none;
+}
+
+.btn-first:hover {
+    background-color: var(--color-active);
+}
+
+.btn-second {
+    background-color: var(--color-back);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+}
+
+.btn-second:hover {
+    background-color: var(--color-search);
+}
+
+.btn:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
 }
