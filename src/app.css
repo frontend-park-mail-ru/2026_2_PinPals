@@ -41,8 +41,9 @@
 :root {
 
     --color-back:            #FFFFFC;   /* основной фон */
-    --color-input:           #DBF1E7;   /* светло-зелёный (рамки, инпуты) */
-    --color-search:          #C9E3D8;   /* зелёный при фокусе */
+    --color-input:           #F0F2F1;   /* светло-зелёный (рамки, инпуты) */
+    --color-input-focus:     #d8e0dd;
+    --color-search:          #C9E3D8; /* зелёный при фокусе */
     --color-accent:          #85A696;   /* тёмно-зелёный (текст, ссылки) */
     --color-text:            #665140;   /* коричневый (лого, кнопки) */
     --color-active:          #46382C;   /* коричневый hover */
@@ -53,6 +54,7 @@
     --overlay-shadow:        rgba(0, 0, 0, 0.50);   /* затемнение модалок */
     --overlay-menu:          rgba(255, 255, 252, 0.8); /* фон сайдбара */
     --overlay-menu-active:   rgba(70, 56, 44, 0.35);
+    --overlay-input:         rgba(70, 56, 44, 0.5);
 
     --font-main:             'Palanquin', sans-serif;
     --font-logo:             'Unkempt', cursive;
