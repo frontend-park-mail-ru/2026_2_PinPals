@@ -1,0 +1,115 @@
+
+
+.input-wrapper label {
+    display: none;
+}
+
+.input-wrapper input {
+    width: 100%;
+    background-color: var(--color-input);
+    border: none;
+    border-radius: 16px;
+    height: 48px;
+    padding: 0 20px;
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 0;
+    color: var(--color-text);
+    box-sizing: border-box;
+    transition: background-color 0.2s;
+}
+
+
+.input-wrapper input[type="password"]{
+    padding-right: 50px;
+}
+
+.input-wrapper input::placeholder {
+    color: var(--overlay-input);
+}
+
+.input-wrapper input:focus {
+    outline: none;
+    background-color: var(--color-input-focus);
+}
+
+/* Иконка глазика внутри поля */
+.eye-icon-img {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 26px;
+    cursor: pointer;
+    user-select: none;
+    opacity: 0.7;
+}
+
+/* Стили для подсказок под полями */
+.field-hint {
+    font-family: var(--font-main), sans-serif;
+    font-size: 14px;        /* Сделать поменьше, чтобы не спорила с инпутом */
+    font-weight: 300;       /* Сделать чуть тоньше */
+    color: var(--color-accent);
+    text-align: left;
+    text-decoration: none;
+    margin-bottom: 4px;     /* Добавить небольшой отступ снизу */
+    padding-left: 20px;
+}
+
+.error-msg {
+    font-family: var(--font-main), sans-serif;
+    display: block;
+    color: var(--color-error);
+    font-size: 14px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 20px;
+    min-height: 14px;
+}
+
+
+.input-field-container {
+    position: relative;
+    width: 100%;
+}
+
+
+.btn {
+    font-family: var(--font-main), sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    height: 48px;
+    padding: 0 10px;
+    width: 100%;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-first {
+    background-color: var(--color-text);
+    color: var(--color-back);
+    border: none;
+}
+
+.btn-first:hover {
+    background-color: var(--color-active);
+}
+
+.btn-second {
+    background-color: var(--color-back);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+}
+
+.btn-second:hover {
+    background-color: var(--color-search);
+}
+
+.btn:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}

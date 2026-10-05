@@ -1,0 +1,63 @@
+@import "/src/components/components.css";
+@import "/src/pages/pages.css";
+@import "/src/pages/SignUpPage/SignUpPage.css";
+@import "/src/pages/LoginPage/LoginPage.css";
+@import "/src/pages/HomePage/HomePage.css";
+
+/* Подключение локального шрифта Unkempt */
+@font-face {
+    font-family: 'Unkempt';
+    src: url('/public/fonts/Unkempt-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Unkempt';
+    src: url('/public/fonts/Unkempt-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Подключение локального шрифта Palanquin */
+@font-face {
+    font-family: 'Palanquin';
+    src: url('/public/fonts/Palanquin-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Palanquin';
+    src: url('/public/fonts/Palanquin-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+
+    --color-back:            #FFFFFC;   /* основной фон */
+    --color-input:           #F0F2F1;   /* светло-зелёный (рамки, инпуты) */
+    --color-input-focus:     #d8e0dd;
+    --color-search:          #C9E3D8; /* зелёный при фокусе */
+    --color-accent:          #85A696;   /* тёмно-зелёный (текст, ссылки) */
+    --color-text:            #665140;   /* коричневый (лого, кнопки) */
+    --color-active:          #46382C;   /* коричневый hover */
+    --color-error:           #FF3F3F;   /* ошибки, крестик hover */
+
+    --color-gray-light:      #F0F0F0;   /* заглушка картинки */
+
+    --overlay-shadow:        rgba(0, 0, 0, 0.50);   /* затемнение модалок */
+    --overlay-menu:          rgba(255, 255, 252, 0.8); /* фон сайдбара */
+    --overlay-menu-active:   rgba(70, 56, 44, 0.35);
+    --overlay-input:         rgba(70, 56, 44, 0.5);
+
+    --font-main:             'Palanquin', sans-serif;
+    --font-logo:             'Unkempt', cursive;
+
+
+}
