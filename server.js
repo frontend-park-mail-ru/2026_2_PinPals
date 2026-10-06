@@ -9,8 +9,12 @@ app.use(express.static(path.join(__dirname)));
 
 // НАСТРОЙКА ПРОКСИ: все запросы к /api уйдут на бэкенд Go
 app.use('/api', createProxyMiddleware({
-    target: 'http://161.104.105.76:8000',
-    changeOrigin: true
+    target: 'http://app:8080',
+    changeOrigin: true,
+    // Принудительно возвращаем /api в начало пути перед отправкой на Go-бэкенд
+    pathRewrite: {
+        '^/api': '/api'
+    }
 }));
 
 // Главная страница фронтенда
