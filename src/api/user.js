@@ -1,4 +1,4 @@
-const BASE_URL = '';
+const BASE_URL = 'http://161.104.107.83:8000';
 /**
  * Регистрация нового пользователя
  * Ожидает от Go: POST /api/v1/auth/register
