@@ -1,4 +1,4 @@
-const BASE_URL = '';
+const BASE_URL = 'http://localhost:8000';
 /**
  * Регистрация нового пользователя
  * Ожидает от Go: POST /api/v1/auth/register
@@ -67,19 +67,39 @@ export async function loginUser(username, password) {
  * @param {Object|null} [cursor=null] - Курсор пагинации.
  * @returns {Promise<Object>} Объект с массивом пинов.
  */
-export async function fetchPins(limit = 20, cursor = null) {
-    const response = await fetch(`${BASE_URL}/api/v1/pins/search`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            limit: limit,
-            cursor: cursor
-        })
-    });
+export async function fetchPins(limit = 30, cursor = null) {
+    const response = await fetch(
+        `${BASE_URL}/api/v1/pins/search`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                limit,
+                ...(cursor ? { cursor } : {}),
+            }),
+        },
+    );
 
-    const data = await response.json();
-    if (!response.ok) {
-        throw new Error(data.error || 'Не удалось загрузить ленту');
+    let payload = null;
+
+    try {
+        payload = await response.json();
+    } catch {
+        throw new Error(`Сервер вернул невалидный JSON: HTTP ${response.status}`);
     }
-    return data; // Возвращает { pins: [...], next_cursor: {...} }
+
+    if (!response.ok) {
+        throw new Error(
+            payload?.error || `HTTP ${response.status}`,
+        );
+    }
+
+    if (!payload || !Array.isArray(payload.pins)) {
+        throw new Error('Некорректный формат ответа /api/v1/pins/search');
+    }
+
+    return payload;
 }
