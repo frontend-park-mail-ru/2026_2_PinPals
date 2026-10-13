@@ -231,6 +231,8 @@
     width: 100%;
     margin-bottom: 16px;
     break-inside: avoid;
+    border: none;
+    border-radius: 20px;
     overflow: hidden;
     background-color: var(--color-back);
 }
@@ -258,6 +260,7 @@
     padding-top: 30px;
     box-sizing: border-box;
     transition: transform 0.3s ease;
+    opacity: visible;
 }
 
 .home-page.sidebar-collapsed .home-sidebar {
@@ -319,41 +322,40 @@
     opacity: 1;
 }
 
+
 /* ========================================= */
 /* Кнопка-гамбургер (посередине сайдбара)    */
 /* ========================================= */
 .sidebar-toggle {
-    position: fixed;
+    position: absolute;
     top: 50%;
-    left: 23px; /* (90 - 44) / 2 */
+    left: 0;
     transform: translateY(-50%);
-    width: 44px;
-    height: 44px;
-    border: 1px solid var(--color-search);
-    border-radius: 50%;
+    width: 75px;
+    height: 80px;
+    border: none;
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
     background-color: var(--color-back);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(102, 81, 64, 0.1);
     padding: 0;
     z-index: 95;
-    transition: left 0.3s ease, background-color 0.2s ease;
+    transition: background-color 0.2s ease;
 }
 
-.sidebar-toggle:hover {
-    background-color: var(--color-input);
-}
 
 .sidebar-toggle img {
-    width: 22px;
-    height: 22px;
+    width: 33px;
+    height: 60px;
     object-fit: contain;
+    transition: transform 0.3s ease;
 }
 
-.home-page.sidebar-collapsed .sidebar-toggle {
-    left: 8px;
+.home-page.sidebar-collapsed .sidebar-toggle img {
+    transform: rotate(180deg);
 }
 
 /* ========================================= */

@@ -65,11 +65,6 @@ export class SignUpPage {
         formContainer.append(this.nicknameInput.render());
         formContainer.append(this.passInput.render());
 
-        const passHint = document.createElement('div');
-        passHint.className = 'field-hint';
-        passHint.textContent = 'Не менее 8 символов';
-        formContainer.append(passHint);
-
         formContainer.append(this.dateInput.render());
 
         // Ограничиваем выбор в самом календаре браузера

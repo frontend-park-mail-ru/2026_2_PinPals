@@ -1,5 +1,8 @@
 /* Ссылка "Уже есть аккаунт?" */
 .login-link-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    margin-top: 10px;
+    margin-top: 6px
 }
