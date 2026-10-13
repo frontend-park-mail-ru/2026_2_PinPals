@@ -62,7 +62,6 @@ export class SignUpPage {
 
         const formContainer = wrapper.querySelector('.form-container');
         formContainer.append(this.loginInput.render());
-        formContainer.append(this.nicknameInput.render());
         formContainer.append(this.passInput.render());
 
         formContainer.append(this.dateInput.render());

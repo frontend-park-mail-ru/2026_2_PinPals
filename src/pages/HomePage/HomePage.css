@@ -329,7 +329,7 @@
 .sidebar-toggle {
     position: absolute;
     top: 50%;
-    left: 0;
+    right: auto;
     transform: translateY(-50%);
     width: 75px;
     height: 80px;
