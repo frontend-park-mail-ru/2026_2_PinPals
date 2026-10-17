@@ -4,25 +4,85 @@ import { signUpUser, loginUser } from '../../api/user.js';
 import { navigateTo } from '../../app.js';
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
-const validatePassword = (val) => val.length >= 8 ? '' : 'Пароль слишком короткий';
+
+const validatePassword = (val) => {
+    if (val.length < 8) return 'Пароль минимум 8 символов';
+    if (!/[a-zA-Zа-яА-Я]/.test(val)) return 'Пароль должен содержать буквы';
+    return '';
+};
+
+const MIN_AGE = 13;
+const MAX_AGE = 120;
+
+/**
+ * Считает точный возраст в годах с учётом дня/месяца рождения.
+ * @param {Date} birthDate
+ * @param {Date} today
+ * @returns {number}
+ */
+function calculateAge(birthDate, today) {
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    const hasHadBirthdayThisYear =
+        today.getMonth() > birthDate.getMonth() ||
+        (today.getMonth() === birthDate.getMonth() &&
+            today.getDate() >= birthDate.getDate());
+
+    if (!hasHadBirthdayThisYear) {
+        age--;
+    }
+
+    return age;
+}
+
 const validateBirthdate = (val) => {
     if (!val.trim()) return 'Поле обязательно';
 
-    const selectedDate = new Date(val);
+    // Парсим "YYYY-MM-DD" как локальную дату
+    const [year, month, day] = val.split('-').map(Number);
+    if (!year || !month || !day) {
+        return 'Некорректная дата';
+    }
+
+    const selectedDate = new Date(year, month - 1, day);
+
+    // Проверяем, что дата реально существует
+    if (
+        selectedDate.getFullYear() !== year ||
+        selectedDate.getMonth() !== month - 1 ||
+        selectedDate.getDate() !== day
+    ) {
+        return 'Некорректная дата';
+    }
+
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
 
     if (selectedDate > today) {
         return 'Дата рождения не может быть в будущем';
     }
 
-    // Защита от слишком старых дат
-    const minDate = new Date();
-    minDate.setFullYear(today.getFullYear() - 120);
-    if (selectedDate < minDate) {
+    const age = calculateAge(selectedDate, today);
+
+    if (age < MIN_AGE) {
+        return `Регистрация доступна с ${MIN_AGE} лет`;
+    }
+
+    if (age > MAX_AGE) {
         return 'Пожалуйста, укажите корректную дату';
     }
 
     return '';
+};
+
+/**
+ * Валидатор совпадения паролей.
+ * Принимает функцию-геттер значения основного пароля.
+ */
+const makePasswordMatchValidator = (getPassword) => (val) => {
+    if (!val.trim()) return 'Поле обязательно';
+    return val === getPassword() ? '' : 'Пароли не совпадают';
 };
 
 /**
@@ -34,27 +94,42 @@ export class SignUpPage {
      */
     constructor() {
         this.loginInput = new Input({
-            label: '', type: 'text', name: 'username',
-            placeholder: 'Введите логин', validator: validateRequired
+            label: '',
+            type: 'text',
+            name: 'username',
+            placeholder: 'Логин',
+            validator: validateRequired,
         });
-        this.nicknameInput = new Input({
-            label: '', type: 'text', name: 'nickname',
-            placeholder: 'Придумайте ник', validator: validateRequired
-        });
+
         this.passInput = new Input({
-            label: '', type: 'password', name: 'password',
-            placeholder: 'Создайте пароль', validator: validatePassword
+            label: '',
+            type: 'password',
+            name: 'password',
+            placeholder: 'Пароль',
+            validator: validatePassword,
+        });
+
+        // Поле повтор пароля - валидируется после основного
+        this.passConfirmInput = new Input({
+            label: '',
+            type: 'password',
+            name: 'password_confirm',
+            placeholder: 'Пароль еще раз',
+            validator: makePasswordMatchValidator(() => this.passInput.getValue()),
         });
 
         this.dateInput = new Input({
-            label: '', type: 'date', name: 'birthdate',
-            placeholder: '', validator: validateBirthdate
+            label: '',
+            type: 'date',
+            name: 'birthdate',
+            placeholder: 'Введите дату рождения',
+            validator: validateBirthdate,
         });
 
         this.submitBtn = new Button({
-            title: 'Зарегистрироваться',
+            title: 'Вход',
             type: 'button',
-            className: 'btn btn-first'
+            className: 'btn btn-first',
         });
     }
 
@@ -72,16 +147,33 @@ export class SignUpPage {
         wrapper.innerHTML = html;
 
         const formContainer = wrapper.querySelector('.form-container');
+
+        // 1. Логин + подсказка снизу
         formContainer.append(this.loginInput.render());
-        formContainer.append(this.nicknameInput.render());
+        const loginHint = document.createElement('div');
+        loginHint.className = 'field-hint';
+        loginHint.textContent = 'Логин должен быть уникальным';
+        formContainer.append(loginHint);
+
+        // 2. Пароль
         formContainer.append(this.passInput.render());
 
+        this.passInput.element.classList.add('password-gap');
+
+        // 3. Повтор пароля + подсказка снизу
+        formContainer.append(this.passConfirmInput.render());
         const passHint = document.createElement('div');
         passHint.className = 'field-hint';
-        passHint.textContent = 'Не менее 8 символов';
+        passHint.textContent = 'Пароль должен содержать буквы и цифры';
         formContainer.append(passHint);
 
+        // 4. Дата рождения
         formContainer.append(this.dateInput.render());
+
+        const birthdateHint = document.createElement('div');
+        birthdateHint.className = 'field-hint field-hint--tight';
+        birthdateHint.textContent = 'Введите дату рождения';
+        formContainer.append(birthdateHint);
 
         // Ограничиваем выбор в самом календаре браузера
         const dateInputElement = this.dateInput.element.querySelector('input');
@@ -92,16 +184,17 @@ export class SignUpPage {
             const maxDateStr = today.toISOString().split('T')[0];
 
             // Максимальный возраст - 120
-            const minYear = today.getFullYear() - 120;
+            const minYear = today.getFullYear() - MAX_AGE;
             const minDateStr = `${minYear}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
             dateInputElement.setAttribute('max', maxDateStr);
             dateInputElement.setAttribute('min', minDateStr);
         }
 
+        // 5. Кнопка
         formContainer.append(this.submitBtn.render());
 
-        // Крестик — закрыть модалку
+        // Крестик - закрыть модалку
         const closeBtn = wrapper.querySelector('.close-btn');
         closeBtn.addEventListener('click', () => {
             navigateTo('/home');
@@ -125,10 +218,11 @@ export class SignUpPage {
         e.preventDefault();
 
         const isLoginValid = this.loginInput.validate();
-        const isNickValid = this.nicknameInput.validate();
         const isPassValid = this.passInput.validate();
+        const isPassConfirmValid = this.passConfirmInput.validate();
         const isDateValid = this.dateInput.validate();
-        if (!isLoginValid || !isNickValid || !isPassValid || !isDateValid) return;
+
+        if (!isLoginValid || !isPassValid || !isPassConfirmValid || !isDateValid) return;
 
         // Находим контейнер для серверной ошибки и очищаем его перед запросом
         const errorContainer = this.element.querySelector('#serverError');
@@ -138,20 +232,19 @@ export class SignUpPage {
             this.submitBtn.setDisabled(true);
 
             const rawDate = this.dateInput.getValue();
+            const username = this.loginInput.getValue();
+            const password = this.passInput.getValue();
 
             // Отправляем запрос на регистрацию
             await signUpUser(
-                this.loginInput.getValue(),
-                this.nicknameInput.getValue(),
-                this.passInput.getValue(),
-                rawDate
+                username,
+                username,
+                password,
+                rawDate,
             );
 
             // Сразу же автоматически авторизуем пользователя
-            const loginResult = await loginUser(
-                this.loginInput.getValue(),
-                this.passInput.getValue()
-            );
+            const loginResult = await loginUser(username, password);
 
             // Сохраняем данные авторизации
             localStorage.setItem('isAuth', 'true');
@@ -168,4 +261,5 @@ export class SignUpPage {
             this.submitBtn.setDisabled(false);
         }
     }
+
 }

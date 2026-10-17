@@ -3,3 +3,15 @@
     text-align: center;
     margin-top: 10px;
 }
+
+/* Прячем подсказку, если у предшествующего поля есть ошибка */
+.input-wrapper.input-wrapper--error + .field-hint {
+    display: none;
+}
+
+/* Сдвигаем блок ошибки на место подсказки */
+.input-wrapper.input-wrapper--error .error-msg {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}

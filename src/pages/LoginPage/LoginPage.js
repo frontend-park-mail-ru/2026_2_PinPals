@@ -41,6 +41,7 @@ export class LoginPage {
 
         const formContainer = wrapper.querySelector('.form-container');
         formContainer.append(this.loginInput.render());
+        this.loginInput.element.classList.add('password-gap');
         formContainer.append(this.passInput.render());
 
         const buttonsContainer = wrapper.querySelector('.buttons-container');
@@ -101,7 +102,7 @@ export class LoginPage {
             navigateTo('/home');
         } catch (error) {
             if (errorContainer) {
-                errorContainer.textContent = error.message;
+                errorContainer.textContent = 'Неверный логин или пароль';
             }
         } finally {
             this.loginBtn.setDisabled(false);

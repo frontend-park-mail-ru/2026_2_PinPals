@@ -92,5 +92,11 @@ export class Input {
     showError() {
         const errorEl = this.element.querySelector('.error-msg');
         if (errorEl) errorEl.textContent = this.error;
+
+        if (this.error) {
+            this.element.classList.add('input-wrapper--error');
+        } else {
+            this.element.classList.remove('input-wrapper--error');
+        }
     }
 }
