@@ -1,3 +1,5 @@
+import template from './Input.hbs';
+
 /**
  * Класс, представляющий переиспользуемый компонент поля ввода со встроенной валидацией и переключателем видимости пароля.
  */
@@ -32,13 +34,13 @@ export class Input {
      * @returns {HTMLElement} Сформированный DOM-элемент обертки инпута.
      */
     render() {
-        const template = Handlebars.templates['Input.hbs'];
         const html = template({
             label: this.label,
             type: this.type,
             name: this.name,
             placeholder: this.placeholder,
-            error: this.error
+            error: this.error,
+            isPassword: this.type === 'password',
         });
 
         const wrapper = document.createElement('div');
@@ -53,10 +55,10 @@ export class Input {
             eyeImg.addEventListener('click', () => {
                 if (this.inputElement.type === 'password') {
                     this.inputElement.type = 'text';
-                    eyeImg.src = '/public/img/eye-open.png';
+                    eyeImg.src = '/img/eye-open.png';
                 } else {
                     this.inputElement.type = 'password';
-                    eyeImg.src = '/public/img/eye-closed.png';
+                    eyeImg.src = '/img/eye-closed.png';
                 }
             });
         }
@@ -92,5 +94,11 @@ export class Input {
     showError() {
         const errorEl = this.element.querySelector('.error-msg');
         if (errorEl) errorEl.textContent = this.error;
+
+        if (this.error) {
+            this.element.classList.add('input-wrapper--error');
+        } else {
+            this.element.classList.remove('input-wrapper--error');
+        }
     }
 }

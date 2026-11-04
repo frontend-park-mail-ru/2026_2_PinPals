@@ -1,3 +1,5 @@
+import template from './Button.hbs';
+
 /**
  * Класс, представляющий переиспользуемый компонент кнопки.
  */
@@ -26,7 +28,6 @@ export class Button {
      * @returns {HTMLElement} Корневой DOM-элемент кнопки.
      */
     render() {
-        const template = Handlebars.templates['Button.hbs'];
         const html = template({
             title: this.title,
             type: this.type,

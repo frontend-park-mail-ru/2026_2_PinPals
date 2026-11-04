@@ -1,7 +1,7 @@
-const eslint = require('@eslint/js');
-const globals = require('globals');
+import eslint from '@eslint/js';
+import globals from 'globals';
 
-module.exports = [
+export default [
     eslint.configs.recommended,
     {
         files: ['src/**/*.js', 'server.js'],
@@ -11,7 +11,6 @@ module.exports = [
             globals: {
                 ...globals.browser,
                 ...globals.node,
-                Handlebars: 'readonly'
             }
         },
         rules: {
