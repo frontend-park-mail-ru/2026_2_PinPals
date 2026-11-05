@@ -1,5 +1,6 @@
 import { navigateTo } from '../../app.js';
 import { fetchPins } from '../../api/user.js';
+import { PinCard } from '../../components/PinCard/PinCard.js';
 import template from './HomePage.hbs';
 
 const PAGE_SIZE = 30;
@@ -40,18 +41,7 @@ export class HomePage {
             const fragment = document.createDocumentFragment();
 
             for (const pin of pins) {
-                const card = document.createElement('div');
-                card.className = 'pin-card';
-
-                const image = document.createElement('img');
-
-                image.src = pin.image_url;
-                image.alt = pin.name ?? '';
-                image.title = pin.description ?? '';
-                image.loading = 'lazy';
-
-                card.appendChild(image);
-                fragment.appendChild(card);
+                fragment.appendChild(new PinCard(pin).render());
             }
 
             grid.appendChild(fragment);
@@ -71,11 +61,8 @@ export class HomePage {
 
                 nextCursor = data.next_cursor ?? null;
                 hasMore = nextCursor !== null;
-            } catch (err) {
-                console.error(
-                    'Не удалось загрузить пины с бэкенда:',
-                    err,
-                );
+            } catch {
+                hasMore = false;
             } finally {
                 isLoading = false;
             }
