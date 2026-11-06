@@ -2,6 +2,7 @@ import { Input } from '../../components/Input/Input.js';
 import { Button } from '../../components/Button/Button.js';
 import { loginUser } from '../../api/user.js';
 import { navigateTo } from '../../app.js';
+import template from './LoginPage.hbs';
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
 const validatePassword = (val) => val.length >= 8 ? '' : 'Пароль минимум 8 символов';
@@ -32,7 +33,6 @@ export class LoginPage {
      * @returns {HTMLElement} Корневой DOM-элемент страницы авторизации.
      */
     render() {
-        const template = Handlebars.templates['LoginPage.hbs'];
         const html = template({});
 
         const wrapper = document.createElement('div');
@@ -41,6 +41,7 @@ export class LoginPage {
 
         const formContainer = wrapper.querySelector('.form-container');
         formContainer.append(this.loginInput.render());
+        this.loginInput.element.classList.add('password-gap');
         formContainer.append(this.passInput.render());
 
         const buttonsContainer = wrapper.querySelector('.buttons-container');
@@ -101,7 +102,7 @@ export class LoginPage {
             navigateTo('/home');
         } catch (error) {
             if (errorContainer) {
-                errorContainer.textContent = error.message;
+                errorContainer.textContent = 'Неверный логин или пароль';
             }
         } finally {
             this.loginBtn.setDisabled(false);

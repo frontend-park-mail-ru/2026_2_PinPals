@@ -1,5 +1,3 @@
-Handlebars.registerHelper('isPassword', (type) => type === 'password');
-
 import { SignUpPage } from './pages/SignUpPage/SignUpPage.js';
 import { LoginPage } from './pages/LoginPage/LoginPage.js';
 import { HomePage } from './pages/HomePage/HomePage.js';

@@ -1,30 +1,27 @@
-const express = require('express');
-const path = require('path');
-const { createProxyMiddleware } = require('http-proxy-middleware'); // Добавить
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname)));
-
-// НАСТРОЙКА ПРОКСИ: все запросы к /api уйдут на бэкенд Go
+// Настройка прокси
 app.use('/api', createProxyMiddleware({
     target: 'http://161.104.105.76:8000',
-    changeOrigin: true,
-    // Принудительно возвращаем /api в начало пути перед отправкой на Go-бэкенд
-    pathRewrite: {
-        '^/api': '/api'
-    }
+    changeOrigin: true
 }));
 
-// Главная страница фронтенда
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/index.html'));
-});
+// Статика из production-сборки Vite
+app.use(express.static(path.join(__dirname, 'dist')));
 
+// Главная страница фронтенда
 app.get('*any', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/index.html'));
-});
+    res.sendFile(path.join(__dirname, 'dist/index.html'));});
 
 app.listen(PORT, () => {
     console.log(`Сервер запущен на порте ${PORT}`);

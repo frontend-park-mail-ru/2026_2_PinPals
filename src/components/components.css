@@ -4,6 +4,10 @@
     display: none;
 }
 
+.password-gap {
+    margin-bottom: 16px;   /* отступ только там, где нужно */
+}
+
 .input-wrapper input {
     width: 100%;
     background-color: var(--color-input);
@@ -33,6 +37,10 @@
     background-color: var(--color-input-focus);
 }
 
+.input-wrapper--error input {
+    border: 1px solid var(--color-error);
+}
+
 /* Иконка глазика внутри поля */
 .eye-icon-img {
     position: absolute;
@@ -49,12 +57,12 @@
 /* Стили для подсказок под полями */
 .field-hint {
     font-family: var(--font-main), sans-serif;
-    font-size: 14px;        /* Сделать поменьше, чтобы не спорила с инпутом */
-    font-weight: 300;       /* Сделать чуть тоньше */
+    font-size: 14px;
+    font-weight: 300;
     color: var(--color-accent);
     text-align: left;
     text-decoration: none;
-    margin-bottom: 4px;     /* Добавить небольшой отступ снизу */
+    margin-bottom: 4px;
     padding-left: 20px;
 }
 
@@ -63,10 +71,10 @@
     display: block;
     color: var(--color-error);
     font-size: 14px;
-    margin-top: 0;
-    margin-bottom: 0;
+    margin-top: 2px;
     padding-left: 20px;
-    min-height: 14px;
+    min-height: 0;
+    line-height: 1;
 }
 
 

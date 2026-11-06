@@ -231,6 +231,8 @@
     width: 100%;
     margin-bottom: 16px;
     break-inside: avoid;
+    border: none;
+    border-radius: 20px;
     overflow: hidden;
     background-color: var(--color-back);
 }
@@ -325,20 +327,22 @@
 .sidebar-toggle {
     position: fixed;
     top: 50%;
-    left: 23px; /* (90 - 44) / 2 */
+    left: 90px;
     transform: translateY(-50%);
-    width: 44px;
-    height: 44px;
+    width: 50px;
+    height: 60px;
     border: 1px solid var(--color-search);
-    border-radius: 50%;
-    background-color: var(--color-back);
+    border-left: none;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    background-color: var(--overlay-menu);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(102, 81, 64, 0.1);
     padding: 0;
-    z-index: 95;
+    z-index: 105;
+    box-shadow: 4px 0 8px rgba(102, 81, 64, 0.1); /* Добавляем тень вправо */
     transition: left 0.3s ease, background-color 0.2s ease;
 }
 
@@ -347,13 +351,20 @@
 }
 
 .sidebar-toggle img {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
+    transition: transform 0.3s ease;
 }
 
+
 .home-page.sidebar-collapsed .sidebar-toggle {
-    left: 8px;
+    left: 0;
+}
+
+/* Поворачиваем стрелочку/иконку при закрытии */
+.home-page.sidebar-collapsed .sidebar-toggle img {
+    transform: rotate(180deg);
 }
 
 /* ========================================= */
