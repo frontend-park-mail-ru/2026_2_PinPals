@@ -8,7 +8,7 @@ const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обя�
 
 const validatePassword = (val) => {
     if (val.length < 8) return 'Пароль минимум 8 символов';
-    if (!/[a-zA-Zа-яА-Я]/.test(val)) return 'Пароль должен содержать буквы';
+    if (!/(?=.*[a-zA-Zа-яА-Я])(?=.*\d)/.test(val)) return 'Пароль должен содержать буквы и цифры';
     return '';
 };
 
