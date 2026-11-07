@@ -58,7 +58,7 @@ export class PinPage {
         try {
             const res = await fetchPins(36);
             const allPins = res.pins || [];
-            const otherPins = allPins.filter((p) => String(p.pin_id ?? p.id) !== this.pinId);
+            const otherPins = allPins.filter((p) => String(p.pin_id) !== this.pinId);
             this.renderRecommendations(otherPins);
         } catch (e) {
             console.warn('Не удалось загрузить рекомендации', e);
