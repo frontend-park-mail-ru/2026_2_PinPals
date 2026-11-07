@@ -98,6 +98,9 @@ export class LoginPage {
             localStorage.setItem('isAuth', 'true');
             localStorage.setItem('token', result.token);
             localStorage.setItem('userName', result.user.name);
+            localStorage.setItem('userId', String(result.user.user_id));
+            localStorage.setItem('userTag', result.user.user_tag || '');
+            localStorage.setItem('userAvatarUrl', result.user.avatar_url || '');
 
             navigateTo('/home');
         } catch (error) {

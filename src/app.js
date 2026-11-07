@@ -1,26 +1,35 @@
 import { SignUpPage } from './pages/SignUpPage/SignUpPage.js';
 import { LoginPage } from './pages/LoginPage/LoginPage.js';
 import { HomePage } from './pages/HomePage/HomePage.js';
+import { PinPage } from './pages/PinPage/PinPage.js';
 
 const root = document.getElementById('root');
 
 /**
- * Выполняет SPA-маршрутизацию и рендерит экраны.
+ * Выполняет SPA-маршрутизацию и рендерит нужный экран.
  */
 function renderPage() {
+    if (!root) {
+        return;
+    }
 
     root.innerHTML = '';
     const path = window.location.pathname;
 
-    const homePage = new HomePage();
-    root.append(homePage.render());
+    const pinRoute = path.match(/^\/pin\/(\d+)\/?$/);
+
+    if (pinRoute) {
+        root.append(new PinPage(pinRoute[1]).render());
+        return;
+    }
+
+    // Авторизация и регистрация остаются модальными окнами поверх главной.
+    root.append(new HomePage().render());
 
     if (path === '/signup') {
-        const signUpPage = new SignUpPage();
-        root.append(signUpPage.render());
+        root.append(new SignUpPage().render());
     } else if (path === '/login') {
-        const loginPage = new LoginPage();
-        root.append(loginPage.render());
+        root.append(new LoginPage().render());
     }
 }
 
@@ -30,17 +39,32 @@ function renderPage() {
  * @param {string} url - Ссылка перехода.
  */
 export function navigateTo(url) {
+    if (window.location.pathname === url) {
+        return;
+    }
+
     window.history.pushState(null, null, url);
+    window.scrollTo(0, 0);
     renderPage();
 }
 
-window.addEventListener('click', (e) => {
-    const targetLink = e.target.closest('a');
+window.addEventListener('click', (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+    }
 
-    // Проверяем, локальная ли это ссылка (начинается с /)
-    if (targetLink && targetLink.href && targetLink.getAttribute('href').startsWith('/')) {
-        e.preventDefault(); // Запрещаем браузеру перезагружать страницу
-        navigateTo(targetLink.getAttribute('href'));
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const targetLink = target?.closest('a');
+    const href = targetLink?.getAttribute('href');
+
+    if (
+        targetLink &&
+        href &&
+        href.startsWith('/') &&
+        targetLink.target !== '_blank'
+    ) {
+        event.preventDefault();
+        navigateTo(href);
     }
 });
 

@@ -103,6 +103,9 @@ export class HomePage {
                 localStorage.removeItem('isAuth');
                 localStorage.removeItem('token');
                 localStorage.removeItem('userName');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userTag');
+                localStorage.removeItem('userAvatarUrl');
 
                 navigateTo('/');
             });
