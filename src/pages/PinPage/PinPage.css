@@ -22,12 +22,12 @@
     color: var(--color-accent);
 }
 
-.pin-layout[hidden],
-.pin-loading[hidden],
-.pin-error[hidden],
-.pin-title[hidden],
-.pin-description[hidden] {
-    display: none !important;
+.pin-page .pin-layout[hidden],
+.pin-page .pin-loading[hidden],
+.pin-page .pin-error[hidden],
+.pin-page .pin-title[hidden],
+.pin-page .pin-description[hidden] {
+    display: none;
 }
 
 .pin-layout {

@@ -1,6 +1,5 @@
 import template from './Header.hbs';
 import { SearchBar } from '../SearchBar/SearchBar.js';
-import { navigateTo } from '../../app.js';
 
 /**
  * Шапка сайта: логотип, слот по центру, меню пользователя.
@@ -10,9 +9,11 @@ export class Header {
      * @param {Object} [options]
      * @param {HTMLElement} [options.center] - что положить в центральный слот;
      *     по умолчанию — SearchBar с глобальным placeholder.
+     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
      */
-    constructor({ center } = {}) {
+    constructor({ center, router } = {}) {
         this.center = center;
+        this.router = router;
         this.searchBar = null;
         /** @type {HTMLElement|null} */
         this.element = null;
@@ -53,7 +54,7 @@ export class Header {
             localStorage.removeItem('userTag');
             localStorage.removeItem('userAvatarUrl');
 
-            navigateTo('/');
+            this.router.navigateTo('/');
         });
     }
 

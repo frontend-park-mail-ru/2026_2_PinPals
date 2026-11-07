@@ -4,10 +4,18 @@ import { Header } from '../../components/Header/Header.js';
 import template from './PinPage.hbs';
 
 export class PinPage {
-    constructor(pinId) {
+    /**
+     * @param {string|number} pinId
+     * @param {Object} [options]
+     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
+     */
+    constructor(pinId, { router } = {}) {
         this.pinId = String(pinId);
+        this.router = router;
         this.pin = null;
         this.element = null;
+        /** @type {number|null} */
+        this.loadingTimer = null;
     }
 
     render() {
@@ -15,7 +23,7 @@ export class PinPage {
         wrapper.innerHTML = template({});
         this.element = wrapper.firstElementChild;
 
-        this.element.prepend(new Header().render());
+        this.element.prepend(new Header({ router: this.router }).render());
 
         this.setupEvents();
         this.loadData();
@@ -24,27 +32,40 @@ export class PinPage {
     }
 
     async loadData() {
+        // Показываем лоадер, только если запрос реально «завис» (>600 мс),
+        // иначе быстрый ответ вообще не вызовет мигания.
+        this.loadingTimer = setTimeout(() => {
+            this.element?.querySelector('#pinLoading')?.removeAttribute('hidden');
+        }, 600);
+
         try {
             this.pin = await fetchPinById(this.pinId);
 
-            let allPins = [];
-            try {
-                const res = await fetchPins(36);
-                allPins = res.pins || [];
-            } catch (e) {
-                console.warn('Не удалось загрузить рекомендации', e);
-            }
-
-            const otherPins = allPins.filter((p) => String(p.pin_id ?? p.id) !== this.pinId);
-            this.renderPin(otherPins);
+            // Сначала показываем сам пин — рекомендации догрузим отдельно.
+            this.renderPin();
+            void this.loadRecommendations();
         } catch (err) {
             this.element.querySelector('#pinLoading').hidden = true;
             this.element.querySelector('#pinError').hidden = false;
             this.element.querySelector('#pinErrorMessage').textContent = err.message || 'Ошибка загрузки';
+        } finally {
+            clearTimeout(this.loadingTimer);
+            this.loadingTimer = null;
         }
     }
 
-    renderPin(otherPins) {
+    async loadRecommendations() {
+        try {
+            const res = await fetchPins(36);
+            const allPins = res.pins || [];
+            const otherPins = allPins.filter((p) => String(p.pin_id ?? p.id) !== this.pinId);
+            this.renderRecommendations(otherPins);
+        } catch (e) {
+            console.warn('Не удалось загрузить рекомендации', e);
+        }
+    }
+
+    renderPin() {
         const img = this.element.querySelector('#pinMainImage');
         img.src = this.pin.image_url;
         img.alt = this.pin.name || 'Пин';
@@ -83,7 +104,12 @@ export class PinPage {
         this.element.querySelector('#pinLoading').hidden = true;
         this.element.querySelector('#pinLayout').hidden = false;
 
-        // Отрисовываем похожие пины
+        this.updateLike();
+        this.updateSave();
+        this.renderComments();
+    }
+
+    renderRecommendations(otherPins) {
         const sideBox = this.element.querySelector('#pinSideRecommendations');
         sideBox.innerHTML = '';
         otherPins.slice(0, 10).forEach((p) => {
@@ -95,10 +121,6 @@ export class PinPage {
         otherPins.slice(10).forEach((p) => {
             bottomBox.append(new PinCard(p).render());
         });
-
-        this.updateLike();
-        this.updateSave();
-        this.renderComments();
     }
 
     setupEvents() {
@@ -147,7 +169,6 @@ export class PinPage {
                 // Игнорируем ошибку, если браузер заблокировал буфер обмена
             }
         });
-
 
         // Комментарии
         this.element.querySelector('#pinCommentForm').addEventListener('submit', (e) => {

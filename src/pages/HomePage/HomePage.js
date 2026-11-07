@@ -5,15 +5,15 @@ import template from './HomePage.hbs';
 
 const PAGE_SIZE = 30;
 
-/**
- * Класс, управляющий отображением главной страницы и бесконечной ленты.
- */
 export class HomePage {
     /**
-     * Рендерит разметку главной страницы и загружает пины с бэкенда.
-     *
-     * @returns {HTMLElement} Корневой элемент страницы.
+     * @param {Object} [options]
+     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
      */
+    constructor({ router } = {}) {
+        this.router = router;
+    }
+
     render() {
         const html = template({ pins: [] });
         const wrapper = document.createElement('div');
@@ -21,7 +21,7 @@ export class HomePage {
 
         const homePage = wrapper.querySelector('.home-page');
         if (homePage) {
-            homePage.prepend(new Header().render());
+            homePage.prepend(new Header({ router: this.router }).render());
         }
 
         const grid = wrapper.querySelector('.pins-grid');

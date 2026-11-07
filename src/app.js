@@ -1,12 +1,49 @@
-import { SignUpPage } from './pages/SignUpPage/SignUpPage.js';
-import { LoginPage } from './pages/LoginPage/LoginPage.js';
-import { HomePage } from './pages/HomePage/HomePage.js';
-import { PinPage } from './pages/PinPage/PinPage.js';
+import { routes } from './routes.js';
 
 const root = document.getElementById('root');
 
 /**
- * Выполняет SPA-маршрутизацию и рендерит нужный экран.
+ * Роутер приложения. Передаётся страницам через конструктор,
+ * чтобы они могли инициировать переходы без импорта из app.js
+ * (это разрывает циклическую зависимость app - pages).
+ */
+const router = {
+    /**
+     * @param {string} url
+     */
+    navigateTo(url) {
+        if (window.location.pathname === url) {
+            return;
+        }
+
+        window.history.pushState(null, null, url);
+        window.scrollTo(0, 0);
+        renderPage();
+    },
+};
+
+/**
+ * Находит первый маршрут, чья регулярка совпала с текущим путём.
+ *
+ * @param {string} path
+ * @returns {{ route: import('./routes.js').AppRoute, match: RegExpExecArray } | null}
+ */
+function findRoute(path) {
+    for (const route of routes) {
+        // Сбрасываем lastIndex, чтобы регулярки с флагом g не «залипали»
+        route.pattern.lastIndex = 0;
+
+        const match = route.pattern.exec(path);
+        if (match) {
+            return { route, match };
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Выполняет SPA-маршрутизацию и рендерит нужные экраны.
  */
 function renderPage() {
     if (!root) {
@@ -14,38 +51,18 @@ function renderPage() {
     }
 
     root.innerHTML = '';
-    const path = window.location.pathname;
 
-    const pinRoute = path.match(/^\/pin\/(\d+)\/?$/);
-
-    if (pinRoute) {
-        root.append(new PinPage(pinRoute[1]).render());
+    const found = findRoute(window.location.pathname);
+    if (!found) {
         return;
     }
 
-    // Авторизация и регистрация остаются модальными окнами поверх главной.
-    root.append(new HomePage().render());
-
-    if (path === '/signup') {
-        root.append(new SignUpPage().render());
-    } else if (path === '/login') {
-        root.append(new LoginPage().render());
+    // pages возвращает массив: первый компонент - основная страница,
+    // остальные рендерятся поверх (модальные окна).
+    const pages = found.route.pages(found.match, { router });
+    for (const page of pages) {
+        root.append(page.render());
     }
-}
-
-/**
- * Переход между страницами без перезагрузки.
- *
- * @param {string} url - Ссылка перехода.
- */
-export function navigateTo(url) {
-    if (window.location.pathname === url) {
-        return;
-    }
-
-    window.history.pushState(null, null, url);
-    window.scrollTo(0, 0);
-    renderPage();
 }
 
 window.addEventListener('click', (event) => {
@@ -64,7 +81,7 @@ window.addEventListener('click', (event) => {
         targetLink.target !== '_blank'
     ) {
         event.preventDefault();
-        navigateTo(href);
+        router.navigateTo(href);
     }
 });
 

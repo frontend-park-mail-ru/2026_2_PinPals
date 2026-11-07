@@ -1,7 +1,6 @@
 import { Input } from '../../components/Input/Input.js';
 import { Button } from '../../components/Button/Button.js';
 import { loginUser } from '../../api/user.js';
-import { navigateTo } from '../../app.js';
 import template from './LoginPage.hbs';
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
@@ -12,9 +11,12 @@ const validatePassword = (val) => val.length >= 8 ? '' : 'Пароль мини�
  */
 export class LoginPage {
     /**
-     * Создает экземпляр страницы LoginPage и инициализирует дочерние компоненты ввода и кнопок.
+     * @param {Object} [options]
+     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
      */
-    constructor() {
+    constructor({ router } = {}) {
+        this.router = router;
+
         this.loginInput = new Input({
             label: '', type: 'text', name: 'username',
             placeholder: 'Логин', validator: validateRequired
@@ -50,11 +52,11 @@ export class LoginPage {
 
         // Крестик — закрыть модалку
         wrapper.querySelector('.close-btn').addEventListener('click', () => {
-            navigateTo('/home');
+            this.router.navigateTo('/home');
         });
 
         this.loginBtn.element.addEventListener('click', (e) => this.handleSubmit(e));
-        this.registerBtn.element.addEventListener('click', () => navigateTo('/signup'));
+        this.registerBtn.element.addEventListener('click', () => this.router.navigateTo('/signup'));
 
         // Забыли пароль
         const forgotLink = wrapper.querySelector('.forgot-link');
@@ -102,7 +104,7 @@ export class LoginPage {
             localStorage.setItem('userTag', result.user.user_tag || '');
             localStorage.setItem('userAvatarUrl', result.user.avatar_url || '');
 
-            navigateTo('/home');
+            this.router.navigateTo('/home');
         } catch (error) {
             if (errorContainer) {
                 errorContainer.textContent = 'Неверный логин или пароль';
