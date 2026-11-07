@@ -1,6 +1,6 @@
-import { navigateTo } from '../../app.js';
 import { fetchPins } from '../../api/user.js';
 import { PinCard } from '../../components/PinCard/PinCard.js';
+import { Header } from '../../components/Header/Header.js';
 import template from './HomePage.hbs';
 
 const PAGE_SIZE = 30;
@@ -15,17 +15,14 @@ export class HomePage {
      * @returns {HTMLElement} Корневой элемент страницы.
      */
     render() {
-        const isAuth = localStorage.getItem('isAuth') === 'true';
-        const userName = localStorage.getItem('userName') || 'Пользователь';
-
-        const html = template({
-            isAuth,
-            pins: [],
-            userName,
-        });
-
+        const html = template({ pins: [] });
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
+
+        const homePage = wrapper.querySelector('.home-page');
+        if (homePage) {
+            homePage.prepend(new Header().render());
+        }
 
         const grid = wrapper.querySelector('.pins-grid');
 
@@ -94,21 +91,6 @@ export class HomePage {
             );
 
             observer.observe(sentinel);
-        }
-
-        const logoutBtn = wrapper.querySelector('#logoutBtn');
-
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('isAuth');
-                localStorage.removeItem('token');
-                localStorage.removeItem('userName');
-                localStorage.removeItem('userId');
-                localStorage.removeItem('userTag');
-                localStorage.removeItem('userAvatarUrl');
-
-                navigateTo('/');
-            });
         }
 
         const root = wrapper.querySelector('.home-page');

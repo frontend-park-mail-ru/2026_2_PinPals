@@ -1,6 +1,6 @@
 import { fetchPinById, fetchPins } from '../../api/user.js';
 import { PinCard } from '../../components/PinCard/PinCard.js';
-import { navigateTo } from '../../app.js';
+import { Header } from '../../components/Header/Header.js';
 import template from './PinPage.hbs';
 
 export class PinPage {
@@ -12,11 +12,10 @@ export class PinPage {
 
     render() {
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = template({
-            isAuth: localStorage.getItem('isAuth') === 'true',
-            userName: localStorage.getItem('userName') || 'Пользователь',
-        });
+        wrapper.innerHTML = template({});
         this.element = wrapper.firstElementChild;
+
+        this.element.prepend(new Header().render());
 
         this.setupEvents();
         this.loadData();
@@ -168,15 +167,6 @@ export class PinPage {
             input.value = '';
             this.renderComments();
         });
-
-        // Выход
-        const logoutBtn = this.element.querySelector('#logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                localStorage.clear();
-                navigateTo('/');
-            });
-        }
     }
 
     updateLike() {
