@@ -20,15 +20,45 @@ export class Header {
     }
 
     render() {
+        this.element = this.buildElement();
+        this.setupEvents();
+        return this.element;
+    }
+
+    /**
+     * Перерисовывает содержимое шапки, не пересоздавая экземпляр.
+     * Нужно после логина/логаута: состояние берётся из localStorage.
+     */
+    refresh() {
+        if (!this.element || !this.element.parentNode) {
+            return;
+        }
+
+        // Снимаем SearchBar, чтобы не оставить висеть его таймер дебаунса.
+        this.searchBar?.destroy();
+        this.searchBar = null;
+
+        const nextElement = this.buildElement();
+        this.element.replaceWith(nextElement);
+        this.element = nextElement;
+        this.setupEvents();
+    }
+
+    /**
+     * Собирает DOM шапки по актуальному состоянию localStorage.
+     *
+     * @returns {HTMLElement}
+     */
+    buildElement() {
         const isAuth = localStorage.getItem('isAuth') === 'true';
         const userName = localStorage.getItem('userName') || 'Пользователь';
         const userAvatarUrl = isAuth ? (localStorage.getItem('userAvatarUrl') || '') : '';
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({ isAuth, userName, userAvatarUrl });
-        this.element = wrapper.firstElementChild;
+        const element = wrapper.firstElementChild;
 
-        const centerSlot = this.element.querySelector('.header-center');
+        const centerSlot = element.querySelector('.header-center');
         if (this.center) {
             centerSlot.append(this.center);
         } else {
@@ -36,8 +66,7 @@ export class Header {
             centerSlot.append(this.searchBar.render());
         }
 
-        this.setupEvents();
-        return this.element;
+        return element;
     }
 
     setupEvents() {
@@ -53,6 +82,10 @@ export class Header {
             localStorage.removeItem('userId');
             localStorage.removeItem('userTag');
             localStorage.removeItem('userAvatarUrl');
+
+            // Сначала обновляем сам хедер (он уже в стеке и не пересоздастся),
+            // а уже потом уходим на главную.
+            this.refresh();
 
             this.router.navigateTo('/');
         });

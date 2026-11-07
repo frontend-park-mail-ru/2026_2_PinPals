@@ -7,19 +7,28 @@ import { PinPage } from './pages/PinPage/PinPage.js';
 export const routes = [
     {
         pattern: /^\/pin\/(\d+)\/?$/,
-        pages: (match, { router }) => [new PinPage(match[1], { router })],
+        pages: (match, { router }) => [
+            { key: `pin:${match[1]}`, instance: new PinPage(match[1], { router }) },
+        ],
     },
     {
         pattern: /^\/signup\/?$/,
-        pages: (match, { router }) => [new HomePage({ router }), new SignUpPage({ router })],
+        pages: (match, { router }) => [
+            { key: 'home', instance: new HomePage({ router }) },
+            { key: 'signup', instance: new SignUpPage({ router }) },
+        ],
     },
     {
         pattern: /^\/login\/?$/,
-        pages: (match, { router }) => [new HomePage({ router }), new LoginPage({ router })],
+        pages: (match, { router }) => [
+            { key: 'home', instance: new HomePage({ router }) },
+            { key: 'login', instance: new LoginPage({ router }) },
+        ],
     },
     {
-        // Фолбэк — главная страница для любого нераспознанного пути.
         pattern: /.*/,
-        pages: (match, { router }) => [new HomePage({ router })],
+        pages: (match, { router }) => [
+            { key: 'home', instance: new HomePage({ router }) },
+        ],
     },
 ];

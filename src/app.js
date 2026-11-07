@@ -3,6 +3,14 @@ import { routes } from './routes.js';
 const root = document.getElementById('root');
 
 /**
+ * Текущий стек отрендеренных страниц.
+
+ *
+ * @type {Array<{ key: string, instance: { destroy?: () => void }, element: HTMLElement }>}
+ */
+let currentStack = [];
+
+/**
  * Роутер приложения. Передаётся страницам через конструктор,
  * чтобы они могли инициировать переходы без импорта из app.js
  * (это разрывает циклическую зависимость app - pages).
@@ -20,11 +28,15 @@ const router = {
         window.scrollTo(0, 0);
         renderPage();
     },
+
+    refreshHeader() {
+        for (const layer of currentStack) {
+            layer.instance.refreshHeader?.();
+        }
+    },
 };
 
 /**
- * Находит первый маршрут, чья регулярка совпала с текущим путём.
- *
  * @param {string} path
  * @returns {{ route: import('./routes.js').AppRoute, match: RegExpExecArray } | null}
  */
@@ -43,25 +55,60 @@ function findRoute(path) {
 }
 
 /**
- * Выполняет SPA-маршрутизацию и рендерит нужные экраны.
+ * Уничтожает слои старого стека начиная с индекса `from`.
+ *
+ * @param {number} from
+ */
+function destroyFrom(from) {
+    for (let i = currentStack.length - 1; i >= from; i -= 1) {
+        const layer = currentStack[i];
+        try {
+            layer.instance.destroy?.();
+        } catch (e) {
+            console.warn('destroy() страницы упал', e);
+        }
+        layer.element.remove();
+    }
+    currentStack.length = from;
+}
+
+/**
+ * Рендерит нужный стек страниц. Слои, чей ключ совпал с текущим стеком,
+ * переиспользуются без пересоздания - это убирает мигание при переходах
+ * между модалками (например, /signup -> /login: HomePage остаётся).
  */
 function renderPage() {
     if (!root) {
         return;
     }
 
-    root.innerHTML = '';
-
     const found = findRoute(window.location.pathname);
     if (!found) {
+        destroyFrom(0);
         return;
     }
 
-    // pages возвращает массив: первый компонент - основная страница,
-    // остальные рендерятся поверх (модальные окна).
-    const pages = found.route.pages(found.match, { router });
-    for (const page of pages) {
-        root.append(page.render());
+    const nextPages = found.route.pages(found.match, { router });
+
+    // Ищем первое расхождение ключей.
+    let i = 0;
+    while (
+        i < currentStack.length &&
+        i < nextPages.length &&
+        currentStack[i].key === nextPages[i].key
+        ) {
+        i += 1;
+    }
+
+    // Всё, что было дальше по стеку, снимаем.
+    destroyFrom(i);
+
+    // Остаток нового стека рендерим и пушим.
+    for (let j = i; j < nextPages.length; j += 1) {
+        const { key, instance } = nextPages[j];
+        const element = instance.render();
+        root.append(element);
+        currentStack.push({ key, instance, element });
     }
 }
 

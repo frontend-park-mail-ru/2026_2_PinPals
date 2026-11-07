@@ -104,6 +104,7 @@ export class LoginPage {
             localStorage.setItem('userTag', result.user.user_tag || '');
             localStorage.setItem('userAvatarUrl', result.user.avatar_url || '');
 
+            this.router.refreshHeader();
             this.router.navigateTo('/home');
         } catch (error) {
             if (errorContainer) {

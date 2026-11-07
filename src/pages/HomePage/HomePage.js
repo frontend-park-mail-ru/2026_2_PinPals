@@ -12,6 +12,10 @@ export class HomePage {
      */
     constructor({ router } = {}) {
         this.router = router;
+        /** @type {import('../../components/Header/Header.js').Header|null} */
+        this.header = null;
+        /** @type {IntersectionObserver|null} */
+        this.observer = null;
     }
 
     render() {
@@ -21,7 +25,8 @@ export class HomePage {
 
         const homePage = wrapper.querySelector('.home-page');
         if (homePage) {
-            homePage.prepend(new Header({ router: this.router }).render());
+            this.header = new Header({ router: this.router });
+            homePage.prepend(this.header.render());
         }
 
         const grid = wrapper.querySelector('.pins-grid');
@@ -74,10 +79,10 @@ export class HomePage {
 
             grid.after(sentinel);
 
-            const observer = new IntersectionObserver(
+            this.observer = new IntersectionObserver(
                 (entries) => {
                     if (!sentinel.isConnected) {
-                        observer.disconnect();
+                        this.observer?.disconnect();
                         return;
                     }
 
@@ -90,15 +95,14 @@ export class HomePage {
                 },
             );
 
-            observer.observe(sentinel);
+            this.observer.observe(sentinel);
         }
 
-        const root = wrapper.querySelector('.home-page');
         const toggle = wrapper.querySelector('#sidebarToggle');
 
-        if (toggle && root) {
+        if (toggle && homePage) {
             toggle.addEventListener('click', () => {
-                root.classList.toggle('sidebar-collapsed');
+                homePage.classList.toggle('sidebar-collapsed');
             });
         }
 
@@ -109,5 +113,21 @@ export class HomePage {
         });
 
         return wrapper;
+    }
+
+    /**
+     * Перерисовывает встроенный Header по актуальному состоянию localStorage.
+     * Вызывается роутером из `router.refreshHeader()` после логина.
+     */
+    refreshHeader() {
+        this.header?.refresh();
+    }
+
+    destroy() {
+        this.header?.destroy();
+        this.header = null;
+
+        this.observer?.disconnect();
+        this.observer = null;
     }
 }

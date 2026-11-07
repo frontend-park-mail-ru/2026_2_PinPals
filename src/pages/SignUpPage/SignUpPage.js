@@ -256,6 +256,7 @@ export class SignUpPage {
             localStorage.setItem('userTag', loginResult.user.user_tag || '');
             localStorage.setItem('userAvatarUrl', loginResult.user.avatar_url || '');
 
+            this.router.refreshHeader();
             this.router.navigateTo('/home');
         } catch (error) {
             // Выводим ошибку бэкенда текстом прямо в интерфейс формы
