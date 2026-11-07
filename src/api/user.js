@@ -126,3 +126,46 @@ export async function fetchPins(limit = 30, cursor = null) {
 
     return payload;
 }
+/**
+ * Получение одного пина по его ID.
+ * Ожидает от Go: GET /api/v1/pins/{pinID}.
+ *
+ * @async
+ * @param {number|string} pinId - ID пина из поля pin_id.
+ * @returns {Promise<Object>} Данные пина.
+ */
+export async function fetchPinById(pinId) {
+    const normalizedId = Number(pinId);
+
+    if (!Number.isInteger(normalizedId) || normalizedId < 1) {
+        throw new Error('Некорректный ID пина');
+    }
+
+    const response = await fetch(
+        `${BASE_URL}/api/v1/pins/${encodeURIComponent(normalizedId)}`,
+        {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+        },
+    );
+
+    let payload = null;
+
+    try {
+        payload = await response.json();
+    } catch {
+        throw new Error(`Сервер вернул невалидный JSON: HTTP ${response.status}`);
+    }
+
+    if (!response.ok) {
+        throw new Error(payload?.error || `HTTP ${response.status}`);
+    }
+
+    if (!payload || Number(payload.pin_id) !== normalizedId || !payload.image_url) {
+        throw new Error('Некорректный формат ответа /api/v1/pins/{pinID}');
+    }
+
+    return payload;
+}

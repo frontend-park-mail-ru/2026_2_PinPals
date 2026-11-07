@@ -250,6 +250,9 @@ export class SignUpPage {
             localStorage.setItem('isAuth', 'true');
             localStorage.setItem('token', loginResult.token);
             localStorage.setItem('userName', loginResult.user.name);
+            localStorage.setItem('userId', String(loginResult.user.user_id));
+            localStorage.setItem('userTag', loginResult.user.user_tag || '');
+            localStorage.setItem('userAvatarUrl', loginResult.user.avatar_url || '');
 
             navigateTo('/home');
         } catch (error) {
