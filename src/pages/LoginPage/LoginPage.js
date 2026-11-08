@@ -96,9 +96,7 @@ export class LoginPage {
                 this.passInput.getValue()
             );
 
-            // Сохраняем сессию и JWT-токен, пришедшие с бэкенда
             localStorage.setItem('isAuth', 'true');
-            localStorage.setItem('token', result.token);
             localStorage.setItem('userName', result.user.name);
             localStorage.setItem('userId', String(result.user.user_id));
             localStorage.setItem('userTag', result.user.user_tag || '');

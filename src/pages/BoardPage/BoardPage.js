@@ -1,4 +1,12 @@
-import { deleteBoard, fetchBoardById, fetchUserSavedPins, addPinsToBoard } from '../../api/user.js';
+import { resolveImageUrl } from '../../api/user.js';
+import {
+    deleteBoard,
+    fetchBoardById,
+    fetchUserSavedPins,
+    addPinsToBoard,
+    updateBoard,
+    removePinFromBoard,
+} from '../../api/user.js';
 import { Header } from '../../components/Header/Header.js';
 import { PinCard } from '../../components/PinCard/PinCard.js';
 import template from './BoardPage.hbs';
@@ -15,13 +23,13 @@ function getPinsLabel(count) {
     return `${value} ${word}`;
 }
 
-function getVisibilityLabel(visibility) {
+function getVisibilityLabel(entryStatus) {
     const labels = {
-        public: 'Публичный для всех',
-        friends: 'Публичный для друзей',
-        private: 'Приватный',
+        0: 'Публичный для всех',
+        1: 'Для подписчиков',
+        2: 'Приватный',
     };
-    return labels[visibility] || labels.public;
+    return labels[entryStatus] ?? labels[0];
 }
 
 export class BoardPage {
@@ -32,10 +40,11 @@ export class BoardPage {
         this.element = null;
         this.header = null;
         this.isDestroyed = false;
+        this.isOwner = false;
 
-        // Переменные для добавления пинов
         this.savedPins = [];
         this.selectedPinIds = new Set();
+        this.notice = new URLSearchParams(window.location.search).get('notice');
     }
 
     render() {
@@ -55,20 +64,24 @@ export class BoardPage {
             const result = await fetchBoardById(this.boardId);
             if (this.isDestroyed || !this.element?.isConnected) return;
 
-            this.board = result.board;
+            this.board = result;
             const currentUserId = localStorage.getItem('userId');
-            const isOwner = String(this.board.owner_id) === String(currentUserId);
+            this.isOwner = String(this.board.creator_id) === String(currentUserId);
 
-            this.element.querySelector('#boardTitle').textContent = this.board.title || 'Без названия';
-            this.element.querySelector('#boardVisibility').textContent = getVisibilityLabel(this.board.visibility);
-            this.element.querySelector('#boardPinsCount').textContent = getPinsLabel(result.pins?.length ?? this.board.pins_count);
+            this.element.querySelector('#boardTitle').textContent = this.board.name || 'Без названия';
+            this.element.querySelector('#boardVisibility').textContent = getVisibilityLabel(this.board.entry_status);
+            this.element.querySelector('#boardPinsCount').textContent = getPinsLabel(result.pins?.length || 0);
             this.element.querySelector('#boardDescription').textContent = this.board.description || '';
 
-            // Показывать действия управления только владельцу
-            this.element.querySelector('#boardDelete').hidden = !isOwner;
-            this.element.querySelector('#boardAddPins').hidden = !isOwner;
+            this.element.querySelector('#boardDelete').hidden = !this.isOwner;
+            this.element.querySelector('#boardAddPins').hidden = !this.isOwner;
+            this.element.querySelector('#boardEdit').hidden = !this.isOwner;
 
             this.renderPins(result.pins || []);
+            if (this.notice === 'pins') {
+                this.showMessage('Доска создана, но не все выбранные пины удалось добавить. Их можно добавить через кнопку «Добавить пины».');
+                this.notice = null;
+            }
         } catch (error) {
             if (this.isDestroyed || !this.element?.isConnected) return;
             this.showMessage(error.message || 'Не удалось загрузить доску.');
@@ -80,7 +93,20 @@ export class BoardPage {
         grid.replaceChildren();
 
         const fragment = document.createDocumentFragment();
-        pins.forEach((pin) => fragment.append(new PinCard(pin).render()));
+        pins.forEach((pin) => {
+            const card = new PinCard(pin).render();
+            // Кнопка удаления пина с доски — только для владельца
+            if (this.isOwner) {
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'board-pin-remove';
+                removeBtn.dataset.pinId = String(pin.pin_id);
+                removeBtn.setAttribute('aria-label', 'Убрать пин с доски');
+                removeBtn.textContent = '×';
+                card.append(removeBtn);
+            }
+            fragment.append(card);
+        });
         grid.append(fragment);
 
         this.showMessage(pins.length ? '' : 'В этой доске пока нет пинов.');
@@ -94,12 +120,19 @@ export class BoardPage {
     }
 
     setupEvents() {
-        // Переход на создание нового пина
         this.element.querySelector('#boardCreatePin').addEventListener('click', () => {
             this.router.navigateTo(`/create-pin?board=${encodeURIComponent(this.boardId)}`);
         });
 
-        // Модальное окно УДАЛЕНИЯ
+        // Удаление пина с доски (делегирование)
+        this.element.querySelector('#boardPinsGrid').addEventListener('click', (event) => {
+            const removeBtn = event.target.closest('.board-pin-remove');
+            if (!removeBtn) return;
+            event.preventDefault();
+            void this.removePinFromBoard(removeBtn.dataset.pinId, removeBtn);
+        });
+
+        // Удаление доски
         const deleteModal = this.element.querySelector('#deleteConfirmModal');
         this.element.querySelector('#boardDelete').addEventListener('click', () => {
             deleteModal.hidden = false;
@@ -109,7 +142,15 @@ export class BoardPage {
         this.element.querySelector('#cancelDeleteBtn').addEventListener('click', closeDelete);
         this.element.querySelector('#confirmDeleteBtn').addEventListener('click', () => void this.removeBoard());
 
-        // Модальное окно ДОБАВЛЕНИЯ ПИНОВ
+        // Редактирование доски
+        const editModal = this.element.querySelector('#editBoardModal');
+        this.element.querySelector('#boardEdit').addEventListener('click', () => this.openEditModal());
+        const closeEdit = () => { editModal.hidden = true; };
+        this.element.querySelector('#editBoardClose').addEventListener('click', closeEdit);
+        this.element.querySelector('#editBoardCancel').addEventListener('click', closeEdit);
+        this.element.querySelector('#editBoardSave').addEventListener('click', () => void this.saveBoardEdit());
+
+        // Добавление пинов
         this.element.querySelector('#boardAddPins').addEventListener('click', () => void this.openSavedPinsModal());
 
         const pinsModal = this.element.querySelector('#savedPinsModal');
@@ -129,6 +170,94 @@ export class BoardPage {
         this.element.querySelector('#confirmSavedPins').addEventListener('click', () => void this.submitAddedPins());
     }
 
+    openEditModal() {
+        const modal = this.element.querySelector('#editBoardModal');
+        this.element.querySelector('#editBoardName').value = this.board?.name || '';
+        this.element.querySelector('#editBoardDescription').value = this.board?.description || '';
+        this.element.querySelector('#editBoardEntryStatus').value = String(this.board?.entry_status ?? 0);
+        this.showEditMessage('');
+        modal.hidden = false;
+    }
+
+    showEditMessage(message) {
+        const el = this.element?.querySelector('#editBoardMessage');
+        if (!el) return;
+        el.textContent = message;
+        el.hidden = !message;
+    }
+
+    /**
+     * PATCH /desks/{id}. Отправляем только изменённые поля.
+     * Если description очистили — передаём null, чтобы бэкенд удалил значение.
+     */
+    async saveBoardEdit() {
+        const nameInput = this.element.querySelector('#editBoardName');
+        const descriptionInput = this.element.querySelector('#editBoardDescription');
+        const entryStatusSelect = this.element.querySelector('#editBoardEntryStatus');
+        const saveBtn = this.element.querySelector('#editBoardSave');
+
+        const name = nameInput.value.trim();
+        if (!name) {
+            this.showEditMessage('Название не может быть пустым.');
+            nameInput.focus();
+            return;
+        }
+
+        const patch = {};
+        const prev = this.board || {};
+
+        if (name !== (prev.name || '')) patch.name = name;
+
+        const description = descriptionInput.value.trim();
+        const prevDescription = prev.description || '';
+        if (description !== prevDescription) {
+            // Пустая строка → null, чтобы бэкенд очистил значение
+            patch.description = description || null;
+        }
+
+        const entryStatus = Number(entryStatusSelect.value);
+        if (entryStatus !== Number(prev.entry_status ?? 0)) {
+            patch.entry_status = entryStatus;
+        }
+
+        if (!Object.keys(patch).length) {
+            this.showEditMessage('Нет изменений.');
+            return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Сохранение…';
+
+        try {
+            await updateBoard(this.boardId, patch);
+            if (this.isDestroyed) return;
+            this.element.querySelector('#editBoardModal').hidden = true;
+            await this.loadBoard();
+        } catch (error) {
+            this.showEditMessage(error.message || 'Не удалось сохранить доску.');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Сохранить';
+        }
+    }
+
+    /**
+     * DELETE /desks/{id}/pins/{pinID}.
+     * Сам пин не удаляется, только отвязывается от доски.
+     */
+    async removePinFromBoard(pinId, button) {
+        if (!this.isOwner) return;
+        button.disabled = true;
+        try {
+            await removePinFromBoard(this.boardId, pinId);
+            if (this.isDestroyed || !this.element?.isConnected) return;
+            await this.loadBoard();
+        } catch (error) {
+            button.disabled = false;
+            this.showMessage(error.message || 'Не удалось убрать пин с доски.');
+        }
+    }
+
     async removeBoard() {
         const button = this.element.querySelector('#confirmDeleteBtn');
         button.disabled = true;
@@ -144,7 +273,6 @@ export class BoardPage {
         }
     }
 
-    // Логика выбора и добавления пинов
     async openSavedPinsModal() {
         const modal = this.element.querySelector('#savedPinsModal');
         const grid = this.element.querySelector('#savedPinsGrid');
@@ -158,9 +286,10 @@ export class BoardPage {
             if (this.isDestroyed) return;
             grid.replaceChildren();
 
-            // Исключаем те пины, которые уже есть на этой доске (из сохраненного состояния с бэкенда)
-            const currentPinIds = new Set((this.board?.pin_ids || []).map(String));
-            const availablePins = this.savedPins.filter(pin => !currentPinIds.has(String(pin.pin_id)));
+            const currentPinIds = new Set(
+                (this.board?.pins || []).map((pin) => String(pin.pin_id))
+            );
+            const availablePins = this.savedPins.filter((pin) => !currentPinIds.has(String(pin.pin_id)));
 
             if (!availablePins.length) {
                 grid.textContent = 'Все ваши сохранённые пины уже добавлены на эту доску.';
@@ -175,7 +304,7 @@ export class BoardPage {
                 card.dataset.pinId = pin.pin_id;
 
                 const image = document.createElement('img');
-                image.src = pin.image_url;
+                image.src = resolveImageUrl(pin.image_url);
                 image.alt = pin.name || '';
 
                 const check = document.createElement('span');
@@ -204,7 +333,7 @@ export class BoardPage {
         try {
             await addPinsToBoard(this.boardId, [...this.selectedPinIds]);
             this.element.querySelector('#savedPinsModal').hidden = true;
-            void this.loadBoard(); // Перезагружаем контент доски
+            void this.loadBoard();
         } catch (error) {
             this.showMessage(error.message || 'Не удалось добавить пины.');
         } finally {

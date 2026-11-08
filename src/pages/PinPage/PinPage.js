@@ -1,11 +1,13 @@
+// FIX: убраны несуществующие экспорты fetchPinInteractions и setPinSaved.
+// FIX: добавлен недостающий импорт fetchPinLikesStatistics.
+import { resolveImageUrl } from '../../api/user.js';
 import {
     createPinComment,
     fetchPinById,
     fetchPinComments,
-    fetchPinInteractions,
+    fetchPinLikesStatistics,
     fetchPins,
     setPinLiked,
-    setPinSaved,
 } from '../../api/user.js';
 import { PinCard } from '../../components/PinCard/PinCard.js';
 import { Header } from '../../components/Header/Header.js';
@@ -26,7 +28,7 @@ export class PinPage {
         this.header = null;
         this.loadingTimer = null;
         this.isDestroyed = false;
-        this.interactions = { is_liked: false, is_saved: false, likes_count: 0 };
+        this.interactions = { is_liked: false, likes_count: 0 };
         this.comments = [];
     }
 
@@ -65,20 +67,22 @@ export class PinPage {
         }
     }
 
-    /** Загружает лайки, сохранение и комментарии с backend. */
+    /** Загружает лайки и комментарии с backend. */
     async loadPinDetails() {
-        const [interactionResult, commentsResult] = await Promise.allSettled([
-            fetchPinInteractions(this.pinId),
+        const [likesResult, commentsResult] = await Promise.allSettled([
+            // Используем контрактный метод получения статистики лайков
+            fetchPinLikesStatistics(this.pinId),
             fetchPinComments(this.pinId),
         ]);
         if (this.isDestroyed || !this.element?.isConnected) return;
 
-        if (interactionResult.status === 'fulfilled') {
-            this.interactions = interactionResult.value;
+        if (likesResult.status === 'fulfilled') {
+            // Наш бэкенд возвращает likes_count и liked_by_me
+            this.interactions.likes_count = likesResult.value.likes_count;
+            this.interactions.is_liked = likesResult.value.liked_by_me;
             this.updateLike();
-            this.updateSave();
         } else {
-            this.showActionMessage(interactionResult.reason?.message || 'Войдите, чтобы сохранять пины и ставить отметки «Нравится».');
+            this.showActionMessage('Не удалось загрузить статистику лайков.');
         }
 
         if (commentsResult.status === 'fulfilled') {
@@ -102,7 +106,7 @@ export class PinPage {
     /** Заполняет основной блок данными пина. */
     renderPin() {
         const img = this.element.querySelector('#pinMainImage');
-        img.src = this.pin.image_url;
+        img.src = resolveImageUrl(this.pin.image_url);
         img.alt = this.pin.name || 'Пин';
         img.onerror = () => img.classList.add('pin-main-image--failed');
 
@@ -128,7 +132,7 @@ export class PinPage {
         avatar.replaceChildren();
         if (avatarUrl) {
             const avatarImage = document.createElement('img');
-            avatarImage.src = avatarUrl;
+            avatarImage.src = resolveImageUrl(avatarUrl);
             avatarImage.alt = '';
             avatar.append(avatarImage);
             avatar.classList.add('pin-author-avatar--image');
@@ -140,7 +144,6 @@ export class PinPage {
         this.element.querySelector('#pinLoading').hidden = true;
         this.element.querySelector('#pinLayout').hidden = false;
         this.updateLike();
-        this.updateSave();
         this.renderComments();
     }
 
@@ -154,13 +157,10 @@ export class PinPage {
         otherPins.slice(10).forEach((pin) => bottomBox.append(new PinCard(pin).render()));
     }
 
-    /** Подключает кнопки лайка, сохранения, поделиться и комментариев. */
+    /** Подключает кнопки лайка, поделиться и комментариев. */
     setupEvents() {
         this.element.querySelector('[data-action="like"]').addEventListener('click', () => {
             void this.changeLike();
-        });
-        this.element.querySelector('[data-action="save"]').addEventListener('click', () => {
-            void this.changeSaved();
         });
 
         const shareButton = this.element.querySelector('[data-action="share"]');
@@ -185,37 +185,22 @@ export class PinPage {
         });
     }
 
-    /** Меняет состояние лайка через API. */
+    /**
+     * Меняет состояние лайка через API.
+     * FIX: ответ приходит с полем liked_by_me, а не is_liked — маппим явно,
+     * иначе сердечко не переключалось.
+     */
     async changeLike() {
         const button = this.element.querySelector('[data-action="like"]');
         button.disabled = true;
         try {
-            this.interactions = {
-                ...this.interactions,
-                ...await setPinLiked(this.pinId, !this.interactions.is_liked),
-            };
+            const result = await setPinLiked(this.pinId, !this.interactions.is_liked);
+            this.interactions.likes_count = result.likes_count;
+            this.interactions.is_liked = result.liked_by_me;
             this.updateLike();
             this.showActionMessage('');
         } catch (error) {
             this.showActionMessage(error.message || 'Не удалось изменить отметку «Нравится».');
-        } finally {
-            button.disabled = false;
-        }
-    }
-
-    /** Меняет состояние сохранения через API. */
-    async changeSaved() {
-        const button = this.element.querySelector('[data-action="save"]');
-        button.disabled = true;
-        try {
-            this.interactions = {
-                ...this.interactions,
-                ...await setPinSaved(this.pinId, !this.interactions.is_saved),
-            };
-            this.updateSave();
-            this.showActionMessage('');
-        } catch (error) {
-            this.showActionMessage(error.message || 'Не удалось сохранить пин.');
         } finally {
             button.disabled = false;
         }
@@ -247,15 +232,6 @@ export class PinPage {
         button.querySelector('.pin-heart').textContent = this.interactions.is_liked ? '♥' : '♡';
         button.querySelector('[data-like-count]').textContent = this.interactions.likes_count || 0;
         button.setAttribute('aria-pressed', String(Boolean(this.interactions.is_liked)));
-    }
-
-    /** Обновляет кнопку сохранения по данным сервера. */
-    updateSave() {
-        const button = this.element?.querySelector('[data-action="save"]');
-        if (!button) return;
-        button.classList.toggle('is-active', Boolean(this.interactions.is_saved));
-        button.textContent = this.interactions.is_saved ? 'Сохранено' : 'Сохранить';
-        button.setAttribute('aria-pressed', String(Boolean(this.interactions.is_saved)));
     }
 
     /** Отрисовывает комментарии, полученные с сервера. */

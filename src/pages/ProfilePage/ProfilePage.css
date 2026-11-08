@@ -88,6 +88,23 @@
     margin: 0 4px 12px;
 }
 
+.profile-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-edit-link {
+    color: var(--color-accent);
+    font-size: 15px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.profile-edit-link:hover {
+    text-decoration: underline;
+}
+
 .profile-tabs {
     display: flex;
     align-items: center;

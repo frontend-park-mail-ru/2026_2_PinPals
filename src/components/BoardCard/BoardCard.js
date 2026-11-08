@@ -1,4 +1,5 @@
 import template from './BoardCard.hbs';
+import { resolveImageUrl } from '../../api/user.js';
 
 /** Возвращает корректную подпись количества пинов. */
 function getPinsLabel(count) {
@@ -18,12 +19,32 @@ function getPinsLabel(count) {
 export class BoardCard {
     /**
      * @param {Object} board - Объект доски, полученный от API.
+     *   По контракту v1: desk_id, name, description, avatar_img_url, entry_status.
+     *   Для совместимости со старым mock'ом принимаем board_id/title/pins_count.
      */
     constructor(board) {
-        this.id = board.board_id ?? board.id ?? '';
-        this.title = board.title || 'Без названия';
-        this.pinsCount = Number(board.pins_count ?? board.pinsCount) || 0;
-        this.images = (board.preview_images || board.images || []).filter(Boolean).slice(0, 3);
+        this.id = board.desk_id ?? board.board_id ?? board.id ?? '';
+        this.title = board.name || board.title || 'Без названия';
+
+
+        const hasPinsCount = Array.isArray(board.pins)
+            || board.pins_count != null
+            || board.pinsCount != null;
+        this.pinsCount = Array.isArray(board.pins)
+            ? board.pins.length
+            : (Number(board.pins_count ?? board.pinsCount) || 0);
+        this.pinsLabel = hasPinsCount ? getPinsLabel(this.pinsCount) : '';
+
+        // FIX: если превью нет, но есть avatar_img_url — используем его
+        let images = (board.preview_images || board.images || []).filter(Boolean);
+        if (!images.length && Array.isArray(board.pins)) {
+            images = board.pins.map((pin) => pin.image_url).filter(Boolean);
+        }
+        if (!images.length && board.avatar_img_url) {
+            images = [board.avatar_img_url];
+        }
+        this.images = images.slice(0, 3);
+
         this.element = null;
     }
 
@@ -33,11 +54,11 @@ export class BoardCard {
         wrapper.innerHTML = template({
             id: encodeURIComponent(this.id),
             title: this.title,
-            pinsLabel: getPinsLabel(this.pinsCount),
+            pinsLabel: this.pinsLabel,
             isSingleImage: this.images.length === 1,
-            firstImage: this.images[0] || '',
-            secondImage: this.images[1] || '',
-            thirdImage: this.images[2] || '',
+            firstImage: resolveImageUrl(this.images[0]),
+            secondImage: resolveImageUrl(this.images[1]),
+            thirdImage: resolveImageUrl(this.images[2]),
         });
         this.element = wrapper.firstElementChild;
         return this.element;

@@ -21,6 +21,13 @@ app.use('/api', createProxyMiddleware({
     changeOrigin: true,
 }));
 
+// API возвращает image_url с маршрутом /images/{filename}; проксируем
+// изображения на тот же Go backend, что и JSON API.
+app.use('/images', createProxyMiddleware({
+    target: API_TARGET,
+    changeOrigin: true,
+}));
+
 // Статика из production-сборки Vite.
 app.use(express.static(path.join(__dirname, 'dist')));
 

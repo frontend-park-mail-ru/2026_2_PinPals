@@ -7,12 +7,11 @@ const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обя�
 
 const validatePassword = (val) => {
     if (val.length < 8) return 'Пароль минимум 8 символов';
-    if (!/(?=.*[a-zA-Zа-яА-Я])(?=.*\d)/.test(val)) return 'Пароль должен содержать буквы и цифры';
+    if (!/\p{L}/u.test(val)) return 'Пароль должен содержать хотя бы одну букву';
     return '';
 };
 
 const MIN_AGE = 13;
-const MAX_AGE = 120;
 
 /**
  * Считает точный возраст в годах с учётом дня/месяца рождения.
@@ -69,9 +68,6 @@ const validateBirthdate = (val) => {
         return `Регистрация доступна с ${MIN_AGE} лет`;
     }
 
-    if (age > MAX_AGE) {
-        return 'Пожалуйста, укажите корректную дату';
-    }
 
     return '';
 };
@@ -152,6 +148,8 @@ export class SignUpPage {
 
         // 1. Логин + подсказка снизу
         formContainer.append(this.loginInput.render());
+        const usernameInput = this.loginInput.element.querySelector('input');
+        if (usernameInput) usernameInput.maxLength = 64;
         const loginHint = document.createElement('div');
         loginHint.className = 'field-hint';
         loginHint.textContent = 'Логин должен быть уникальным';
@@ -166,7 +164,7 @@ export class SignUpPage {
         formContainer.append(this.passConfirmInput.render());
         const passHint = document.createElement('div');
         passHint.className = 'field-hint';
-        passHint.textContent = 'Пароль должен содержать буквы и цифры';
+        passHint.textContent = 'Не менее 8 символов, включая хотя бы одну букву';
         formContainer.append(passHint);
 
         // 4. Дата рождения
@@ -182,15 +180,10 @@ export class SignUpPage {
         if (dateInputElement) {
             const today = new Date();
 
-            // Максимальная дата - сегодняшний день
-            const maxDateStr = today.toISOString().split('T')[0];
-
-            // Максимальный возраст - 120
-            const minYear = today.getFullYear() - MAX_AGE;
-            const minDateStr = `${minYear}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
+            // HTML date input uses a calendar date, so format local components
+            // instead of UTC to avoid shifting the date around midnight.
+            const maxDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             dateInputElement.setAttribute('max', maxDateStr);
-            dateInputElement.setAttribute('min', minDateStr);
         }
 
         // 5. Кнопка
@@ -237,20 +230,14 @@ export class SignUpPage {
             const username = this.loginInput.getValue();
             const password = this.passInput.getValue();
 
-            // Отправляем запрос на регистрацию
-            await signUpUser(
-                username,
-                username,
-                password,
-                rawDate,
-            );
+            // Регистрируем пользователя
+            await signUpUser(username, username, password, rawDate);
 
-            // Сразу же автоматически авторизуем пользователя
+            // Автоматически логиним (бэкенд установит HttpOnly cookie)
             const loginResult = await loginUser(username, password);
 
-            // Сохраняем данные авторизации
+            // Сохраняем состояние без поиска JWT-токена в JSON
             localStorage.setItem('isAuth', 'true');
-            localStorage.setItem('token', loginResult.token);
             localStorage.setItem('userName', loginResult.user.name);
             localStorage.setItem('userId', String(loginResult.user.user_id));
             localStorage.setItem('userTag', loginResult.user.user_tag || '');

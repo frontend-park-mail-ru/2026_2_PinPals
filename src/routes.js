@@ -3,11 +3,18 @@ import { LoginPage } from './pages/LoginPage/LoginPage.js';
 import { HomePage } from './pages/HomePage/HomePage.js';
 import { PinPage } from './pages/PinPage/PinPage.js';
 import { ProfilePage } from './pages/ProfilePage/ProfilePage.js';
+import { ProfileEditPage } from './pages/ProfileEditPage/ProfileEditPage.js';
 import { BoardPage } from './pages/BoardPage/BoardPage.js';
 import { CreatePinPage } from './pages/CreatePinPage/CreatePinPage.js';
 import { CreateBoardPage } from './pages/CreateBoardPage/CreateBoardPage.js';
 
 export const routes = [
+    {
+        pattern: /^\/profile\/edit\/?$/,
+        pages: (match, { router }) => [
+            { key: 'profile-edit', instance: new ProfileEditPage({ router }) },
+        ],
+    },
     {
         pattern: /^\/create-board\/?$/,
         pages: (match, { router }) => [

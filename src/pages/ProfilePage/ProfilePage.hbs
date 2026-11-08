@@ -30,9 +30,12 @@
                 >Доски</a>
             </nav>
 
-            <button class="profile-create-button" id="profileActionButton" type="button">
-                {{actionText}}
-            </button>
+            <div class="profile-toolbar-actions">
+                <a class="profile-edit-link" href="/profile/edit">Редактировать профиль</a>
+                <button class="profile-create-button" id="profileActionButton" type="button">
+                    {{actionText}}
+                </button>
+            </div>
         </section>
 
         {{#if isPinsTab}}

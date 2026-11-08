@@ -1,4 +1,5 @@
 import template from './PinCard.hbs';
+import { resolveImageUrl } from '../../api/user.js';
 
 /**
  * Карточка одного пина в ленте.
@@ -24,7 +25,7 @@ export class PinCard {
         const pinId = this.pin.pin_id;
         const html = template({
             url: pinId ? `/pin/${encodeURIComponent(pinId)}` : '/',
-            imageUrl: this.pin.image_url,
+            imageUrl: resolveImageUrl(this.pin.image_url),
             alt: this.pin.name ?? '',
             title: this.pin.description ?? '',
         });

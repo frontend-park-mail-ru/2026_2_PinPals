@@ -4,7 +4,7 @@ import globals from 'globals';
 export default [
     eslint.configs.recommended,
     {
-        files: ['src/**/*.js', 'server.js'],
+        files: ['src/**/*.js', 'server.js', 'server.dev.js'],
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',

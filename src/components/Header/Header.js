@@ -1,5 +1,6 @@
 import template from './Header.hbs';
 import { SearchBar } from '../SearchBar/SearchBar.js';
+import { logoutUser, resolveImageUrl } from '../../api/user.js';
 
 /**
  * Шапка сайта: логотип, слот по центру, меню пользователя.
@@ -15,7 +16,6 @@ export class Header {
         this.center = center;
         this.router = router;
         this.searchBar = null;
-        /** @type {HTMLElement|null} */
         this.element = null;
     }
 
@@ -34,7 +34,6 @@ export class Header {
             return;
         }
 
-        // Снимаем SearchBar, чтобы не оставить висеть его таймер дебаунса.
         this.searchBar?.destroy();
         this.searchBar = null;
 
@@ -52,11 +51,16 @@ export class Header {
     buildElement() {
         const isAuth = localStorage.getItem('isAuth') === 'true';
         const userName = localStorage.getItem('userName') || 'Пользователь';
-        const userAvatarUrl = isAuth ? (localStorage.getItem('userAvatarUrl') || '') : '';
+        const rawAvatarUrl = isAuth ? (localStorage.getItem('userAvatarUrl') || '') : '';
+        const userAvatarUrl = resolveImageUrl(rawAvatarUrl);
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({ isAuth, userName, userAvatarUrl });
         const element = wrapper.firstElementChild;
+        const avatarImage = element.querySelector('.user-avatar img');
+        if (avatarImage) {
+            avatarImage.addEventListener('error', () => avatarImage.remove(), { once: true });
+        }
 
         const centerSlot = element.querySelector('.header-center');
         if (this.center) {
@@ -75,9 +79,14 @@ export class Header {
             return;
         }
 
-        logoutBtn.addEventListener('click', () => {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await logoutUser();
+            } catch (e) {
+                console.warn('Серверный логаут не удался или сессия уже истекла', e);
+            }
+
             localStorage.removeItem('isAuth');
-            localStorage.removeItem('token');
             localStorage.removeItem('userName');
             localStorage.removeItem('userId');
             localStorage.removeItem('userTag');
@@ -86,7 +95,6 @@ export class Header {
             // Сначала обновляем сам хедер (он уже в стеке и не пересоздастся),
             // а уже потом уходим на главную.
             this.refresh();
-
             this.router.navigateTo('/');
         });
     }

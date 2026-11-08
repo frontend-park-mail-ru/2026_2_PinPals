@@ -1,4 +1,6 @@
-import { fetchUserBoards, fetchUserSavedPins } from '../../api/user.js';
+// FIX: для вкладки «Доски» используем контрактный GET /desks/me —
+// /users/{id}/desks отдаёт только публичные доски.
+import { fetchMyDesks, fetchMyProfile, fetchUserSavedPins, resolveImageUrl } from '../../api/user.js';
 import { Header } from '../../components/Header/Header.js';
 import { PinCard } from '../../components/PinCard/PinCard.js';
 import { BoardCard } from '../../components/BoardCard/BoardCard.js';
@@ -39,6 +41,7 @@ export class ProfilePage {
         this.element = null;
         this.header = null;
         this.isDestroyed = false;
+        this.profile = null;
     }
 
     /**
@@ -50,7 +53,7 @@ export class ProfilePage {
         const userName = localStorage.getItem('userName')
             || localStorage.getItem('userTag')
             || 'Пользователь';
-        const userAvatarUrl = localStorage.getItem('userAvatarUrl') || '';
+        const userAvatarUrl = resolveImageUrl(localStorage.getItem('userAvatarUrl') || '');
         const followersCount = localStorage.getItem('followersCount')
             || localStorage.getItem('userFollowersCount')
             || '0';
@@ -67,6 +70,10 @@ export class ProfilePage {
         });
 
         this.element = wrapper.firstElementChild;
+        const initialAvatar = this.element.querySelector('.profile-avatar');
+        if (initialAvatar?.tagName === 'IMG') {
+            this.attachAvatarFallback(initialAvatar, userName);
+        }
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
 
@@ -77,26 +84,82 @@ export class ProfilePage {
 
     /** Загружает содержимое вкладки с backend. */
     async loadContent() {
-        const userId = localStorage.getItem('userId');
-        if (!userId) {
-            this.showContentMessage('Войдите в аккаунт, чтобы посмотреть свои сохранения.');
-            return;
-        }
-
         try {
+            // The profile endpoint is the source of truth. Do not rely only on
+            // stale localStorage values after a refresh or profile update.
+            this.profile = await fetchMyProfile();
+            if (this.isDestroyed || !this.element?.isConnected) return;
+
+            localStorage.setItem('isAuth', 'true');
+            localStorage.setItem('userId', String(this.profile.user_id));
+            localStorage.setItem('userName', this.profile.name || '');
+            localStorage.setItem('userTag', this.profile.user_tag || '');
+            localStorage.setItem('userAvatarUrl', this.profile.avatar_url || '');
+            this.renderProfileSummary(this.profile);
+            this.header?.refresh();
+
             if (this.activeTab === 'pins') {
-                const pins = await fetchUserSavedPins(userId);
+                // Dev-only endpoint: not part of the documented API v1 contract.
+                const pins = await fetchUserSavedPins(this.profile.user_id);
                 if (this.isDestroyed || !this.element?.isConnected) return;
                 this.renderPins(pins);
             } else {
-                const boards = await fetchUserBoards(userId);
+                // Contract endpoint: includes private desks owned by current user.
+                const boards = await fetchMyDesks();
                 if (this.isDestroyed || !this.element?.isConnected) return;
                 this.renderBoards(boards);
             }
         } catch (error) {
             if (this.isDestroyed || !this.element?.isConnected) return;
+            if (error.status === 401) {
+                ['isAuth', 'userName', 'userId', 'userTag', 'userAvatarUrl'].forEach((key) => localStorage.removeItem(key));
+                this.header?.refresh();
+                this.showContentMessage('Сессия истекла. Войдите в аккаунт, чтобы посмотреть свой профиль.');
+                return;
+            }
             this.showContentMessage(error.message || 'Не удалось загрузить данные профиля.');
         }
+    }
+
+    renderProfileSummary(profile) {
+        const name = profile.name || profile.user_tag || 'Пользователь';
+        const nameElement = this.element.querySelector('.profile-user-name');
+        if (nameElement) nameElement.textContent = name;
+
+        const avatarElement = this.element.querySelector('.profile-avatar');
+        if (profile.avatar_url) {
+            if (avatarElement?.tagName === 'IMG') {
+                avatarElement.src = resolveImageUrl(profile.avatar_url);
+                avatarElement.alt = 'Аватар пользователя';
+                this.attachAvatarFallback(avatarElement, name);
+            } else if (avatarElement) {
+                const image = document.createElement('img');
+                image.className = 'profile-avatar';
+                image.src = resolveImageUrl(profile.avatar_url);
+                image.alt = 'Аватар пользователя';
+                this.attachAvatarFallback(image, name);
+                avatarElement.replaceWith(image);
+            }
+        } else if (avatarElement?.tagName === 'IMG') {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'profile-avatar profile-avatar--placeholder';
+            placeholder.setAttribute('aria-hidden', 'true');
+            placeholder.textContent = name.trim().charAt(0).toUpperCase() || 'П';
+            avatarElement.replaceWith(placeholder);
+        } else if (avatarElement) {
+            avatarElement.textContent = name.trim().charAt(0).toUpperCase() || 'П';
+        }
+    }
+
+    attachAvatarFallback(image, name) {
+        image.addEventListener('error', () => {
+            if (!image.isConnected) return;
+            const placeholder = document.createElement('div');
+            placeholder.className = 'profile-avatar profile-avatar--placeholder';
+            placeholder.setAttribute('aria-hidden', 'true');
+            placeholder.textContent = name.trim().charAt(0).toUpperCase() || 'П';
+            image.replaceWith(placeholder);
+        }, { once: true });
     }
 
     /**

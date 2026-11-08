@@ -1,3 +1,4 @@
+import { resolveImageUrl } from '../../api/user.js';
 import { Header } from '../../components/Header/Header.js';
 import { addPinsToBoard, createBoard, fetchUserSavedPins } from '../../api/user.js';
 import template from './CreateBoardPage.hbs';
@@ -119,7 +120,7 @@ export class CreateBoardPage {
                 }
 
                 const image = document.createElement('img');
-                image.src = pin.image_url;
+                image.src = resolveImageUrl(pin.image_url);
                 image.alt = pin.name || 'Сохраненный пин';
                 image.loading = 'lazy';
 
@@ -154,7 +155,7 @@ export class CreateBoardPage {
 
         selectedPins.slice(0, 3).forEach((pin) => {
             const image = document.createElement('img');
-            image.src = pin.image_url;
+            image.src = resolveImageUrl(pin.image_url);
             image.alt = pin.name || 'Превью доски';
             preview.append(image);
         });
@@ -196,11 +197,23 @@ export class CreateBoardPage {
         try {
             const visibility = this.element.querySelector('[name="visibility"]:checked').value;
             const board = await createBoard({ title, visibility });
-            const boardId = board.board_id || board.id;
+
+            // FIX: POST /desks возвращает desk_id — board_id/id в контракте нет
+            const boardId = board.desk_id ?? board.board_id ?? board.id;
+            if (!boardId) {
+                throw new Error('Сервер не вернул идентификатор созданной доски.');
+            }
 
             // Если были выбраны пины, привязываем их к созданной доске
             if (this.selectedPinIds.size) {
-                await addPinsToBoard(boardId, [...this.selectedPinIds]);
+                try {
+                    await addPinsToBoard(boardId, [...this.selectedPinIds]);
+                } catch {
+                    // Доска уже создана. Не оставляем пользователя на форме,
+                    // иначе повторная отправка создаст дубликат доски.
+                    this.router.navigateTo(`/board/${encodeURIComponent(boardId)}?notice=pins`);
+                    return;
+                }
             }
 
             this.router.navigateTo(`/board/${encodeURIComponent(boardId)}`);

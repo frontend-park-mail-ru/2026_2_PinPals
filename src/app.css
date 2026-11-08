@@ -8,6 +8,7 @@
 @import "/src/pages/HomePage/HomePage.css";
 @import "/src/pages/PinPage/PinPage.css";
 @import "/src/pages/ProfilePage/ProfilePage.css";
+@import "/src/pages/ProfileEditPage/ProfileEditPage.css";
 @import "/src/pages/BoardPage/BoardPage.css";
 @import "/src/pages/CreatePinPage/CreatePinPage.css";
 @import "/src/pages/CreateBoardPage/CreateBoardPage.css";
@@ -15,7 +16,7 @@
 /* Подключение локального шрифта Unkempt */
 @font-face {
     font-family: 'Unkempt';
-    src: url('/public/fonts/Unkempt-Regular.ttf') format('truetype');
+    src: url('/fonts/Unkempt-Regular.ttf') format('truetype');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -23,7 +24,7 @@
 
 @font-face {
     font-family: 'Unkempt';
-    src: url('/public/fonts/Unkempt-Bold.ttf') format('truetype');
+    src: url('/fonts/Unkempt-Bold.ttf') format('truetype');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -32,7 +33,7 @@
 /* Подключение локального шрифта Palanquin */
 @font-face {
     font-family: 'Palanquin';
-    src: url('/public/fonts/Palanquin-Regular.ttf') format('truetype');
+    src: url('/fonts/Palanquin-Regular.ttf') format('truetype');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -40,7 +41,7 @@
 
 @font-face {
     font-family: 'Palanquin';
-    src: url('/public/fonts/Palanquin-Medium.ttf') format('truetype');
+    src: url('/fonts/Palanquin-Medium.ttf') format('truetype');
     font-weight: 500;
     font-style: normal;
     font-display: swap;

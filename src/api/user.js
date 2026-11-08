@@ -1,24 +1,61 @@
 const BASE_URL = location.origin;
 
+
 /**
- * Общая функция для запросов к API.
- * Токен используется только для авторизации, а данные приложения хранятся на сервере.
- *
- * @param {string} path
- * @param {RequestInit} [options]
- * @returns {Promise<any>}
+ * Приводит URL изображений backend к same-origin маршруту.
+ * Go API часто возвращает http://localhost:8002/images/..., но во frontend
+ * используется proxy /images -> API_TARGET. Пропускаем внешние URL без изменений.
+ * @param {string|null|undefined} value
+ * @returns {string}
  */
+export function resolveImageUrl(value) {
+    if (typeof value !== 'string' || !value.trim()) return '';
+    const raw = value.trim();
+
+    if (/^(?:data:|blob:)/i.test(raw)) return raw;
+    if (raw.startsWith('/images/')) return raw;
+
+    try {
+        const parsed = new URL(raw, location.origin);
+        if (parsed.pathname.startsWith('/images/')) {
+            return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        }
+        if (parsed.origin === location.origin) {
+            return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        }
+        return raw;
+    } catch {
+        return raw;
+    }
+}
+
+function getCsrfToken() {
+    const matches = document.cookie.match(new RegExp(
+        '(?:^|; )' + 'csrf_token'.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'
+    ));
+    return matches ? decodeURIComponent(matches[1]) : '';
+}
+
 async function apiRequest(path, options = {}) {
-    const token = localStorage.getItem('token');
     const headers = {
         Accept: 'application/json',
-        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
     };
 
+    if (options.body && !(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
+
+    if (['POST', 'PATCH', 'DELETE'].includes(options.method?.toUpperCase())) {
+        const csrfToken = getCsrfToken();
+        if (csrfToken) {
+            headers['X-CSRF-Token'] = csrfToken;
+        }
+    }
+
     const response = await fetch(`${BASE_URL}${path}`, {
         ...options,
+        credentials: 'include',
         headers,
     });
 
@@ -26,37 +63,51 @@ async function apiRequest(path, options = {}) {
         return null;
     }
 
-    let payload;
-    try {
-        payload = await response.json();
-    } catch {
-        throw new Error(`Сервер вернул невалидный JSON: HTTP ${response.status}`);
+    // FIX: читаем тело как текст, чтобы не падать на пустых/HTML-ответах
+    // (например, 404 от Go-роутера без JSON). Статус всегда сохраняем в error.
+    const rawText = await response.text();
+    let payload = null;
+    if (rawText) {
+        try {
+            payload = JSON.parse(rawText);
+        } catch {
+            if (!response.ok) {
+                const error = new Error(`HTTP ${response.status}`);
+                error.status = response.status;
+                throw error;
+            }
+            const error = new Error(`Сервер вернул невалидный JSON: HTTP ${response.status}`);
+            error.status = response.status;
+            throw error;
+        }
     }
 
     if (!response.ok) {
-        if (payload?.error === 'validation_error' && payload.fields) {
-            const fieldsMessage = Object.entries(payload.fields)
-                .map(([field, code]) => `${field}: ${code}`)
-                .join(', ');
-            throw new Error(fieldsMessage || 'Ошибка проверки данных');
-        }
-        throw new Error(payload?.error || `Ошибка запроса: HTTP ${response.status}`);
+        const fieldErrors = payload?.fields
+            ? Object.entries(payload.fields).map(([field, code]) => `${field}: ${code}`).join(', ')
+            : '';
+        const message = fieldErrors
+            || payload?.message
+            || payload?.error
+            || `Ошибка запроса: HTTP ${response.status}`;
+        const error = new Error(message);
+        error.status = response.status;
+        error.fields = payload?.fields;
+        error.payload = payload;
+        throw error;
     }
 
     return payload;
 }
 
-/**
- * Регистрация нового пользователя.
- *
- * @param {string} username
- * @param {string} nickname
- * @param {string} password
- * @param {string} birthdate
- * @returns {Promise<Object>}
- */
+// ===== Auth =====
+
 export async function signUpUser(username, nickname, password, birthdate) {
-    const formattedDate = birthdate ? new Date(birthdate).toISOString() : '';
+    // Preserve the date selected in the browser; parsing it as local midnight and
+    // converting it to UTC can shift the calendar day in positive time zones.
+    const formattedDate = birthdate
+        ? (birthdate.includes('T') ? birthdate : `${birthdate}T00:00:00.000Z`)
+        : '';
     return apiRequest('/api/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify({
@@ -68,13 +119,6 @@ export async function signUpUser(username, nickname, password, birthdate) {
     });
 }
 
-/**
- * Авторизация пользователя.
- *
- * @param {string} username
- * @param {string} password
- * @returns {Promise<Object>}
- */
 export async function loginUser(username, password) {
     return apiRequest('/api/v1/auth/login', {
         method: 'POST',
@@ -82,180 +126,163 @@ export async function loginUser(username, password) {
     });
 }
 
-/**
- * Получает список пинов с пагинацией.
- *
- * @param {number} [limit=30]
- * @param {Object|null} [cursor=null]
- * @returns {Promise<Object>}
- */
-export async function fetchPins(limit = 30, cursor = null) {
-    const result = await apiRequest('/api/v1/pins/search', {
+export async function logoutUser() {
+    return apiRequest('/api/v1/auth/logout', {
         method: 'POST',
-        body: JSON.stringify({ limit, ...(cursor ? { cursor } : {}) }),
     });
-
-    if (!result || !Array.isArray(result.pins)) {
-        throw new Error('Некорректный формат ответа /api/v1/pins/search');
-    }
-    return result;
 }
 
-/**
- * Получает один пин по ID.
- *
- * @param {number|string} pinId
- * @returns {Promise<Object>}
- */
+// ===== Pins =====
+
+export async function fetchPins(limit = 20, cursor = null) {
+    return apiRequest('/api/v1/pins/search', {
+        method: 'POST',
+        body: JSON.stringify({ limit, cursor }),
+    });
+}
+
 export async function fetchPinById(pinId) {
-    const normalizedId = Number(pinId);
-    if (!Number.isInteger(normalizedId) || normalizedId < 1) {
-        throw new Error('Некорректный ID пина');
+    return apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}`);
+}
+
+export async function createPin({ name, description, tags = [], fileObject }) {
+    if (typeof File === 'undefined' || !(fileObject instanceof File)) {
+        throw new TypeError('Для создания пина необходимо выбрать файл изображения.');
     }
 
-    return apiRequest(`/api/v1/pins/${encodeURIComponent(normalizedId)}`);
-}
+    const normalizedTags = tags ?? [];
+    if (!Array.isArray(normalizedTags) || normalizedTags.some((tag) => typeof tag !== 'string')) {
+        throw new TypeError('Теги должны быть массивом строк.');
+    }
 
-/**
- * Получает сохранённые пины пользователя с сервера.
- *
- * @param {number|string} userId
- * @returns {Promise<Object[]>}
- */
-export async function fetchUserSavedPins(userId) {
-    const result = await apiRequest(`/api/v1/users/${encodeURIComponent(userId)}/saved-pins`);
-    return result.pins || [];
-}
+    const formData = new FormData();
+    formData.append('name', name);
+    if (description) formData.append('description', description);
+    if (normalizedTags.length) formData.append('tags', JSON.stringify(normalizedTags));
+    formData.append('image', fileObject);
 
-/**
- * Получает список досок пользователя с сервера.
- *
- * @param {number|string} userId
- * @returns {Promise<Object[]>}
- */
-export async function fetchUserBoards(userId) {
-    const result = await apiRequest(`/api/v1/users/${encodeURIComponent(userId)}/boards`);
-    return result.boards || [];
-}
-
-/**
- * Получает доску и все её пины.
- *
- * @param {string|number} boardId
- * @returns {Promise<{board: Object, pins: Object[]}>}
- */
-export async function fetchBoardById(boardId) {
-    return apiRequest(`/api/v1/boards/${encodeURIComponent(boardId)}`);
-}
-
-/**
- * Создаёт доску на сервере.
- *
- * @param {{title: string, description?: string, visibility?: string}} board
- * @returns {Promise<Object>}
- */
-export async function createBoard(board) {
-    const result = await apiRequest('/api/v1/boards', {
+    return apiRequest('/api/v1/pins', {
         method: 'POST',
-        body: JSON.stringify(board),
-    });
-    return result.board;
-}
-
-/** Добавляет сохранённые пины в доску через API.
- * @param {string|number} boardId
- * @param {(string|number)[]} pinIds
- * @returns {Promise<Object>}
- */
-export async function addPinsToBoard(boardId, pinIds) {
-    return apiRequest(`/api/v1/boards/${encodeURIComponent(boardId)}/pins`, {
-        method: 'POST',
-        body: JSON.stringify({ pin_ids: pinIds }),
+        body: formData,
     });
 }
 
-/**
- * Удаляет доску на сервере. Проверка владельца выполняется сервером.
- *
- * @param {string|number} boardId
- * @returns {Promise<void>}
- */
-export async function deleteBoard(boardId) {
-    await apiRequest(`/api/v1/boards/${encodeURIComponent(boardId)}`, {
+// ===== Likes =====
+
+export async function setPinLiked(pinId, liked) {
+    return apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/like`, {
+        method: liked ? 'POST' : 'DELETE',
+    });
+}
+
+export async function fetchPinLikesStatistics(pinId) {
+    return apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/likes`);
+}
+
+// ===== Profile =====
+
+export async function fetchMyProfile() {
+    return apiRequest('/api/v1/users/me');
+}
+
+export async function updateMyProfile(patch) {
+    return apiRequest('/api/v1/users/me', {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+    });
+}
+
+export async function deleteMyProfile() {
+    return apiRequest('/api/v1/users/me', {
         method: 'DELETE',
     });
 }
 
-/**
- * Создаёт пин на сервере и, при передаче board_id, добавляет его в доску.
- * image_data — сжатое изображение в формате Data URL для mock API.
- * Реальный backend может заменить это поле на multipart-загрузку файла.
- *
- * @param {{name: string, description?: string, tags?: string[], image_data: string, board_id?: string|null}} pin
- * @returns {Promise<Object>}
- */
-export async function createPin(pin) {
-    const result = await apiRequest('/api/v1/pins', {
+// ===== Boards / Desks =====
+
+export async function fetchMyDesks() {
+    const result = await apiRequest('/api/v1/desks/me');
+    return result.desks || [];
+}
+
+export async function fetchUserPublicDesks(userId) {
+    const result = await apiRequest(`/api/v1/users/${encodeURIComponent(userId)}/desks`);
+    return result.desks || [];
+}
+
+// Сохранено имя fetchUserBoards для совместимости с импортами
+export const fetchUserBoards = fetchUserPublicDesks;
+
+export async function fetchBoardById(deskId) {
+    return apiRequest(`/api/v1/desks/${encodeURIComponent(deskId)}`);
+}
+
+export async function createBoard(board) {
+    return apiRequest('/api/v1/desks', {
         method: 'POST',
-        body: JSON.stringify(pin),
-    });
-    return result.pin;
-}
-
-/**
- * Загружает состояние лайка и сохранения пина для текущего пользователя.
- *
- * @param {number|string} pinId
- * @returns {Promise<Object>}
- */
-export async function fetchPinInteractions(pinId) {
-    return apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/interactions`);
-}
-
-/**
- * Устанавливает состояние лайка пина.
- *
- * @param {number|string} pinId
- * @param {boolean} liked
- * @returns {Promise<Object>}
- */
-export async function setPinLiked(pinId, liked) {
-    return apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/like`, {
-        method: liked ? 'PUT' : 'DELETE',
+        body: JSON.stringify({
+            name: board.title,
+            description: board.description || '',
+            entry_status: board.visibility === 'private' ? 2 : (['subscribers', 'friends'].includes(board.visibility) ? 1 : 0),
+            ...(board.avatar_img_url !== undefined ? { avatar_img_url: board.avatar_img_url } : {}),
+        }),
     });
 }
 
-/**
- * Устанавливает состояние сохранения пина.
- *
- * @param {number|string} pinId
- * @param {boolean} saved
- * @returns {Promise<Object>}
- */
-export async function setPinSaved(pinId, saved) {
-    return apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/save`, {
-        method: saved ? 'PUT' : 'DELETE',
+export async function updateBoard(deskId, patch) {
+    return apiRequest(`/api/v1/desks/${encodeURIComponent(deskId)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
     });
 }
 
-/**
- * Получает комментарии к пину.
- *
- * @param {number|string} pinId
- * @returns {Promise<Object[]>}
- */
+export async function deleteBoard(deskId) {
+    await apiRequest(`/api/v1/desks/${encodeURIComponent(deskId)}`, {
+        method: 'DELETE',
+    });
+}
+
+export async function addPinsToBoard(deskId, pinIds) {
+    const promises = pinIds.map((pinId) =>
+        apiRequest(`/api/v1/desks/${encodeURIComponent(deskId)}/pins/${encodeURIComponent(pinId)}`, {
+            method: 'POST',
+        })
+    );
+    await Promise.all(promises);
+}
+
+export async function removePinFromBoard(deskId, pinId) {
+    await apiRequest(`/api/v1/desks/${encodeURIComponent(deskId)}/pins/${encodeURIComponent(pinId)}`, {
+        method: 'DELETE',
+    });
+}
+
+// ===== Saved pins (эндпоинт отсутствует в спецификации v1) =====
+// Используется вкладкой «Пины» в профиле и модалками выбора пинов.
+// TODO: согласовать с бэкендом, пока gracefully возвращаем пустой список.
+
+export async function fetchUserSavedPins(userId) {
+    try {
+        const result = await apiRequest(`/api/v1/users/${encodeURIComponent(userId)}/saved-pins`);
+        return result.pins || [];
+    } catch (error) {
+        if (error.status === 404) return [];
+        throw error;
+    }
+}
+
+// ===== Comments (эндпоинт отсутствует в спецификации v1) =====
+
 export async function fetchPinComments(pinId) {
-    const result = await apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/comments`);
-    return result.comments || [];
+    try {
+        const result = await apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/comments`);
+        return result.comments || [];
+    } catch (error) {
+        if (error.status === 404) return [];
+        throw error;
+    }
 }
 
-/**
- * Добавляет комментарий к пину.
- *
- * @param {number|string} pinId
- * @param {string} text
- * @returns {Promise<Object>}
- */
 export async function createPinComment(pinId, text) {
     const result = await apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/comments`, {
         method: 'POST',

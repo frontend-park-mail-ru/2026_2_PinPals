@@ -10,3 +10,4 @@ dist
 server.dev.js
 Dockerfile
 .dockerignore
+uploads/

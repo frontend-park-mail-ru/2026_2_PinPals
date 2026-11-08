@@ -1,0 +1,59 @@
+<div class="profile-edit-page">
+    <main class="profile-edit-main">
+        <div class="profile-edit-heading">
+            <h1 class="profile-edit-title">Редактирование профиля</h1>
+            <a class="profile-edit-back" href="/profile">Вернуться в профиль</a>
+        </div>
+
+        <form class="profile-edit-form" id="profileEditForm" novalidate>
+            <label class="profile-modal-field">
+                <span>Имя</span>
+                <input id="profileEditName" name="name" type="text" maxlength="255" autocomplete="name" required>
+            </label>
+
+            <label class="profile-modal-field">
+                <span>Никнейм (user_tag)</span>
+                <input id="profileEditTag" name="user_tag" type="text" maxlength="64" autocomplete="username" required>
+            </label>
+
+            <label class="profile-modal-field">
+                <span>Описание</span>
+                <textarea id="profileEditDescription" name="description" rows="4" placeholder="Расскажите о себе"></textarea>
+            </label>
+
+            <label class="profile-modal-field">
+                <span>Ссылка на аватар</span>
+                <input id="profileEditAvatar" name="avatar_url" type="url" placeholder="https://..." autocomplete="url">
+            </label>
+
+            <p class="profile-modal-message" id="profileEditMessage" role="status" aria-live="polite" hidden></p>
+
+            <div class="profile-edit-actions">
+                <button type="submit" class="btn btn-first" id="profileEditSubmit">Сохранить</button>
+                <a href="/profile" class="btn btn-second">Отмена</a>
+            </div>
+        </form>
+
+        <section class="profile-danger-zone" aria-labelledby="profileDangerTitle">
+            <h2 id="profileDangerTitle">Опасная зона</h2>
+            <p>Удаление аккаунта — необратимое действие. Профиль будет помечен как удалённый, а текущая сессия завершится.</p>
+            <button type="button" class="btn btn-danger" id="profileDeleteButton">Удалить аккаунт</button>
+        </section>
+    </main>
+
+    <div class="profile-modal-backdrop" id="profileDeleteModal" hidden>
+        <div class="profile-modal-box" role="dialog" aria-modal="true" aria-labelledby="profileDeleteTitle">
+            <div class="profile-modal-header">
+                <h2 class="profile-modal-title" id="profileDeleteTitle">Удалить аккаунт?</h2>
+                <button class="profile-modal-close" id="profileDeleteClose" type="button" aria-label="Закрыть">×</button>
+            </div>
+            <p style="font-size:16px;margin:0 0 20px;color:var(--color-text)">
+                Это действие нельзя отменить. После удаления вы будете разлогинены.
+            </p>
+            <div class="profile-modal-actions">
+                <button class="btn btn-second" id="profileDeleteCancel" type="button">Отмена</button>
+                <button class="btn btn-danger" id="profileDeleteConfirm" type="button">Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
