@@ -1,12 +1,12 @@
 <header class="home-header">
-    <div class="header-left">
+    <a class="header-left" href="/home">
         {{#if isAuth}}
             <img src="/img/logo_reg.png" alt="Logo" class="logo-img-small">
         {{else}}
             <img src="/img/logo_no_reg.png" alt="Logo" class="logo-img-small">
         {{/if}}
         <span class="logo-text-small">PicKing</span>
-    </div>
+    </a>
 
     <div class="header-center"></div>
 
@@ -20,6 +20,7 @@
                 </div>
                 <div class="user-dropdown">
                     <div class="user-name">{{userName}}</div>
+                    <a class="btn-profile-menu" href="/profile">Профиль</a>
                     <button class="btn-logout" id="logoutBtn" type="button">Выйти</button>
                 </div>
             </div>

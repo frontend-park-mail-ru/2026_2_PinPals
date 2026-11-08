@@ -19,8 +19,9 @@ export class PinPage {
     }
 
     render() {
+        const backUrl = this.router?.getBackUrl('/home') || '/home';
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = template({});
+        wrapper.innerHTML = template({ backUrl });
         this.element = wrapper.firstElementChild;
 
         this.element.prepend(new Header({ router: this.router }).render());

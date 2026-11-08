@@ -9,6 +9,7 @@ const root = document.getElementById('root');
  * @type {Array<{ key: string, instance: { destroy?: () => void }, element: HTMLElement }>}
  */
 let currentStack = [];
+let previousPath = null;
 
 /**
  * Роутер приложения. Передаётся страницам через конструктор,
@@ -24,9 +25,25 @@ const router = {
             return;
         }
 
-        window.history.pushState(null, null, url);
+        previousPath = window.location.pathname;
+        window.history.pushState({ from: previousPath }, null, url);
         window.scrollTo(0, 0);
         renderPage();
+    },
+
+    /**
+     * @param {string} [fallback='/home']
+     * @returns {string}
+     */
+    getBackUrl(fallback = '/home') {
+        const stateFrom = window.history.state?.from;
+        const candidate = previousPath || stateFrom;
+
+        if (candidate && candidate !== window.location.pathname && candidate.startsWith('/')) {
+            return candidate;
+        }
+
+        return fallback;
     },
 
     refreshHeader() {
@@ -133,7 +150,10 @@ window.addEventListener('click', (event) => {
 });
 
 // Слушаем кнопки "Назад/Вперед" в браузере
-window.addEventListener('popstate', renderPage);
+window.addEventListener('popstate', () => {
+    previousPath = null;
+    renderPage();
+});
 
 // Первый рендер при загрузке страницы
 renderPage();
