@@ -415,3 +415,12 @@
         column-count: 2;
     }
 }
+.pin-action-message {
+    margin: -8px 0 10px;
+    color: var(--color-error);
+    font-size: 13px;
+}
+
+.pin-action-message[hidden] {
+    display: none;
+}

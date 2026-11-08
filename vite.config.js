@@ -7,7 +7,9 @@ export default defineConfig({
         port: 3000,
         proxy: {
             '/api': {
-                target: 'http://161.104.105.76:8000',
+                // Mock API из server.dev.js. Для настоящего backend здесь
+                // можно указать адрес Go-сервера.
+                target: process.env.API_TARGET || 'http://localhost:3001',
                 changeOrigin: true,
             },
         },

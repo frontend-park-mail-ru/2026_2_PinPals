@@ -1,113 +1,32 @@
 const BASE_URL = location.origin;
-/**
- * Регистрация нового пользователя
- * Ожидает от Go: POST /api/v1/auth/register
- *
- * @async
- * @param {string} username - Логин (тег).
- * @param {string} nickname - Имя пользователя.
- * @param {string} password - Пароль.
- * @param {string} birthdate - Дата рождения.
- * @returns {Promise<Object>} Данные созданного профиля.
- */
-export async function signUpUser(username, nickname, password, birthdate) {
-    // Приводим дату к формату RFC3339 ISO строки ("2005-03-14T00:00:00Z"), которую ждет Go time.Time
-    const formattedDate = birthdate ? new Date(birthdate).toISOString() : '';
 
-    const response = await fetch(`${BASE_URL}/api/v1/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            user_tag: username,
-            name: nickname,
-            password: password,
-            birth_date: formattedDate
-        })
+/**
+ * Общая функция для запросов к API.
+ * Токен используется только для авторизации, а данные приложения хранятся на сервере.
+ *
+ * @param {string} path
+ * @param {RequestInit} [options]
+ * @returns {Promise<any>}
+ */
+async function apiRequest(path, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = {
+        Accept: 'application/json',
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+    };
+
+    const response = await fetch(`${BASE_URL}${path}`, {
+        ...options,
+        headers,
     });
 
-    // Безопасная обработка ответа сервера
-    const contentType = response.headers.get('content-type');
-    let data;
-    if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-    } else {
-        const textError = await response.text();
-        throw new Error(textError || `Ошибка сервера: HTTP ${response.status}`);
+    if (response.status === 204) {
+        return null;
     }
 
-    if (!response.ok) {
-        if (data.error === 'validation_error' && data.fields) {
-            const messages = Object.entries(data.fields)
-                .map(([field, code]) => `${field}: ${code}`)
-                .join(', ');
-            throw new Error(messages);
-        }
-        throw new Error(data.error || 'Ошибка регистрации');
-    }
-    return data; // Возвращает созданную структуру User (без токена)
-}
-
-/**
- * Авторизация пользователя
- * Ожидает от Go: POST /api/v1/auth/login
- *
- * @async
- * @param {string} username - Логин.
- * @param {string} password - Пароль.
- * @returns {Promise<Object>} Токен и данные пользователя.
- */
-export async function loginUser(username, password) {
-    const response = await fetch(`${BASE_URL}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            user_tag: username,
-            password: password
-        })
-    });
-
-    const contentType = response.headers.get('content-type');
-    let data;
-    if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-    } else {
-        const textError = await response.text();
-        throw new Error(textError || `Ошибка авторизации: HTTP ${response.status}`);
-    }
-
-    if (!response.ok) {
-        throw new Error(data.error || 'Неверный логин или пароль');
-    }
-    return data;
-}
-
-/**
- * Получение списка пинов с пагинацией
- * Ожидает от Go: POST /api/v1/pins/search
- *
- * @async
- * @param {number} [limit=20] - Лимит пинов.
- * @param {Object|null} [cursor=null] - Курсор пагинации.
- * @returns {Promise<Object>} Объект с массивом пинов.
- */
-export async function fetchPins(limit = 30, cursor = null) {
-    const response = await fetch(
-        `${BASE_URL}/api/v1/pins/search`,
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                limit,
-                ...(cursor ? { cursor } : {}),
-            }),
-        },
-    );
-
-    let payload = null;
-
+    let payload;
     try {
         payload = await response.json();
     } catch {
@@ -115,57 +34,232 @@ export async function fetchPins(limit = 30, cursor = null) {
     }
 
     if (!response.ok) {
-        throw new Error(
-            payload?.error || `HTTP ${response.status}`,
-        );
-    }
-
-    if (!payload || !Array.isArray(payload.pins)) {
-        throw new Error('Некорректный формат ответа /api/v1/pins/search');
+        if (payload?.error === 'validation_error' && payload.fields) {
+            const fieldsMessage = Object.entries(payload.fields)
+                .map(([field, code]) => `${field}: ${code}`)
+                .join(', ');
+            throw new Error(fieldsMessage || 'Ошибка проверки данных');
+        }
+        throw new Error(payload?.error || `Ошибка запроса: HTTP ${response.status}`);
     }
 
     return payload;
 }
+
 /**
- * Получение одного пина по его ID.
- * Ожидает от Go: GET /api/v1/pins/{pinID}.
+ * Регистрация нового пользователя.
  *
- * @async
- * @param {number|string} pinId - ID пина из поля pin_id.
- * @returns {Promise<Object>} Данные пина.
+ * @param {string} username
+ * @param {string} nickname
+ * @param {string} password
+ * @param {string} birthdate
+ * @returns {Promise<Object>}
+ */
+export async function signUpUser(username, nickname, password, birthdate) {
+    const formattedDate = birthdate ? new Date(birthdate).toISOString() : '';
+    return apiRequest('/api/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+            user_tag: username,
+            name: nickname,
+            password,
+            birth_date: formattedDate,
+        }),
+    });
+}
+
+/**
+ * Авторизация пользователя.
+ *
+ * @param {string} username
+ * @param {string} password
+ * @returns {Promise<Object>}
+ */
+export async function loginUser(username, password) {
+    return apiRequest('/api/v1/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ user_tag: username, password }),
+    });
+}
+
+/**
+ * Получает список пинов с пагинацией.
+ *
+ * @param {number} [limit=30]
+ * @param {Object|null} [cursor=null]
+ * @returns {Promise<Object>}
+ */
+export async function fetchPins(limit = 30, cursor = null) {
+    const result = await apiRequest('/api/v1/pins/search', {
+        method: 'POST',
+        body: JSON.stringify({ limit, ...(cursor ? { cursor } : {}) }),
+    });
+
+    if (!result || !Array.isArray(result.pins)) {
+        throw new Error('Некорректный формат ответа /api/v1/pins/search');
+    }
+    return result;
+}
+
+/**
+ * Получает один пин по ID.
+ *
+ * @param {number|string} pinId
+ * @returns {Promise<Object>}
  */
 export async function fetchPinById(pinId) {
     const normalizedId = Number(pinId);
-
     if (!Number.isInteger(normalizedId) || normalizedId < 1) {
         throw new Error('Некорректный ID пина');
     }
 
-    const response = await fetch(
-        `${BASE_URL}/api/v1/pins/${encodeURIComponent(normalizedId)}`,
-        {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-            },
-        },
-    );
+    return apiRequest(`/api/v1/pins/${encodeURIComponent(normalizedId)}`);
+}
 
-    let payload = null;
+/**
+ * Получает сохранённые пины пользователя с сервера.
+ *
+ * @param {number|string} userId
+ * @returns {Promise<Object[]>}
+ */
+export async function fetchUserSavedPins(userId) {
+    const result = await apiRequest(`/api/v1/users/${encodeURIComponent(userId)}/saved-pins`);
+    return result.pins || [];
+}
 
-    try {
-        payload = await response.json();
-    } catch {
-        throw new Error(`Сервер вернул невалидный JSON: HTTP ${response.status}`);
-    }
+/**
+ * Получает список досок пользователя с сервера.
+ *
+ * @param {number|string} userId
+ * @returns {Promise<Object[]>}
+ */
+export async function fetchUserBoards(userId) {
+    const result = await apiRequest(`/api/v1/users/${encodeURIComponent(userId)}/boards`);
+    return result.boards || [];
+}
 
-    if (!response.ok) {
-        throw new Error(payload?.error || `HTTP ${response.status}`);
-    }
+/**
+ * Получает доску и все её пины.
+ *
+ * @param {string|number} boardId
+ * @returns {Promise<{board: Object, pins: Object[]}>}
+ */
+export async function fetchBoardById(boardId) {
+    return apiRequest(`/api/v1/boards/${encodeURIComponent(boardId)}`);
+}
 
-    if (!payload || Number(payload.pin_id) !== normalizedId || !payload.image_url) {
-        throw new Error('Некорректный формат ответа /api/v1/pins/{pinID}');
-    }
+/**
+ * Создаёт доску на сервере.
+ *
+ * @param {{title: string, description?: string, visibility?: string}} board
+ * @returns {Promise<Object>}
+ */
+export async function createBoard(board) {
+    const result = await apiRequest('/api/v1/boards', {
+        method: 'POST',
+        body: JSON.stringify(board),
+    });
+    return result.board;
+}
 
-    return payload;
+/** Добавляет сохранённые пины в доску через API.
+ * @param {string|number} boardId
+ * @param {(string|number)[]} pinIds
+ * @returns {Promise<Object>}
+ */
+export async function addPinsToBoard(boardId, pinIds) {
+    return apiRequest(`/api/v1/boards/${encodeURIComponent(boardId)}/pins`, {
+        method: 'POST',
+        body: JSON.stringify({ pin_ids: pinIds }),
+    });
+}
+
+/**
+ * Удаляет доску на сервере. Проверка владельца выполняется сервером.
+ *
+ * @param {string|number} boardId
+ * @returns {Promise<void>}
+ */
+export async function deleteBoard(boardId) {
+    await apiRequest(`/api/v1/boards/${encodeURIComponent(boardId)}`, {
+        method: 'DELETE',
+    });
+}
+
+/**
+ * Создаёт пин на сервере и, при передаче board_id, добавляет его в доску.
+ * image_data — сжатое изображение в формате Data URL для mock API.
+ * Реальный backend может заменить это поле на multipart-загрузку файла.
+ *
+ * @param {{name: string, description?: string, tags?: string[], image_data: string, board_id?: string|null}} pin
+ * @returns {Promise<Object>}
+ */
+export async function createPin(pin) {
+    const result = await apiRequest('/api/v1/pins', {
+        method: 'POST',
+        body: JSON.stringify(pin),
+    });
+    return result.pin;
+}
+
+/**
+ * Загружает состояние лайка и сохранения пина для текущего пользователя.
+ *
+ * @param {number|string} pinId
+ * @returns {Promise<Object>}
+ */
+export async function fetchPinInteractions(pinId) {
+    return apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/interactions`);
+}
+
+/**
+ * Устанавливает состояние лайка пина.
+ *
+ * @param {number|string} pinId
+ * @param {boolean} liked
+ * @returns {Promise<Object>}
+ */
+export async function setPinLiked(pinId, liked) {
+    return apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/like`, {
+        method: liked ? 'PUT' : 'DELETE',
+    });
+}
+
+/**
+ * Устанавливает состояние сохранения пина.
+ *
+ * @param {number|string} pinId
+ * @param {boolean} saved
+ * @returns {Promise<Object>}
+ */
+export async function setPinSaved(pinId, saved) {
+    return apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/save`, {
+        method: saved ? 'PUT' : 'DELETE',
+    });
+}
+
+/**
+ * Получает комментарии к пину.
+ *
+ * @param {number|string} pinId
+ * @returns {Promise<Object[]>}
+ */
+export async function fetchPinComments(pinId) {
+    const result = await apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/comments`);
+    return result.comments || [];
+}
+
+/**
+ * Добавляет комментарий к пину.
+ *
+ * @param {number|string} pinId
+ * @param {string} text
+ * @returns {Promise<Object>}
+ */
+export async function createPinComment(pinId, text) {
+    const result = await apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ text }),
+    });
+    return result.comment;
 }

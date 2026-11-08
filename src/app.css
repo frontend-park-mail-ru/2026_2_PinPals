@@ -1,11 +1,16 @@
 @import "/src/components/components.css";
 @import "/src/components/Header/Header.css";
 @import "/src/components/SearchBar/SearchBar.css";
+@import "/src/components/BoardCard/BoardCard.css";
 @import "/src/pages/pages.css";
 @import "/src/pages/SignUpPage/SignUpPage.css";
 @import "/src/pages/LoginPage/LoginPage.css";
 @import "/src/pages/HomePage/HomePage.css";
 @import "/src/pages/PinPage/PinPage.css";
+@import "/src/pages/ProfilePage/ProfilePage.css";
+@import "/src/pages/BoardPage/BoardPage.css";
+@import "/src/pages/CreatePinPage/CreatePinPage.css";
+@import "/src/pages/CreateBoardPage/CreateBoardPage.css";
 
 /* Подключение локального шрифта Unkempt */
 @font-face {
@@ -42,7 +47,6 @@
 }
 
 :root {
-
     --color-back:            #FFFFFC;   /* основной фон */
     --color-input:           #F0F2F1;   /* светло-зелёный (рамки, инпуты) */
     --color-input-focus:     #d8e0dd;
@@ -50,9 +54,8 @@
     --color-accent:          #85A696;   /* тёмно-зелёный (текст, ссылки) */
     --color-text:            #665140;   /* коричневый (лого, кнопки) */
     --color-active:          #46382C;   /* коричневый hover */
-    --color-error:           #FF3F3F;   /* ошибки, крестик hover */
-
-    --color-gray-light:      #F0F0F0;   /* заглушка картинки */
+    --color-error:            #FF3F3F;   /* ошибки, крестик hover */
+    --color-gray-light:       #F0F0F0;   /* заглушка картинки */
 
     --overlay-shadow:        rgba(0, 0, 0, 0.50);   /* затемнение модалок */
     --overlay-menu:          rgba(255, 255, 252, 0.8); /* фон сайдбара */
@@ -61,6 +64,4 @@
 
     --font-main:             'Palanquin', sans-serif;
     --font-logo:             'Unkempt', cursive;
-
-
 }
