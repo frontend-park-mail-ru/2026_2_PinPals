@@ -58,22 +58,5 @@
         </form>
     </main>
 
-    <!-- Модальное окно выбора пинов -->
-    <div class="saved-pins-modal" id="savedPinsModal" hidden>
-        <section class="saved-pins-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-            <header>
-                <h2 id="modalTitle">Выберите пины</h2>
-                <button type="button" id="closeSavedPins" aria-label="Закрыть модальное окно">×</button>
-            </header>
-
-            <p id="savedPinsSelectedCount">Выбрано: 0</p>
-
-            <div class="saved-pins-grid" id="savedPinsGrid">Загрузка…</div>
-
-            <footer>
-                <button type="button" class="btn btn-second" id="cancelSavedPins">Отмена</button>
-                <button type="button" class="btn btn-first" id="confirmSavedPins">Добавить выбранные</button>
-            </footer>
-        </section>
-    </div>
+    <div id="savedPinsPickerMount"></div>
 </div>

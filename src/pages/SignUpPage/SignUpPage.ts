@@ -1,6 +1,6 @@
-import { Input } from '../../components/Input/Input.js';
-import { Button } from '../../components/Button/Button.js';
-import { signUpUser, loginUser } from '../../api/user.js';
+import { Input } from '../../components/Input/Input';
+import { Button } from '../../components/Button/Button';
+import { signUpUser, loginUser } from '../../api/user';
 import template from './SignUpPage.hbs';
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
@@ -85,11 +85,12 @@ const makePasswordMatchValidator = (getPassword) => (val) => {
  * Класс, управляющий отображением и логикой работы страницы создания учетной записи (регистрации).
  */
 export class SignUpPage {
+    [key: string]: any;
     /**
      * @param {Object} [options]
-     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
+     * @param {import('../../routes').Router} [options.router] - роутер для переходов.
      */
-    constructor({ router } = {}) {
+    constructor({ router }: any = {}) {
         this.router = router;
 
         this.loginInput = new Input({
@@ -180,8 +181,6 @@ export class SignUpPage {
         if (dateInputElement) {
             const today = new Date();
 
-            // HTML date input uses a calendar date, so format local components
-            // instead of UTC to avoid shifting the date around midnight.
             const maxDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             dateInputElement.setAttribute('max', maxDateStr);
         }

@@ -1,14 +1,14 @@
-import { resolveImageUrl } from '../../api/user.js';
 import {
+    addPinsToBoard,
     deleteBoard,
     fetchBoardById,
     fetchUserSavedPins,
-    addPinsToBoard,
-    updateBoard,
     removePinFromBoard,
-} from '../../api/user.js';
-import { Header } from '../../components/Header/Header.js';
-import { PinCard } from '../../components/PinCard/PinCard.js';
+    updateBoard,
+} from '../../api/user';
+import { Header } from '../../components/Header/Header';
+import { PinCard } from '../../components/PinCard/PinCard';
+import { SavedPinsPicker } from '../../components/SavedPinsPicker/SavedPinsPicker';
 import template from './BoardPage.hbs';
 
 function getPinsLabel(count) {
@@ -33,7 +33,8 @@ function getVisibilityLabel(entryStatus) {
 }
 
 export class BoardPage {
-    constructor(boardId, { router } = {}) {
+    [key: string]: any;
+    constructor(boardId, { router }: any = {}) {
         this.boardId = String(boardId);
         this.router = router;
         this.board = null;
@@ -42,8 +43,7 @@ export class BoardPage {
         this.isDestroyed = false;
         this.isOwner = false;
 
-        this.savedPins = [];
-        this.selectedPinIds = new Set();
+        this.savedPinsPicker = null;
         this.notice = new URLSearchParams(window.location.search).get('notice');
     }
 
@@ -54,6 +54,19 @@ export class BoardPage {
 
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
+        this.savedPinsPicker = new SavedPinsPicker({
+            loadPins: async () => {
+                const userId = localStorage.getItem('userId');
+                if (!userId) throw new Error('Войдите в аккаунт, чтобы выбрать сохранённые пины.');
+                return fetchUserSavedPins(userId);
+            },
+            excludePinIds: () => (this.board?.pins || []).map((pin) => pin.pin_id),
+            onConfirm: async (ids) => {
+                await addPinsToBoard(this.boardId, ids);
+                await this.loadBoard();
+            },
+        });
+        this.element.querySelector('#savedPinsPickerMount').append(this.savedPinsPicker.render());
         this.setupEvents();
         void this.loadBoard();
         return this.element;
@@ -151,23 +164,8 @@ export class BoardPage {
         this.element.querySelector('#editBoardSave').addEventListener('click', () => void this.saveBoardEdit());
 
         // Добавление пинов
-        this.element.querySelector('#boardAddPins').addEventListener('click', () => void this.openSavedPinsModal());
+        this.element.querySelector('#boardAddPins').addEventListener('click', () => void this.savedPinsPicker?.open());
 
-        const pinsModal = this.element.querySelector('#savedPinsModal');
-        const closePinsModal = () => { pinsModal.hidden = true; };
-        this.element.querySelector('#closeSavedPins').addEventListener('click', closePinsModal);
-        this.element.querySelector('#cancelSavedPins').addEventListener('click', closePinsModal);
-
-        this.element.querySelector('#savedPinsGrid').addEventListener('click', (e) => {
-            const card = e.target.closest('[data-pin-id]');
-            if (!card) return;
-            const id = String(card.dataset.pinId);
-            this.selectedPinIds.has(id) ? this.selectedPinIds.delete(id) : this.selectedPinIds.add(id);
-            card.classList.toggle('is-selected', this.selectedPinIds.has(id));
-            this.updateSavedPinsCount();
-        });
-
-        this.element.querySelector('#confirmSavedPins').addEventListener('click', () => void this.submitAddedPins());
     }
 
     openEditModal() {
@@ -203,7 +201,7 @@ export class BoardPage {
             return;
         }
 
-        const patch = {};
+        const patch: any = {};
         const prev = this.board || {};
 
         if (name !== (prev.name || '')) patch.name = name;
@@ -241,10 +239,6 @@ export class BoardPage {
         }
     }
 
-    /**
-     * DELETE /desks/{id}/pins/{pinID}.
-     * Сам пин не удаляется, только отвязывается от доски.
-     */
     async removePinFromBoard(pinId, button) {
         if (!this.isOwner) return;
         button.disabled = true;
@@ -273,79 +267,13 @@ export class BoardPage {
         }
     }
 
-    async openSavedPinsModal() {
-        const modal = this.element.querySelector('#savedPinsModal');
-        const grid = this.element.querySelector('#savedPinsGrid');
-        modal.hidden = false;
-        grid.textContent = 'Загрузка сохранённых пинов…';
-        this.selectedPinIds.clear();
-
-        try {
-            const userId = localStorage.getItem('userId');
-            this.savedPins = await fetchUserSavedPins(userId);
-            if (this.isDestroyed) return;
-            grid.replaceChildren();
-
-            const currentPinIds = new Set(
-                (this.board?.pins || []).map((pin) => String(pin.pin_id))
-            );
-            const availablePins = this.savedPins.filter((pin) => !currentPinIds.has(String(pin.pin_id)));
-
-            if (!availablePins.length) {
-                grid.textContent = 'Все ваши сохранённые пины уже добавлены на эту доску.';
-                this.updateSavedPinsCount();
-                return;
-            }
-
-            availablePins.forEach((pin) => {
-                const card = document.createElement('button');
-                card.type = 'button';
-                card.className = 'saved-pin-option';
-                card.dataset.pinId = pin.pin_id;
-
-                const image = document.createElement('img');
-                image.src = resolveImageUrl(pin.image_url);
-                image.alt = pin.name || '';
-
-                const check = document.createElement('span');
-                check.className = 'saved-pin-check';
-
-                card.append(image, check);
-                grid.append(card);
-            });
-            this.updateSavedPinsCount();
-        } catch (error) {
-            grid.textContent = error.message || 'Не удалось загрузить пины.';
-        }
-    }
-
-    updateSavedPinsCount() {
-        this.element.querySelector('#savedPinsSelectedCount').textContent = `Выбрано: ${this.selectedPinIds.size}`;
-    }
-
-    async submitAddedPins() {
-        if (!this.selectedPinIds.size) {
-            this.element.querySelector('#savedPinsModal').hidden = true;
-            return;
-        }
-        const button = this.element.querySelector('#confirmSavedPins');
-        button.disabled = true;
-        try {
-            await addPinsToBoard(this.boardId, [...this.selectedPinIds]);
-            this.element.querySelector('#savedPinsModal').hidden = true;
-            void this.loadBoard();
-        } catch (error) {
-            this.showMessage(error.message || 'Не удалось добавить пины.');
-        } finally {
-            button.disabled = false;
-        }
-    }
-
     refreshHeader() { this.header?.refresh(); }
     destroy() {
         this.isDestroyed = true;
         this.header?.destroy();
         this.header = null;
+        this.savedPinsPicker?.destroy();
+        this.savedPinsPicker = null;
         this.element = null;
     }
 }

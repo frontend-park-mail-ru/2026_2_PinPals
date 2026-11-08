@@ -5,6 +5,7 @@ import template from './SearchBar.hbs';
  * просто дебаунсит ввод и зовёт переданный onSearch.
  */
 export class SearchBar {
+    [key: string]: any;
     /**
      * @param {Object} [options]
      * @param {string} [options.placeholder='Поиск']
@@ -12,7 +13,7 @@ export class SearchBar {
      * @param {number} [options.debounceMs=300]
      * @param {(query: string) => void} [options.onSearch]
      */
-    constructor({ placeholder = 'Поиск', initialQuery = '', debounceMs = 300, onSearch } = {}) {
+    constructor({ placeholder = 'Поиск', initialQuery = '', debounceMs = 300, onSearch }: any = {}) {
         this.placeholder = placeholder;
         this.initialQuery = initialQuery;
         this.debounceMs = debounceMs;

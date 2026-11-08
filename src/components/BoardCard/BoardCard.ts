@@ -1,5 +1,5 @@
 import template from './BoardCard.hbs';
-import { resolveImageUrl } from '../../api/user.js';
+import { resolveImageUrl } from '../../api/user';
 
 /** Возвращает корректную подпись количества пинов. */
 function getPinsLabel(count) {
@@ -17,6 +17,7 @@ function getPinsLabel(count) {
 
 /** Карточка доски с коллажем из трёх изображений. */
 export class BoardCard {
+    [key: string]: any;
     /**
      * @param {Object} board - Объект доски, полученный от API.
      *   По контракту v1: desk_id, name, description, avatar_img_url, entry_status.
@@ -35,7 +36,6 @@ export class BoardCard {
             : (Number(board.pins_count ?? board.pinsCount) || 0);
         this.pinsLabel = hasPinsCount ? getPinsLabel(this.pinsCount) : '';
 
-        // FIX: если превью нет, но есть avatar_img_url — используем его
         let images = (board.preview_images || board.images || []).filter(Boolean);
         if (!images.length && Array.isArray(board.pins)) {
             images = board.pins.map((pin) => pin.image_url).filter(Boolean);

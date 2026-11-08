@@ -1,6 +1,6 @@
-import { Input } from '../../components/Input/Input.js';
-import { Button } from '../../components/Button/Button.js';
-import { loginUser } from '../../api/user.js';
+import { Input } from '../../components/Input/Input';
+import { Button } from '../../components/Button/Button';
+import { loginUser } from '../../api/user';
 import template from './LoginPage.hbs';
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
@@ -10,11 +10,12 @@ const validatePassword = (val) => val.length >= 8 ? '' : 'Пароль мини�
  * Класс, управляющий отображением и логикой работы страницы авторизации (входа) пользователя.
  */
 export class LoginPage {
+    [key: string]: any;
     /**
      * @param {Object} [options]
-     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
+     * @param {import('../../routes').Router} [options.router] - роутер для переходов.
      */
-    constructor({ router } = {}) {
+    constructor({ router }: any = {}) {
         this.router = router;
 
         this.loginInput = new Input({

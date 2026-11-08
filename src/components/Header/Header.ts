@@ -1,18 +1,19 @@
 import template from './Header.hbs';
-import { SearchBar } from '../SearchBar/SearchBar.js';
-import { logoutUser, resolveImageUrl } from '../../api/user.js';
+import { SearchBar } from '../SearchBar/SearchBar';
+import { logoutUser, resolveImageUrl } from '../../api/user';
 
 /**
  * Шапка сайта: логотип, слот по центру, меню пользователя.
  */
 export class Header {
+    [key: string]: any;
     /**
      * @param {Object} [options]
      * @param {HTMLElement} [options.center] - что положить в центральный слот;
      *     по умолчанию — SearchBar с глобальным placeholder.
-     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
+     * @param {import('../../routes').Router} [options.router] - роутер для переходов.
      */
-    constructor({ center, router } = {}) {
+    constructor({ center, router }: any = {}) {
         this.center = center;
         this.router = router;
         this.searchBar = null;

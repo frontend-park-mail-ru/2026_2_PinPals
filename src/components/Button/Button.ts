@@ -4,6 +4,7 @@ import template from './Button.hbs';
  * Класс, представляющий переиспользуемый компонент кнопки.
  */
 export class Button {
+    [key: string]: any;
     /**
      * Создает экземпляр компонента Button.
      *
@@ -13,7 +14,7 @@ export class Button {
      * @param {function} [options.onClick] - Функция-обработчик события клика.
      * @param {string} [options.className='btn btn-primary'] - CSS-классы для стилизации кнопки.
      */
-    constructor({ title, type = 'button', onClick, className = 'btn btn-primary' }) {
+    constructor({ title, type = 'button', onClick, className = 'btn btn-primary' }: any) {
         this.title = title;
         this.type = type;
         this.onClick = onClick;

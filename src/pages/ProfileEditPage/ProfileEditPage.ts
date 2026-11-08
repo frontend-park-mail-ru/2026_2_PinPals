@@ -3,8 +3,8 @@ import {
     fetchMyProfile,
     logoutUser,
     updateMyProfile,
-} from '../../api/user.js';
-import { Header } from '../../components/Header/Header.js';
+} from '../../api/user';
+import { Header } from '../../components/Header/Header';
 import template from './ProfileEditPage.hbs';
 
 /**
@@ -12,11 +12,12 @@ import template from './ProfileEditPage.hbs';
  * Эндпоинты: GET/PATCH/DELETE /api/v1/users/me.
  */
 export class ProfileEditPage {
+    [key: string]: any;
     /**
      * @param {Object} [options]
-     * @param {import('../../routes.js').Router} [options.router]
+     * @param {import('../../routes').Router} [options.router]
      */
-    constructor({ router } = {}) {
+    constructor({ router }: any = {}) {
         this.router = router;
         this.element = null;
         this.header = null;
@@ -116,7 +117,7 @@ export class ProfileEditPage {
 
         // Формируем патч только из изменённых полей.
         // description/avatar_url передаём как null, если пользователь очистил поле.
-        const patch = {};
+        const patch: any = {};
         const prev = this.profile || {};
 
         if (name !== (prev.name || '')) patch.name = name;

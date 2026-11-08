@@ -1,0 +1,15 @@
+<div class="saved-pins-modal" data-picker-modal hidden>
+    <section class="saved-pins-dialog" role="dialog" aria-modal="true" aria-labelledby="savedPinsPickerTitle">
+        <header>
+            <h2 id="savedPinsPickerTitle">{{title}}</h2>
+            <button type="button" data-picker-close aria-label="Закрыть">×</button>
+        </header>
+        <p data-picker-count>Выбрано: 0</p>
+        <p data-picker-error class="saved-pins-error" role="alert" hidden></p>
+        <div class="saved-pins-grid" data-picker-grid>Загрузка…</div>
+        <footer>
+            <button type="button" class="btn btn-second" data-picker-cancel>Отмена</button>
+            <button type="button" class="btn btn-first" data-picker-confirm>{{confirmText}}</button>
+        </footer>
+    </section>
+</div>

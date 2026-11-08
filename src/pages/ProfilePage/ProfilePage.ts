@@ -1,9 +1,7 @@
-// FIX: для вкладки «Доски» используем контрактный GET /desks/me —
-// /users/{id}/desks отдаёт только публичные доски.
-import { fetchMyDesks, fetchMyProfile, fetchUserSavedPins, resolveImageUrl } from '../../api/user.js';
-import { Header } from '../../components/Header/Header.js';
-import { PinCard } from '../../components/PinCard/PinCard.js';
-import { BoardCard } from '../../components/BoardCard/BoardCard.js';
+import { fetchMyDesks, fetchMyProfile, fetchUserSavedPins, resolveImageUrl } from '../../api/user';
+import { Header } from '../../components/Header/Header';
+import { PinCard } from '../../components/PinCard/PinCard';
+import { BoardCard } from '../../components/BoardCard/BoardCard';
 import template from './ProfilePage.hbs';
 
 /**
@@ -30,12 +28,13 @@ function formatFollowers(count) {
  * Страница профиля с вкладками «Пины» и «Доски».
  */
 export class ProfilePage {
+    [key: string]: any;
     /**
      * @param {Object} options
-     * @param {import('../../routes.js').Router} options.router
+     * @param {import('../../routes').Router} options.router
      * @param {'pins'|'boards'} [options.activeTab='pins']
      */
-    constructor({ router, activeTab = 'pins' } = {}) {
+    constructor({ router, activeTab = 'pins' }: any = {}) {
         this.router = router;
         this.activeTab = activeTab === 'boards' ? 'boards' : 'pins';
         this.element = null;
@@ -54,16 +53,14 @@ export class ProfilePage {
             || localStorage.getItem('userTag')
             || 'Пользователь';
         const userAvatarUrl = resolveImageUrl(localStorage.getItem('userAvatarUrl') || '');
-        const followersCount = localStorage.getItem('followersCount')
-            || localStorage.getItem('userFollowersCount')
-            || '0';
+        const followersLabel = 'Подписчики: —';
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({
             userName,
             userAvatarUrl,
             userInitial: userName.trim().charAt(0).toUpperCase() || 'П',
-            followersLabel: formatFollowers(Number(followersCount)),
+            followersLabel,
             isPinsTab: this.activeTab === 'pins',
             isBoardsTab: this.activeTab === 'boards',
             actionText: this.activeTab === 'pins' ? 'Создать пин' : 'Создать доску',
@@ -112,7 +109,6 @@ export class ProfilePage {
         } catch (error) {
             if (this.isDestroyed || !this.element?.isConnected) return;
             if (error.status === 401) {
-                ['isAuth', 'userName', 'userId', 'userTag', 'userAvatarUrl'].forEach((key) => localStorage.removeItem(key));
                 this.header?.refresh();
                 this.showContentMessage('Сессия истекла. Войдите в аккаунт, чтобы посмотреть свой профиль.');
                 return;
@@ -125,6 +121,12 @@ export class ProfilePage {
         const name = profile.name || profile.user_tag || 'Пользователь';
         const nameElement = this.element.querySelector('.profile-user-name');
         if (nameElement) nameElement.textContent = name;
+        const followersElement = this.element.querySelector('.profile-followers');
+        if (followersElement) {
+            followersElement.textContent = Number.isFinite(profile.followers_count)
+                ? formatFollowers(Number(profile.followers_count))
+                : 'Подписчики: —';
+        }
 
         const avatarElement = this.element.querySelector('.profile-avatar');
         if (profile.avatar_url) {

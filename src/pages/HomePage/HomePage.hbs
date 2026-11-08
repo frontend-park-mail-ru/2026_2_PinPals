@@ -5,18 +5,15 @@
                 <img src="/img/home.png" alt="Главная" class="sidebar-icon">
                 <span class="sidebar-label">Главная</span>
             </a>
-            <a class="sidebar-item" href="#" data-action="create" title="Создать">
-                <img src="/img/plus.png" alt="Создать" class="sidebar-icon">
-                <span class="sidebar-label">Создать</span>
-            </a>
-            <a class="sidebar-item" href="#" data-action="chat" title="Чат">
-                <img src="/img/chat.png" alt="Чат" class="sidebar-icon">
-                <span class="sidebar-label">Чат</span>
+            <a class="sidebar-item" href="/create-pin" data-action="create" title="Создать пин">
+                <img src="/img/plus.png" alt="Создать пин" class="sidebar-icon">
+                <span class="sidebar-label">Создать пин</span>
             </a>
         </nav>
     </aside>
 
     <main class="home-content">
+        <p class="pins-load-error" id="pinsLoadError" role="alert" hidden></p>
         <div class="pins-grid">
             {{#each pins}}
                 <div class="pin-card"><img src="{{this}}" alt="Pin"></div>

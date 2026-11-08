@@ -41,21 +41,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно выбора пинов (как на странице создания доски) -->
-    <div class="saved-pins-modal" id="savedPinsModal" hidden>
-        <section class="saved-pins-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-            <header>
-                <h2 id="modalTitle">Выберите пины</h2>
-                <button type="button" id="closeSavedPins" aria-label="Закрыть">×</button>
-            </header>
-            <p id="savedPinsSelectedCount">Выбрано: 0</p>
-            <div class="saved-pins-grid" id="savedPinsGrid">Загрузка…</div>
-            <footer>
-                <button type="button" id="cancelSavedPins" class="btn btn-second">Отмена</button>
-                <button type="button" id="confirmSavedPins" class="btn btn-first">Добавить выбранные</button>
-            </footer>
-        </section>
-    </div>
+    <div id="savedPinsPickerMount"></div>
 
     <!-- Модальное окно редактирования доски -->
     <div class="profile-modal-backdrop" id="editBoardModal" hidden>

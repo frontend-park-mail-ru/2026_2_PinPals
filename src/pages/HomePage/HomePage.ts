@@ -1,18 +1,19 @@
-import { fetchPins } from '../../api/user.js';
-import { PinCard } from '../../components/PinCard/PinCard.js';
-import { Header } from '../../components/Header/Header.js';
+import { fetchPins } from '../../api/user';
+import { PinCard } from '../../components/PinCard/PinCard';
+import { Header } from '../../components/Header/Header';
 import template from './HomePage.hbs';
 
 const PAGE_SIZE = 30;
 
 export class HomePage {
+    [key: string]: any;
     /**
      * @param {Object} [options]
-     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
+     * @param {import('../../routes').Router} [options.router] - роутер для переходов.
      */
-    constructor({ router } = {}) {
+    constructor({ router }: any = {}) {
         this.router = router;
-        /** @type {import('../../components/Header/Header.js').Header|null} */
+        /** @type {import('../../components/Header/Header').Header|null} */
         this.header = null;
         /** @type {IntersectionObserver|null} */
         this.observer = null;
@@ -34,6 +35,7 @@ export class HomePage {
         let nextCursor = null;
         let isLoading = false;
         let hasMore = true;
+        const loadError = wrapper.querySelector<HTMLElement>('#pinsLoadError');
 
         const appendPins = (pins) => {
             if (!grid) {
@@ -63,8 +65,12 @@ export class HomePage {
 
                 nextCursor = data.next_cursor ?? null;
                 hasMore = nextCursor !== null;
-            } catch {
+            } catch (error) {
                 hasMore = false;
+                if (loadError) {
+                    loadError.textContent = 'Не удалось загрузить пины. Проверьте подключение и обновите страницу.';
+                    loadError.hidden = false;
+                }
             } finally {
                 isLoading = false;
             }
@@ -105,12 +111,6 @@ export class HomePage {
                 homePage.classList.toggle('sidebar-collapsed');
             });
         }
-
-        wrapper.querySelectorAll('.sidebar-item[data-action]').forEach((item) => {
-            item.addEventListener('click', (event) => {
-                event.preventDefault();
-            });
-        });
 
         return wrapper;
     }

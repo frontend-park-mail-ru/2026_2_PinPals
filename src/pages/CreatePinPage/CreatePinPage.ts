@@ -1,16 +1,17 @@
-import { Header } from '../../components/Header/Header.js';
-import { addPinsToBoard, createPin } from '../../api/user.js';
+import { Header } from '../../components/Header/Header';
+import { addPinsToBoard, createPin } from '../../api/user';
 import template from './CreatePinPage.hbs';
 
 /**
  * Страница создания пина.
  */
 export class CreatePinPage {
+    [key: string]: any;
     /**
      * @param {Object} [options]
-     * @param {import('../../routes.js').Router} [options.router]
+     * @param {import('../../routes').Router} [options.router]
      */
-    constructor({ router } = {}) {
+    constructor({ router }: any = {}) {
         this.router = router;
         this.header = null;
         this.element = null;

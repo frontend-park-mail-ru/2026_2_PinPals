@@ -4,6 +4,7 @@ import template from './Comment.hbs';
  * Один комментарий под пином.
  */
 export class Comment {
+    [key: string]: any;
     /**
      * @param {Object} comment
      * @param {string} comment.author - Имя автора.

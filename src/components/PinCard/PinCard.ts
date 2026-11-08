@@ -1,10 +1,11 @@
 import template from './PinCard.hbs';
-import { resolveImageUrl } from '../../api/user.js';
+import { resolveImageUrl } from '../../api/user';
 
 /**
  * Карточка одного пина в ленте.
  */
 export class PinCard {
+    [key: string]: any;
     /**
      * @param {Object} pin - Данные пина с бэкенда.
      * @param {string|number} pin.pin_id - ID пина.

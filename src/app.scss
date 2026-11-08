@@ -1,18 +1,3 @@
-@import "/src/components/components.css";
-@import "/src/components/Header/Header.css";
-@import "/src/components/SearchBar/SearchBar.css";
-@import "/src/components/BoardCard/BoardCard.css";
-@import "/src/pages/pages.css";
-@import "/src/pages/SignUpPage/SignUpPage.css";
-@import "/src/pages/LoginPage/LoginPage.css";
-@import "/src/pages/HomePage/HomePage.css";
-@import "/src/pages/PinPage/PinPage.css";
-@import "/src/pages/ProfilePage/ProfilePage.css";
-@import "/src/pages/ProfileEditPage/ProfileEditPage.css";
-@import "/src/pages/BoardPage/BoardPage.css";
-@import "/src/pages/CreatePinPage/CreatePinPage.css";
-@import "/src/pages/CreateBoardPage/CreateBoardPage.css";
-
 /* Подключение локального шрифта Unkempt */
 @font-face {
     font-family: 'Unkempt';
@@ -65,4 +50,23 @@
 
     --font-main:             'Palanquin', sans-serif;
     --font-logo:             'Unkempt', cursive;
+}
+
+/* Небольшое уведомление при потере соединения. */
+.network-status {
+    position: fixed;
+    z-index: 2000;
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100% - 24px);
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--color-text);
+    color: var(--color-back);
+    font-size: 14px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+}
+
+.network-status[hidden] {
+    display: none;
 }

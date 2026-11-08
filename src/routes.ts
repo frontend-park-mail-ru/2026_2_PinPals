@@ -1,14 +1,34 @@
-import { SignUpPage } from './pages/SignUpPage/SignUpPage.js';
-import { LoginPage } from './pages/LoginPage/LoginPage.js';
-import { HomePage } from './pages/HomePage/HomePage.js';
-import { PinPage } from './pages/PinPage/PinPage.js';
-import { ProfilePage } from './pages/ProfilePage/ProfilePage.js';
-import { ProfileEditPage } from './pages/ProfileEditPage/ProfileEditPage.js';
-import { BoardPage } from './pages/BoardPage/BoardPage.js';
-import { CreatePinPage } from './pages/CreatePinPage/CreatePinPage.js';
-import { CreateBoardPage } from './pages/CreateBoardPage/CreateBoardPage.js';
+/** Объект роутера, который страницы используют для переходов. */
+export type Router = {
+    navigateTo: (url: string) => void;
+    getBackUrl?: (fallback?: string) => string;
+    refreshHeader?: () => void;
+};
 
-export const routes = [
+/** Описание одного маршрута приложения. */
+export type AppRoute = {
+    pattern: RegExp;
+    pages: (match: RegExpExecArray, context: { router: Router }) => Array<{
+        key: string;
+        instance: {
+            render: () => HTMLElement;
+            destroy?: () => void;
+            refreshHeader?: () => void;
+        };
+    }>;
+};
+
+import { SignUpPage } from './pages/SignUpPage/SignUpPage';
+import { LoginPage } from './pages/LoginPage/LoginPage';
+import { HomePage } from './pages/HomePage/HomePage';
+import { PinPage } from './pages/PinPage/PinPage';
+import { ProfilePage } from './pages/ProfilePage/ProfilePage';
+import { ProfileEditPage } from './pages/ProfileEditPage/ProfileEditPage';
+import { BoardPage } from './pages/BoardPage/BoardPage';
+import { CreatePinPage } from './pages/CreatePinPage/CreatePinPage';
+import { CreateBoardPage } from './pages/CreateBoardPage/CreateBoardPage';
+
+export const routes: AppRoute[] = [
     {
         pattern: /^\/profile\/edit\/?$/,
         pages: (match, { router }) => [

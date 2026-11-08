@@ -1,4 +1,5 @@
-import { routes } from './routes.js';
+import './styles';
+import { routes } from './routes';
 
 const root = document.getElementById('root');
 
@@ -10,6 +11,8 @@ const root = document.getElementById('root');
  */
 let currentStack = [];
 let previousPath = null;
+let lastRenderedPathname = window.location.pathname;
+let lastRenderedSearch = window.location.search;
 
 /**
  * Роутер приложения. Передаётся страницам через конструктор,
@@ -21,12 +24,17 @@ const router = {
      * @param {string} url
      */
     navigateTo(url) {
-        if (window.location.pathname === url) {
-            return;
-        }
+        const target = new URL(url, window.location.href);
+        const currentLocation = `${window.location.pathname}${window.location.search}`;
+        const targetLocation = `${target.pathname}${target.search}`;
+        if (currentLocation === targetLocation) return;
 
-        previousPath = window.location.pathname;
-        window.history.pushState({ from: previousPath }, null, url);
+        previousPath = currentLocation;
+        const samePathname = target.pathname === window.location.pathname;
+        window.history.pushState({ from: previousPath }, '', `${target.pathname}${target.search}${target.hash}`);
+        if (samePathname) destroyFrom(0);
+        lastRenderedPathname = window.location.pathname;
+        lastRenderedSearch = window.location.search;
         window.scrollTo(0, 0);
         renderPage();
     },
@@ -51,11 +59,14 @@ const router = {
             layer.instance.refreshHeader?.();
         }
     },
-};
+ };
+
+// API layer emits this event after a protected endpoint responds with 401.
+window.addEventListener('app:auth-expired', () => router.refreshHeader());
 
 /**
  * @param {string} path
- * @returns {{ route: import('./routes.js').AppRoute, match: RegExpExecArray } | null}
+ * @returns {{ route: import('./routes').AppRoute, match: RegExpExecArray } | null}
  */
 function findRoute(path) {
     for (const route of routes) {
@@ -134,7 +145,8 @@ window.addEventListener('click', (event) => {
         return;
     }
 
-    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const eventTarget = event.target as Node | null;
+    const target = eventTarget instanceof Element ? eventTarget : eventTarget?.parentElement;
     const targetLink = target?.closest('a');
     const href = targetLink?.getAttribute('href');
 
@@ -152,8 +164,37 @@ window.addEventListener('click', (event) => {
 // Слушаем кнопки "Назад/Вперед" в браузере
 window.addEventListener('popstate', () => {
     previousPath = null;
+    if (window.location.pathname === lastRenderedPathname && window.location.search !== lastRenderedSearch) {
+        destroyFrom(0);
+    }
+    lastRenderedPathname = window.location.pathname;
+    lastRenderedSearch = window.location.search;
     renderPage();
 });
 
 // Первый рендер при загрузке страницы
 renderPage();
+
+// Service Worker кэширует оболочку приложения и локальные ресурсы для запуска без сети.
+function registerServiceWorker() {
+    if (!import.meta.env.PROD || !('serviceWorker' in navigator)) {
+        return;
+    }
+
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .catch((error) => console.warn('Не удалось зарегистрировать Service Worker:', error));
+    }, { once: true });
+}
+
+function updateNetworkStatus() {
+    const status = document.getElementById('networkStatus');
+    if (status) {
+        status.hidden = navigator.onLine;
+    }
+}
+
+registerServiceWorker();
+updateNetworkStatus();
+window.addEventListener('online', updateNetworkStatus);
+window.addEventListener('offline', updateNetworkStatus);

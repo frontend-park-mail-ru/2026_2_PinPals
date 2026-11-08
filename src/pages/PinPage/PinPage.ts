@@ -1,6 +1,4 @@
-// FIX: убраны несуществующие экспорты fetchPinInteractions и setPinSaved.
-// FIX: добавлен недостающий импорт fetchPinLikesStatistics.
-import { resolveImageUrl } from '../../api/user.js';
+import { resolveImageUrl } from '../../api/user';
 import {
     createPinComment,
     fetchPinById,
@@ -8,19 +6,20 @@ import {
     fetchPinLikesStatistics,
     fetchPins,
     setPinLiked,
-} from '../../api/user.js';
-import { PinCard } from '../../components/PinCard/PinCard.js';
-import { Header } from '../../components/Header/Header.js';
+} from '../../api/user';
+import { PinCard } from '../../components/PinCard/PinCard';
+import { Header } from '../../components/Header/Header';
 import template from './PinPage.hbs';
 
 /** Страница просмотра одного пина. */
 export class PinPage {
+    [key: string]: any;
     /**
      * @param {string|number} pinId
      * @param {Object} [options]
-     * @param {import('../../routes.js').Router} [options.router]
+     * @param {import('../../routes').Router} [options.router]
      */
-    constructor(pinId, { router } = {}) {
+    constructor(pinId, { router }: any = {}) {
         this.pinId = String(pinId);
         this.router = router;
         this.pin = null;
@@ -79,7 +78,7 @@ export class PinPage {
         if (likesResult.status === 'fulfilled') {
             // Наш бэкенд возвращает likes_count и liked_by_me
             this.interactions.likes_count = likesResult.value.likes_count;
-            this.interactions.is_liked = likesResult.value.liked_by_me;
+            this.interactions.is_liked = Boolean(likesResult.value.liked_by_me ?? likesResult.value.is_liked ?? false);
             this.updateLike();
         } else {
             this.showActionMessage('Не удалось загрузить статистику лайков.');
@@ -91,10 +90,10 @@ export class PinPage {
         }
     }
 
-    /** Загружает рекомендации. */
+    /** Загружает ограниченный список рекомендаций (12 элементов вместо 36). */
     async loadRecommendations() {
         try {
-            const result = await fetchPins(36);
+            const result = await fetchPins(12);
             if (this.isDestroyed || !this.element?.isConnected) return;
             const otherPins = (result.pins || []).filter((pin) => String(pin.pin_id) !== this.pinId);
             this.renderRecommendations(otherPins);
@@ -185,11 +184,6 @@ export class PinPage {
         });
     }
 
-    /**
-     * Меняет состояние лайка через API.
-     * FIX: ответ приходит с полем liked_by_me, а не is_liked — маппим явно,
-     * иначе сердечко не переключалось.
-     */
     async changeLike() {
         const button = this.element.querySelector('[data-action="like"]');
         button.disabled = true;
