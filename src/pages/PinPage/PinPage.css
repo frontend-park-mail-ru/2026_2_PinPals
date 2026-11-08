@@ -1,0 +1,417 @@
+.pin-page {
+    min-height: 100vh;
+    background: var(--color-back);
+    color: var(--color-text);
+    font-family: var(--font-main), sans-serif;
+}
+
+.pin-detail-main {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 96px 12px 28px;
+}
+
+.pin-loading,
+.pin-error {
+    margin: 60px auto;
+    text-align: center;
+    font-size: 18px;
+}
+
+.pin-error a {
+    color: var(--color-accent);
+}
+
+.pin-page .pin-layout[hidden],
+.pin-page .pin-loading[hidden],
+.pin-page .pin-error[hidden],
+.pin-page .pin-title[hidden],
+.pin-page .pin-description[hidden] {
+    display: none;
+}
+
+.pin-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.pin-primary {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 16px;
+    min-width: 0;
+}
+
+.pin-main-image-wrap {
+    position: relative;
+    align-self: start;
+    justify-self: start;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+    width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--color-input);
+}
+
+
+.pin-main-image {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: calc(100vh - 124px);
+    object-fit: contain;
+}
+
+.pin-main-image--failed {
+    object-fit: contain;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.pin-back-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 0 0 15px;
+    background: rgba(255, 255, 252, .80);
+    color: var(--color-text);
+    text-decoration: none;
+    font: 32px/1 Arial, sans-serif;
+}
+
+.pin-back-button:hover {
+    background: #fff;
+}
+
+.pin-detail-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.pin-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-height: 44px;
+    margin-bottom: 16px;
+}
+
+.pin-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 30px;
+    height: 38px;
+    padding: 0 3px;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.pin-action-button:hover,
+.pin-action-button.is-active {
+    color: #bd665d;
+}
+
+.pin-heart {
+    font-size: 25px;
+    line-height: 1;
+}
+
+.pin-share-button {
+    font-size: 25px;
+}
+
+.pin-save-button {
+    min-width: 100px;
+    height: 38px;
+    padding: 0 15px;
+    border: 0;
+    border-radius: 13px;
+    background: var(--color-text);
+    color: #fff;
+    font: 500 15px var(--font-main), sans-serif;
+    cursor: pointer;
+}
+
+.pin-save-button:hover,
+.pin-save-button.is-active {
+    background: var(--color-accent);
+}
+
+.pin-author-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid var(--color-search);
+}
+
+.pin-author-avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-search);
+    color: var(--color-text);
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.pin-author-name {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.pin-author-avatar--image {
+    overflow: hidden;
+}
+
+.pin-author-avatar--image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pin-copy {
+    padding: 10px 0 12px;
+}
+
+.pin-title {
+    margin: 0 0 5px;
+    color: var(--color-active);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.pin-description {
+    margin: 0;
+    color: #514a43;
+    font-size: 16px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.pin-comments {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 120px;
+    margin-top: auto;
+}
+
+.pin-comments-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.pin-comments-heading h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.pin-comments-heading span {
+    color: #9a8b7d;
+    font-size: 13px;
+}
+
+.pin-comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 150px;
+    margin-bottom: 10px;
+    overflow-y: auto;
+}
+
+.pin-comment {
+    padding: 7px 10px;
+    border-radius: 12px;
+    background: #f7f6f2;
+}
+
+.pin-comment strong {
+    font-size: 13px;
+}
+
+.pin-comment p {
+    margin: 0;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.pin-comment-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 10px 0 14px;
+    border-radius: 14px;
+    background: var(--color-input);
+}
+
+.pin-comment-form input {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: 15px var(--font-main), sans-serif;
+}
+
+.pin-comment-form input::placeholder {
+    color: #a99d92;
+}
+
+.pin-comment-form button {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 21px;
+    cursor: pointer;
+}
+
+.pin-side-recommendations {
+    min-width: 0;
+}
+
+.pin-recommendations-grid {
+    min-width: 0;
+    column-gap: 12px;
+}
+
+.pin-recommendations-grid--side {
+    column-count: 2;
+}
+
+.pin-recommendations-grid--bottom {
+    column-count: 4;
+}
+
+.pin-bottom-recommendations {
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin-top: 4px;
+}
+
+.pin-page .pin-card {
+    display: inline-block;
+    width: 100%;
+    margin: 0 0 12px;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--color-input);
+    break-inside: avoid;
+    vertical-align: top;
+}
+
+.pin-page .pin-card img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform .2s ease;
+}
+
+.pin-page .pin-card:hover img {
+    transform: scale(1.025);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+    .pin-layout {
+        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+    }
+
+    .pin-primary {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .pin-recommendations-grid--bottom {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 800px) {
+    .pin-layout,
+    .pin-primary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pin-side-recommendations {
+        grid-column: 1;
+    }
+
+    .pin-main-image {
+        height: min(72vh, 620px);
+        min-height: 300px;
+    }
+
+    .pin-detail-panel {
+        min-height: 500px;
+    }
+
+    .pin-recommendations-grid--bottom {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 520px) {
+    .pin-detail-main {
+        padding: 90px 10px 20px;
+    }
+
+    .pin-main-image {
+        height: 70vh;
+        min-height: 260px;
+    }
+
+    .pin-toolbar {
+        justify-content: flex-start;
+    }
+
+    .pin-recommendations-grid--side,
+    .pin-recommendations-grid--bottom {
+        column-count: 2;
+    }
+}

@@ -1,7 +1,6 @@
 import { Input } from '../../components/Input/Input.js';
 import { Button } from '../../components/Button/Button.js';
 import { signUpUser, loginUser } from '../../api/user.js';
-import { navigateTo } from '../../app.js';
 import template from './SignUpPage.hbs';
 
 const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
@@ -91,9 +90,12 @@ const makePasswordMatchValidator = (getPassword) => (val) => {
  */
 export class SignUpPage {
     /**
-     * Создает экземпляр SignUpPage и инициализирует поля ввода данных профиля.
+     * @param {Object} [options]
+     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
      */
-    constructor() {
+    constructor({ router } = {}) {
+        this.router = router;
+
         this.loginInput = new Input({
             label: '',
             type: 'text',
@@ -197,7 +199,7 @@ export class SignUpPage {
         // Крестик - закрыть модалку
         const closeBtn = wrapper.querySelector('.close-btn');
         closeBtn.addEventListener('click', () => {
-            navigateTo('/home');
+            this.router.navigateTo('/home');
         });
 
         this.submitBtn.element.addEventListener('click', (e) => this.handleSubmit(e));
@@ -250,8 +252,12 @@ export class SignUpPage {
             localStorage.setItem('isAuth', 'true');
             localStorage.setItem('token', loginResult.token);
             localStorage.setItem('userName', loginResult.user.name);
+            localStorage.setItem('userId', String(loginResult.user.user_id));
+            localStorage.setItem('userTag', loginResult.user.user_tag || '');
+            localStorage.setItem('userAvatarUrl', loginResult.user.avatar_url || '');
 
-            navigateTo('/home');
+            this.router.refreshHeader();
+            this.router.navigateTo('/home');
         } catch (error) {
             // Выводим ошибку бэкенда текстом прямо в интерфейс формы
             if (errorContainer) {
@@ -261,5 +267,4 @@ export class SignUpPage {
             this.submitBtn.setDisabled(false);
         }
     }
-
 }

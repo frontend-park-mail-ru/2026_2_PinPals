@@ -1,0 +1,60 @@
+<div class="pin-page">
+    <main class="pin-detail-main">
+        <p class="pin-loading" id="pinLoading" role="status" hidden>Загружаем пин…</p>
+        <div class="pin-error" id="pinError" role="alert" hidden>
+            <p id="pinErrorMessage">Не удалось загрузить пин.</p>
+            <a href="/home">Вернуться на главную</a>
+        </div>
+
+        <div class="pin-layout" id="pinLayout" hidden>
+            <section class="pin-primary">
+                <div class="pin-main-image-wrap">
+                    <a class="pin-back-button" href="/home" aria-label="Вернуться на главную">←</a>
+                    <img class="pin-main-image" id="pinMainImage" alt="">
+                </div>
+
+                <section class="pin-detail-panel">
+                    <div class="pin-toolbar">
+                        <button class="pin-action-button" type="button" data-action="like" aria-pressed="false" title="Нравится">
+                            <span class="pin-heart" aria-hidden="true">♡</span>
+                            <span data-like-count>0</span>
+                        </button>
+                        <button class="pin-action-button pin-share-button" type="button" data-action="share" title="Поделиться" aria-label="Поделиться">↗</button>
+                        <button class="pin-save-button" type="button" data-action="save" aria-pressed="false">Сохранить</button>
+                    </div>
+
+                    <div class="pin-author-row">
+                        <div class="pin-author-avatar" id="pinAuthorAvatar" aria-hidden="true">P</div>
+                        <span class="pin-author-name" id="pinAuthorName">Автор пина</span>
+                    </div>
+
+                    <div class="pin-copy">
+                        <h1 class="pin-title" id="pinTitle" hidden></h1>
+                        <p class="pin-description" id="pinDescription"></p>
+                    </div>
+
+                    <section class="pin-comments" aria-label="Комментарии">
+                        <div class="pin-comments-heading">
+                            <h2>Комментарии</h2>
+                            <span id="pinCommentsCount">0</span>
+                        </div>
+                        <div class="pin-comments-list" id="pinCommentsList"></div>
+                        <form class="pin-comment-form" id="pinCommentForm">
+                            <label class="visually-hidden" for="pinCommentInput">Добавьте комментарий</label>
+                            <input id="pinCommentInput" name="comment" type="text" maxlength="500" placeholder="Добавьте комментарий" autocomplete="off">
+                            <button type="submit" aria-label="Отправить комментарий">➤</button>
+                        </form>
+                    </section>
+                </section>
+
+                <section class="pin-bottom-recommendations" aria-label="Другие пины">
+                    <div class="pin-recommendations-grid pin-recommendations-grid--bottom" id="pinBottomRecommendations"></div>
+                </section>
+            </section>
+
+            <aside class="pin-side-recommendations" aria-label="Другие пины">
+                <div class="pin-recommendations-grid pin-recommendations-grid--side" id="pinSideRecommendations"></div>
+            </aside>
+        </div>
+    </main>
+</div>

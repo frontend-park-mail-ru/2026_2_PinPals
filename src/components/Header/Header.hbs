@@ -1,0 +1,31 @@
+<header class="home-header">
+    <div class="header-left">
+        {{#if isAuth}}
+            <img src="/img/logo_reg.png" alt="Logo" class="logo-img-small">
+        {{else}}
+            <img src="/img/logo_no_reg.png" alt="Logo" class="logo-img-small">
+        {{/if}}
+        <span class="logo-text-small">PicKing</span>
+    </div>
+
+    <div class="header-center"></div>
+
+    <div class="header-right">
+        {{#if isAuth}}
+            <div class="user-menu-wrapper">
+                <div class="user-avatar" title="Профиль">
+                    {{#if userAvatarUrl}}
+                        <img src="{{userAvatarUrl}}" alt="">
+                    {{/if}}
+                </div>
+                <div class="user-dropdown">
+                    <div class="user-name">{{userName}}</div>
+                    <button class="btn-logout" id="logoutBtn" type="button">Выйти</button>
+                </div>
+            </div>
+        {{else}}
+            <a class="btn-header btn-login-header" href="/login" style="display: flex; align-items: center; text-decoration: none;">Вход</a>
+            <a class="btn-header btn-register-header" href="/signup" style="display: flex; align-items: center; text-decoration: none;">Регистрация</a>
+        {{/if}}
+    </div>
+</header>

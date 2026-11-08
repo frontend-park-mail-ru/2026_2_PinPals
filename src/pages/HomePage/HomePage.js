@@ -1,31 +1,33 @@
-import { navigateTo } from '../../app.js';
 import { fetchPins } from '../../api/user.js';
 import { PinCard } from '../../components/PinCard/PinCard.js';
+import { Header } from '../../components/Header/Header.js';
 import template from './HomePage.hbs';
 
 const PAGE_SIZE = 30;
 
-/**
- * Класс, управляющий отображением главной страницы и бесконечной ленты.
- */
 export class HomePage {
     /**
-     * Рендерит разметку главной страницы и загружает пины с бэкенда.
-     *
-     * @returns {HTMLElement} Корневой элемент страницы.
+     * @param {Object} [options]
+     * @param {import('../../routes.js').Router} [options.router] - роутер для переходов.
      */
+    constructor({ router } = {}) {
+        this.router = router;
+        /** @type {import('../../components/Header/Header.js').Header|null} */
+        this.header = null;
+        /** @type {IntersectionObserver|null} */
+        this.observer = null;
+    }
+
     render() {
-        const isAuth = localStorage.getItem('isAuth') === 'true';
-        const userName = localStorage.getItem('userName') || 'Пользователь';
-
-        const html = template({
-            isAuth,
-            pins: [],
-            userName,
-        });
-
+        const html = template({ pins: [] });
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
+
+        const homePage = wrapper.querySelector('.home-page');
+        if (homePage) {
+            this.header = new Header({ router: this.router });
+            homePage.prepend(this.header.render());
+        }
 
         const grid = wrapper.querySelector('.pins-grid');
 
@@ -77,10 +79,10 @@ export class HomePage {
 
             grid.after(sentinel);
 
-            const observer = new IntersectionObserver(
+            this.observer = new IntersectionObserver(
                 (entries) => {
                     if (!sentinel.isConnected) {
-                        observer.disconnect();
+                        this.observer?.disconnect();
                         return;
                     }
 
@@ -93,27 +95,14 @@ export class HomePage {
                 },
             );
 
-            observer.observe(sentinel);
+            this.observer.observe(sentinel);
         }
 
-        const logoutBtn = wrapper.querySelector('#logoutBtn');
-
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('isAuth');
-                localStorage.removeItem('token');
-                localStorage.removeItem('userName');
-
-                navigateTo('/');
-            });
-        }
-
-        const root = wrapper.querySelector('.home-page');
         const toggle = wrapper.querySelector('#sidebarToggle');
 
-        if (toggle && root) {
+        if (toggle && homePage) {
             toggle.addEventListener('click', () => {
-                root.classList.toggle('sidebar-collapsed');
+                homePage.classList.toggle('sidebar-collapsed');
             });
         }
 
@@ -124,5 +113,21 @@ export class HomePage {
         });
 
         return wrapper;
+    }
+
+    /**
+     * Перерисовывает встроенный Header по актуальному состоянию localStorage.
+     * Вызывается роутером из `router.refreshHeader()` после логина.
+     */
+    refreshHeader() {
+        this.header?.refresh();
+    }
+
+    destroy() {
+        this.header?.destroy();
+        this.header = null;
+
+        this.observer?.disconnect();
+        this.observer = null;
     }
 }
