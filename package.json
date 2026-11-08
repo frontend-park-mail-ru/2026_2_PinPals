@@ -12,7 +12,7 @@
     "dev:server": "node server.dev.js",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
-    "start": "node server.js",
+    "start": "node --env-file-if-exists=.env server.js",
     "lint": "eslint \"src/**/*.{js,ts}\" server.js server.dev.js vite.config.js eslint.config.js",
     "test": "node --test",
     "typecheck": "tsc --noEmit"

@@ -1,12 +1,12 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import handlebarsPlugin from '@cpulvermacher/vite-plugin-handlebars';
 import { readFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createViteProxyConfig, resolveBackendTargets } from './proxy-routing.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const apiTarget = process.env.API_TARGET || 'http://localhost:3001';
 
 /** Собирает все файлы из public, чтобы кэшировать локальные картинки и шрифты. */
 function getPublicFiles(directory, prefix = '') {
@@ -100,36 +100,32 @@ function babelTypeScriptPlugin() {
     };
 }
 
-export default defineConfig({
-    plugins: [
-        babelTypeScriptPlugin(),
-        handlebarsPlugin(),
-        offlineServiceWorkerPlugin(),
-    ],
-    server: {
-        port: 3000,
-        strictPort: true,
-        proxy: {
-            '/api': {
-                target: apiTarget,
-                changeOrigin: true,
-            },
-            '/images': {
-                target: apiTarget,
-                changeOrigin: true,
+export default defineConfig(({ mode }) => {
+    const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env };
+    const backendTargets = resolveBackendTargets(env);
+
+    return {
+        plugins: [
+            babelTypeScriptPlugin(),
+            handlebarsPlugin(),
+            offlineServiceWorkerPlugin(),
+        ],
+        server: {
+            port: 3000,
+            strictPort: true,
+            proxy: createViteProxyConfig(backendTargets),
+        },
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    quietDeps: true,
+                },
             },
         },
-    },
-    css: {
-        preprocessorOptions: {
-            scss: {
-                quietDeps: true,
-            },
+        build: {
+            outDir: 'dist',
+            cssCodeSplit: false,
+            target: 'es2022',
         },
-    },
-    build: {
-        outDir: 'dist',
-        cssCodeSplit: false,
-        target: 'es2022',
-    },
+    };
 });

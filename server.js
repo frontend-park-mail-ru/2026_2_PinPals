@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import { DEFAULT_BACKEND_TARGETS, resolveBackendService } from './proxy-routing.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,33 +10,58 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-// Адрес настоящего Go-бэкенда берём из окружения.
-const API_TARGET = process.env.API_TARGET;
-if (!API_TARGET) {
-    console.error('API_TARGET is not set. Production server cannot start.');
-    process.exit(1);
-}
+// В Docker указывайте адреса сервисов по DNS-именам из общей Docker-сети.
+// При локальном запуске на хосте используются опубликованные порты 8001–8003.
+const backendTargets = {
+    auth: process.env.AUTH_API_TARGET || DEFAULT_BACKEND_TARGETS.auth,
+    pin: process.env.PIN_API_TARGET || DEFAULT_BACKEND_TARGETS.pin,
+    user: process.env.USER_API_TARGET || DEFAULT_BACKEND_TARGETS.user,
+};
 
-app.use('/api', createProxyMiddleware({
-    target: API_TARGET,
-    changeOrigin: true,
-}));
+const backendProxies = Object.fromEntries(
+    Object.entries(backendTargets).map(([service, target]) => [service, createProxyMiddleware({
+        target,
+        changeOrigin: true,
+        on: {
+            error(error, _req, res) {
+                console.error(`Proxy error (${service} -> ${target}):`, error.message);
+                if (!res.headersSent) {
+                    res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({
+                        message: `Backend service "${service}" is unavailable.`,
+                    }));
+                }
+            },
+        },
+    })]),
+);
 
-// API возвращает image_url с маршрутом /images/{filename}; проксируем
-// изображения на тот же Go backend, что и JSON API.
-app.use('/images', createProxyMiddleware({
-    target: API_TARGET,
-    changeOrigin: true,
-}));
+// Не подключаем proxy через app.use('/api', ...): Express удаляет
+// смонтированный префикс из req.url. Прокси вызывается без mount path,
+// поэтому Go получает исходный /api/v1/... или /images/... URL.
+app.use((req, res, next) => {
+    const service = resolveBackendService(req.path);
+    if (!service) return next();
+    return backendProxies[service](req, res, next);
+});
+
+// Не отдаём index.html в ответ на неизвестный API/image URL.
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api/') || req.path.startsWith('/images/')) {
+        return res.status(404).json({ message: 'API route not found.' });
+    }
+    return next();
+});
 
 // Статика из production-сборки Vite.
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Главная страница фронтенда
+// SPA fallback.
 app.get('*any', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist/index.html'));
 });
 
 app.listen(PORT, () => {
-    console.log(`Server started on http://localhost:${PORT}`);
+    console.log(`Frontend server started on http://localhost:${PORT}`);
+    console.log('Backend targets:', backendTargets);
 });

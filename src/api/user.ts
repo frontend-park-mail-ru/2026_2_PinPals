@@ -5,7 +5,7 @@ const BASE_URL = location.origin;
 
 /**
  * Приводит URL изображений backend к same-origin маршруту.
- * используется proxy /images -> API_TARGET. Пропускаем внешние URL без изменений.
+ * используется proxy /images -> pin_service. Пропускаем внешние URL без изменений.
  * @param {string|null|undefined} value
  * @returns {string}
  */
@@ -111,12 +111,12 @@ async function apiRequest<T = unknown>(path: string, options: RequestInit = {}):
 
 // ===== Auth =====
 
-export async function signUpUser(username: string, nickname: string, password: string, birthdate: string): Promise<{ user: User }> {
+export async function signUpUser(username: string, nickname: string, password: string, birthdate: string): Promise<User> {
 
     const formattedDate = birthdate
         ? (birthdate.includes('T') ? birthdate : `${birthdate}T00:00:00.000Z`)
         : '';
-    return apiRequest<{ user: User }>('/api/v1/auth/register', {
+    return apiRequest<User>('/api/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify({
             user_tag: username,
@@ -226,12 +226,16 @@ export async function fetchBoardById(deskId: string | number): Promise<Desk> {
 }
 
 export async function createBoard(board: { title: string; description?: string; visibility: string; avatar_img_url?: string }): Promise<Desk & { board_id?: number | string; id?: number | string }> {
+    if (['subscribers', 'friends'].includes(board.visibility)) {
+        throw new Error('Доступ для подписчиков пока не поддерживается текущим backend. Выберите публичную или приватную доску.');
+    }
+
     return apiRequest<Desk & { board_id?: number | string; id?: number | string }>('/api/v1/desks', {
         method: 'POST',
         body: JSON.stringify({
             name: board.title,
             description: board.description || '',
-            entry_status: board.visibility === 'private' ? 2 : (['subscribers', 'friends'].includes(board.visibility) ? 1 : 0),
+            entry_status: board.visibility === 'private' ? 2 : 0,
             ...(board.avatar_img_url !== undefined ? { avatar_img_url: board.avatar_img_url } : {}),
         }),
     });
@@ -280,32 +284,55 @@ export async function removePinFromBoard(deskId: string | number, pinId: string 
     });
 }
 
+function featureUnavailableError(feature: string, endpoint: string, cause: unknown): Error & { status?: number; cause?: unknown } {
+    const error = new Error(`${feature} пока не поддерживаются текущим backend (HTTP 404: ${endpoint}).`) as Error & { status?: number; cause?: unknown };
+    error.status = 404;
+    error.cause = cause;
+    return error;
+}
+
 export async function fetchUserSavedPins(userId: string | number): Promise<Pin[]> {
+    const endpoint = `/api/v1/users/${encodeURIComponent(userId)}/saved-pins`;
     try {
-        const result = await apiRequest<{ pins?: Pin[] }>(`/api/v1/users/${encodeURIComponent(userId)}/saved-pins`);
+        const result = await apiRequest<{ pins?: Pin[] }>(endpoint);
         return result.pins || [];
     } catch (error) {
-        if (error.status === 404) return [];
+        // Не превращаем отсутствующий backend endpoint в пустой список:
+        // иначе пользователь ошибочно решит, что сохранённых пинов нет.
+        if (error?.status === 404) {
+            throw featureUnavailableError('Сохранённые пины', endpoint, error);
+        }
         throw error;
     }
 }
 
-// ===== Comments (эндпоинт отсутствует в спецификации v1) =====
+// ===== Comments (маршруты пока отсутствуют в Go backend) =====
 
 export async function fetchPinComments(pinId: string | number): Promise<Comment[]> {
+    const endpoint = `/api/v1/pins/${encodeURIComponent(pinId)}/comments`;
     try {
-        const result = await apiRequest<{ comments?: Comment[] }>(`/api/v1/pins/${encodeURIComponent(pinId)}/comments`);
+        const result = await apiRequest<{ comments?: Comment[] }>(endpoint);
         return result.comments || [];
     } catch (error) {
-        if (error.status === 404) return [];
+        if (error?.status === 404) {
+            throw featureUnavailableError('Комментарии', endpoint, error);
+        }
         throw error;
     }
 }
 
 export async function createPinComment(pinId: string | number, text: string): Promise<Comment> {
-    const result = await apiRequest<{ comment: Comment }>(`/api/v1/pins/${encodeURIComponent(pinId)}/comments`, {
-        method: 'POST',
-        body: JSON.stringify({ text }),
-    });
-    return result.comment;
+    const endpoint = `/api/v1/pins/${encodeURIComponent(pinId)}/comments`;
+    try {
+        const result = await apiRequest<{ comment: Comment }>(endpoint, {
+            method: 'POST',
+            body: JSON.stringify({ text }),
+        });
+        return result.comment;
+    } catch (error) {
+        if (error?.status === 404) {
+            throw featureUnavailableError('Комментарии', endpoint, error);
+        }
+        throw error;
+    }
 }

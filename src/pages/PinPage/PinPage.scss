@@ -424,3 +424,20 @@
 .pin-action-message[hidden] {
     display: none;
 }
+.pin-comments-empty {
+    margin: 0;
+    padding: 8px 0;
+    color: #8a7d72;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.pin-comment-form input:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.pin-comment-form button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}

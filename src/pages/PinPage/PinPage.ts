@@ -86,7 +86,15 @@ export class PinPage {
 
         if (commentsResult.status === 'fulfilled') {
             this.comments = commentsResult.value;
+            this.setCommentComposerEnabled(true);
             this.renderComments();
+        } else {
+            const error = commentsResult.reason;
+            const isMissingEndpoint = error?.status === 404;
+            this.renderCommentsMessage(isMissingEndpoint
+                ? error.message
+                : 'Не удалось загрузить комментарии.');
+            if (isMissingEndpoint) this.setCommentComposerEnabled(false);
         }
     }
 
@@ -214,6 +222,10 @@ export class PinPage {
             this.renderComments();
             this.showActionMessage('');
         } catch (error) {
+            if (error?.status === 404) {
+                this.setCommentComposerEnabled(false);
+                this.renderCommentsMessage(error.message);
+            }
             this.showActionMessage(error.message || 'Не удалось добавить комментарий.');
         }
     }
@@ -244,7 +256,32 @@ export class PinPage {
             item.append(author, text);
             list.append(item);
         });
+        if (!this.comments.length) this.renderCommentsMessage('Пока нет комментариев.');
         this.element.querySelector('#pinCommentsCount').textContent = this.comments.length;
+    }
+
+    /** Показывает честное состояние вместо пустого списка при ошибке API. */
+    renderCommentsMessage(message) {
+        const list = this.element?.querySelector('#pinCommentsList');
+        if (!list) return;
+        list.replaceChildren();
+        const state = document.createElement('p');
+        state.className = 'pin-comments-empty';
+        state.textContent = message;
+        list.append(state);
+        const count = this.element.querySelector('#pinCommentsCount');
+        if (count) count.textContent = this.comments.length;
+    }
+
+    /** Отключает отправку комментариев, если соответствующего API нет. */
+    setCommentComposerEnabled(enabled) {
+        const input = this.element?.querySelector('#pinCommentInput');
+        const button = this.element?.querySelector('#pinCommentForm button[type="submit"]');
+        if (input) {
+            input.disabled = !enabled;
+            input.placeholder = enabled ? 'Добавьте комментарий' : 'Комментарии пока недоступны';
+        }
+        if (button) button.disabled = !enabled;
     }
 
     /** Показывает сообщение о результате действия. */

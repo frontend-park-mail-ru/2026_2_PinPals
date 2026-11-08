@@ -26,7 +26,7 @@ function getPinsLabel(count) {
 function getVisibilityLabel(entryStatus) {
     const labels = {
         0: 'Публичный для всех',
-        1: 'Для подписчиков',
+        1: 'Для подписчиков (доступ пока не поддерживается)',
         2: 'Приватный',
     };
     return labels[entryStatus] ?? labels[0];
@@ -83,7 +83,7 @@ export class BoardPage {
 
             this.element.querySelector('#boardTitle').textContent = this.board.name || 'Без названия';
             this.element.querySelector('#boardVisibility').textContent = getVisibilityLabel(this.board.entry_status);
-            this.element.querySelector('#boardPinsCount').textContent = getPinsLabel(result.pins?.length || 0);
+            this.element.querySelector('#boardPinsCount').textContent = getPinsLabel(result.pins_count ?? result.pins?.length ?? 0);
             this.element.querySelector('#boardDescription').textContent = this.board.description || '';
 
             this.element.querySelector('#boardDelete').hidden = !this.isOwner;

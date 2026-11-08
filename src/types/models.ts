@@ -26,7 +26,7 @@ export interface PinCursor {
 
 export interface PinSearchResponse {
     pins: Pin[];
-    next_cursor: PinCursor | null;
+    next_cursor?: PinCursor | null;
 }
 
 export interface Desk {
