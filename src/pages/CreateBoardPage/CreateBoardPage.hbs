@@ -1,0 +1,79 @@
+<div class="create-board-page">
+    <div class="create-board-title-wrap">
+        <h1>Создание Доски</h1>
+    </div>
+
+    <main class="create-board-main">
+        <!-- Превью коллажа доски -->
+        <section class="create-board-preview">
+            <div></div>
+            <div>
+                <i></i>
+                <i></i>
+            </div>
+            <div id="createBoardPreviewImages"></div>
+        </section>
+
+        <!-- Форма создания -->
+        <form id="createBoardForm" novalidate>
+            <div class="create-board-field">
+                <label for="boardTitleInput">Название</label>
+                <input
+                        id="boardTitleInput"
+                        type="text"
+                        maxlength="60"
+                        placeholder="Добавьте название"
+                        required
+                >
+            </div>
+
+            <fieldset class="create-board-visibility">
+                <legend>Статус доски</legend>
+
+                <label>
+                    <span>Публичный для всех</span>
+                    <input type="radio" name="visibility" value="public" checked>
+                    <i></i>
+                </label>
+
+                <label>
+                    <span>Публичный для друзей</span>
+                    <input type="radio" name="visibility" value="friends">
+                    <i></i>
+                </label>
+
+                <label>
+                    <span>Приватный</span>
+                    <input type="radio" name="visibility" value="private">
+                    <i></i>
+                </label>
+            </fieldset>
+
+            <p id="createBoardError" role="alert" hidden></p>
+
+            <div class="create-board-actions">
+                <button id="createBoardSubmit" type="submit" class="btn btn-first">Создать</button>
+                <button id="openSavedPins" type="button" class="btn btn-second">Добавить пины</button>
+            </div>
+        </form>
+    </main>
+
+    <!-- Модальное окно выбора пинов -->
+    <div class="saved-pins-modal" id="savedPinsModal" hidden>
+        <section class="saved-pins-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <header>
+                <h2 id="modalTitle">Выберите пины</h2>
+                <button type="button" id="closeSavedPins" aria-label="Закрыть модальное окно">×</button>
+            </header>
+
+            <p id="savedPinsSelectedCount">Выбрано: 0</p>
+
+            <div class="saved-pins-grid" id="savedPinsGrid">Загрузка…</div>
+
+            <footer>
+                <button type="button" class="btn btn-second" id="cancelSavedPins">Отмена</button>
+                <button type="button" class="btn btn-first" id="confirmSavedPins">Добавить выбранные</button>
+            </footer>
+        </section>
+    </div>
+</div>

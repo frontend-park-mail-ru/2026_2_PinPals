@@ -1,35 +1,11 @@
-import { fetchPins } from '../../api/user.js';
+import { fetchUserBoards, fetchUserSavedPins } from '../../api/user.js';
 import { Header } from '../../components/Header/Header.js';
 import { PinCard } from '../../components/PinCard/PinCard.js';
 import { BoardCard } from '../../components/BoardCard/BoardCard.js';
 import template from './ProfilePage.hbs';
 
-
-const MOCK_BOARDS = [
-    { title: 'Котики', pinsCount: 10, imageIndexes: [0, 1, 2] },
-    { title: 'Мультики', pinsCount: 42, imageIndexes: [3, 4, 5] },
-    { title: 'Страх', pinsCount: 10, imageIndexes: [6, 7, 8] },
-    { title: 'Фон на телефон', pinsCount: 2, imageIndexes: [9, 10] },
-    { title: 'Я', pinsCount: 19, imageIndexes: [11, 12, 13] },
-    { title: 'Еще логотипы', pinsCount: 3, imageIndexes: [14, 15, 16] },
-];
-
 /**
- * Безопасно читает массив ID сохранённых пинов из localStorage.
- *
- * @returns {string[]}
- */
-function getSavedPinIds() {
-    try {
-        const savedPins = JSON.parse(localStorage.getItem('pickking:saved-pins') || '[]');
-        return Array.isArray(savedPins) ? savedPins.map(String) : [];
-    } catch {
-        return [];
-    }
-}
-
-/**
- * Возвращает правильную подпись количества подписчиков.
+ * Возвращает подпись количества подписчиков.
  *
  * @param {number} count
  * @returns {string}
@@ -38,8 +14,8 @@ function formatFollowers(count) {
     const value = Math.max(0, Number(count) || 0);
     const lastTwoDigits = value % 100;
     const lastDigit = value % 10;
-
     let word = 'подписчиков';
+
     if (lastTwoDigits < 11 || lastTwoDigits > 14) {
         if (lastDigit === 1) word = 'подписчик';
         else if (lastDigit >= 2 && lastDigit <= 4) word = 'подписчика';
@@ -49,27 +25,8 @@ function formatFollowers(count) {
 }
 
 /**
- * Подготавливает демонстрационные доски, используя изображения загруженных пинов.
- *
- * @param {Array<Object>} pins
- * @returns {Array<Object>}
+ * Страница профиля с вкладками «Пины» и «Доски».
  */
-function makeMockBoards(pins) {
-    return MOCK_BOARDS.map((board) => {
-        const images = pins.length
-            ? board.imageIndexes
-                .map((index) => pins[index % pins.length]?.image_url)
-                .filter(Boolean)
-            : [];
-
-        return {
-            title: board.title,
-            pinsCount: board.pinsCount,
-            images,
-        };
-    });
-}
-
 export class ProfilePage {
     /**
      * @param {Object} options
@@ -79,21 +36,19 @@ export class ProfilePage {
     constructor({ router, activeTab = 'pins' } = {}) {
         this.router = router;
         this.activeTab = activeTab === 'boards' ? 'boards' : 'pins';
-        /** @type {HTMLElement|null} */
         this.element = null;
-        /** @type {import('../../components/Header/Header.js').Header|null} */
         this.header = null;
         this.isDestroyed = false;
     }
 
     /**
-     * Создаёт DOM страницы и запускает загрузку содержимого.
+     * Создаёт DOM страницы и запускает загрузку данных с API.
      *
      * @returns {HTMLElement}
      */
     render() {
-        const userName = localStorage.getItem('userTag')
-            || localStorage.getItem('userName')
+        const userName = localStorage.getItem('userName')
+            || localStorage.getItem('userTag')
             || 'Пользователь';
         const userAvatarUrl = localStorage.getItem('userAvatarUrl') || '';
         const followersCount = localStorage.getItem('followersCount')
@@ -114,62 +69,53 @@ export class ProfilePage {
         this.element = wrapper.firstElementChild;
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
+
         this.setupEvents();
         void this.loadContent();
-
         return this.element;
     }
 
-    /**
-     * Загружает данные для активной вкладки.
-     */
+    /** Загружает содержимое вкладки с backend. */
     async loadContent() {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            this.showContentMessage('Войдите в аккаунт, чтобы посмотреть свои сохранения.');
+            return;
+        }
+
         try {
-            const data = await fetchPins(100);
-            if (this.isDestroyed || !this.element?.isConnected) return;
-
             if (this.activeTab === 'pins') {
-                this.renderPins(data.pins || []);
+                const pins = await fetchUserSavedPins(userId);
+                if (this.isDestroyed || !this.element?.isConnected) return;
+                this.renderPins(pins);
             } else {
-                this.renderBoards(makeMockBoards(data.pins || []));
+                const boards = await fetchUserBoards(userId);
+                if (this.isDestroyed || !this.element?.isConnected) return;
+                this.renderBoards(boards);
             }
-        } catch {
+        } catch (error) {
             if (this.isDestroyed || !this.element?.isConnected) return;
-
-            if (this.activeTab === 'pins') {
-                this.showContentMessage('Не удалось загрузить пины. Попробуйте обновить страницу.');
-            } else {
-                // Доски остаются видимыми даже без ответа API — с пустыми коллажами.
-                this.renderBoards(makeMockBoards([]));
-            }
+            this.showContentMessage(error.message || 'Не удалось загрузить данные профиля.');
         }
     }
 
     /**
-     * Рендерит сетку пинов.
+     * Рендерит сохранённые пины, полученные с сервера.
      *
      * @param {Array<Object>} pins
      */
     renderPins(pins) {
         const grid = this.element.querySelector('#profilePinsGrid');
-        const savedIds = getSavedPinIds();
-        const savedPins = savedIds.length
-            ? pins.filter((pin) => savedIds.includes(String(pin.pin_id)))
-            : [];
-        // У текущего API нет отдельной выдачи сохранений — используем ленту,
-        // пока пользователь ещё не сохранил пины локально или список не совпал.
-        const visiblePins = savedPins.length ? savedPins : pins;
-
         grid.replaceChildren();
-        const fragment = document.createDocumentFragment();
-        visiblePins.forEach((pin) => fragment.append(new PinCard(pin).render()));
-        grid.append(fragment);
 
-        this.showContentMessage(visiblePins.length ? '' : 'Пока нет сохранённых пинов.');
+        const fragment = document.createDocumentFragment();
+        pins.forEach((pin) => fragment.append(new PinCard(pin).render()));
+        grid.append(fragment);
+        this.showContentMessage(pins.length ? '' : 'Пока нет сохранённых пинов.');
     }
 
     /**
-     * Рендерит сетку досок.
+     * Рендерит доски, полученные с сервера.
      *
      * @param {Array<Object>} boards
      */
@@ -180,8 +126,7 @@ export class ProfilePage {
         const fragment = document.createDocumentFragment();
         boards.forEach((board) => fragment.append(new BoardCard(board).render()));
         grid.append(fragment);
-
-        this.showContentMessage('');
+        this.showContentMessage(boards.length ? '' : 'Пока нет досок. Создайте первую доску.');
     }
 
     /**
@@ -190,38 +135,29 @@ export class ProfilePage {
      * @param {string} message
      */
     showContentMessage(message) {
-        const state = this.element.querySelector('#profileContentState');
+        const state = this.element?.querySelector('#profileContentState');
+        if (!state) return;
         state.textContent = message;
         state.hidden = !message;
     }
 
-    /**
-     * Подключает обработчик кнопки создания.
-     */
+    /** Подключает обработчики элементов страницы. */
     setupEvents() {
-        const button = this.element.querySelector('#profileActionButton');
-        const message = this.element.querySelector('#profileActionMessage');
-
-        button.addEventListener('click', () => {
-            const type = this.activeTab === 'pins' ? 'pin' : 'board';
-            window.dispatchEvent(new CustomEvent('pickking:create', { detail: { type } }));
-            message.textContent = this.activeTab === 'pins'
-                ? 'Форма создания пина пока не подключена.'
-                : 'Форма создания доски пока не подключена.';
-            message.hidden = false;
+        this.element.querySelector('#profileActionButton').addEventListener('click', () => {
+            if (this.activeTab === 'pins') {
+                this.router.navigateTo('/create-pin');
+                return;
+            }
+            this.router.navigateTo('/create-board');
         });
     }
 
-    /**
-     * Обновляет шапку после изменения состояния авторизации.
-     */
+    /** Обновляет шапку после изменения авторизации. */
     refreshHeader() {
         this.header?.refresh();
     }
 
-    /**
-     * Освобождает ресурсы страницы перед переходом на другой маршрут.
-     */
+    /** Освобождает ресурсы страницы. */
     destroy() {
         this.isDestroyed = true;
         this.header?.destroy();

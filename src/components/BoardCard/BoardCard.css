@@ -1,6 +1,8 @@
 .board-card {
+    display: block;
     min-width: 0;
     color: var(--color-text);
+    text-decoration: none;
     font-family: var(--font-main), sans-serif;
 }
 
@@ -78,4 +80,7 @@
     color: var(--color-text);
     font-size: 12px;
     line-height: 1.25;
+}
+.board-card:hover .board-card-title {
+    text-decoration: underline;
 }

@@ -8,6 +8,9 @@
 @import "/src/pages/HomePage/HomePage.css";
 @import "/src/pages/PinPage/PinPage.css";
 @import "/src/pages/ProfilePage/ProfilePage.css";
+@import "/src/pages/BoardPage/BoardPage.css";
+@import "/src/pages/CreatePinPage/CreatePinPage.css";
+@import "/src/pages/CreateBoardPage/CreateBoardPage.css";
 
 /* Подключение локального шрифта Unkempt */
 @font-face {

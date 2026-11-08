@@ -1,0 +1,58 @@
+<div class="board-page">
+    <main class="board-main">
+        <section class="board-heading">
+            <div class="board-heading-copy">
+                <div class="board-title-row">
+                    <h1 class="board-title" id="boardTitle"></h1>
+                    <span class="board-visibility" id="boardVisibility"></span>
+                    <span class="board-pins-count" id="boardPinsCount"></span>
+                </div>
+                <p class="board-description" id="boardDescription"></p>
+            </div>
+
+            <div class="board-actions">
+                <button class="btn btn-first" id="boardCreatePin" type="button">Создать пин</button>
+                <button class="btn btn-first" id="boardAddPins" type="button" hidden>Добавить пины</button>
+                <button class="btn btn-second" id="boardDelete" type="button" hidden>Удалить доску</button>
+            </div>
+        </section>
+
+        <p class="board-message" id="boardMessage" role="status" hidden></p>
+
+        <!-- Сетка пинов -->
+        <section class="board-pins-grid" id="boardPinsGrid" aria-label="Пины доски"></section>
+    </main>
+
+    <!-- Кастомное модальное окно подтверждения удаления -->
+    <div class="profile-modal-backdrop" id="deleteConfirmModal" hidden>
+        <div class="profile-modal-box" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+            <div class="profile-modal-header">
+                <h2 class="profile-modal-title" id="deleteModalTitle">Удаление доски</h2>
+                <button class="profile-modal-close" id="closeDeleteModal" type="button" aria-label="Закрыть">×</button>
+            </div>
+            <div class="profile-modal-form">
+                <p style="font-size: 16px; margin: 0 0 20px; color: var(--color-text);">Вы действительно хотите удалить доску?</p>
+            </div>
+            <div class="profile-modal-actions">
+                <button class="btn btn-second" id="cancelDeleteBtn" type="button">Отмена</button>
+                <button class="btn btn-first" id="confirmDeleteBtn" type="button">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно выбора пинов (как на странице создания доски) -->
+    <div class="saved-pins-modal" id="savedPinsModal" hidden>
+        <section class="saved-pins-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <header>
+                <h2 id="modalTitle">Выберите пины</h2>
+                <button type="button" id="closeSavedPins" aria-label="Закрыть">×</button>
+            </header>
+            <p id="savedPinsSelectedCount">Выбрано: 0</p>
+            <div class="saved-pins-grid" id="savedPinsGrid">Загрузка…</div>
+            <footer>
+                <button type="button" id="cancelSavedPins" class="btn btn-second">Отмена</button>
+                <button type="button" id="confirmSavedPins" class="btn btn-first">Добавить выбранные</button>
+            </footer>
+        </section>
+    </div>
+</div>

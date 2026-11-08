@@ -47,34 +47,4 @@
             </section>
         {{/if}}
     </main>
-
-    <div class="profile-modal-backdrop" id="createBoardModal" hidden>
-        <div class="profile-modal-box" role="dialog" aria-modal="true" aria-labelledby="createBoardModalTitle">
-            <div class="profile-modal-header">
-                <h2 class="profile-modal-title" id="createBoardModalTitle">Создание доски</h2>
-                <button class="profile-modal-close" id="closeCreateBoardModal" type="button" aria-label="Закрыть">×</button>
-            </div>
-            <form class="profile-modal-form" id="createBoardForm" novalidate>
-                <div class="input-wrapper" id="boardTitleWrapper">
-                    <label for="boardTitleInput">Название доски</label>
-                    <div class="input-field-container">
-                        <input
-                                id="boardTitleInput"
-                                name="title"
-                                type="text"
-                                maxlength="60"
-                                placeholder="Например, «Идеи для интерьера»"
-                                autocomplete="off"
-                                required
-                        >
-                    </div>
-                    <span class="error-msg" id="boardTitleError"></span>
-                </div>
-                <div class="profile-modal-actions">
-                    <button class="btn btn-second" id="cancelCreateBoardBtn" type="button">Отмена</button>
-                    <button class="btn btn-first" type="submit">Создать</button>
-                </div>
-            </form>
-        </div>
-    </div>
 </div>

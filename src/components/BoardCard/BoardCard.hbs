@@ -1,4 +1,4 @@
-<article class="board-card">
+<a class="board-card" href="/board/{{id}}" aria-label="Открыть доску {{title}}">
     <div class="board-card-collage {{#if isSingleImage}}board-card-collage--single{{/if}}">
         {{#if isSingleImage}}
             <img class="board-card-single-image" src="{{firstImage}}" alt="{{title}}" loading="lazy">
@@ -33,4 +33,4 @@
         <h2 class="board-card-title">{{title}}</h2>
         <span class="board-card-count">{{pinsLabel}}</span>
     </div>
-</article>
+</a>
