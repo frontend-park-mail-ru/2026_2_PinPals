@@ -1,5 +1,7 @@
-import { resolveImageUrl } from '../../api/user';
+import { resolveImageUrl, resolveAvatarUrl, DEFAULT_AVATAR_URL } from '../../api/user';
 import {
+    addPinsToBoard,
+    fetchMyDesks,
     createPinComment,
     fetchPinById,
     fetchPinComments,
@@ -10,6 +12,7 @@ import {
 import { PinCard } from '../../components/PinCard/PinCard';
 import { Header } from '../../components/Header/Header';
 import template from './PinPage.hbs';
+const COMMENTS_UNAVAILABLE = 'Чатик пока не работает, но скоро будет :P'
 
 /** Страница просмотра одного пина. */
 export class PinPage {
@@ -92,8 +95,8 @@ export class PinPage {
             const error = commentsResult.reason;
             const isMissingEndpoint = error?.status === 404;
             this.renderCommentsMessage(isMissingEndpoint
-                ? error.message
-                : 'Не удалось загрузить комментарии.');
+                ? COMMENTS_UNAVAILABLE
+                : 'Не удалось загрузить комментарии.');;
             if (isMissingEndpoint) this.setCommentComposerEnabled(false);
         }
     }
@@ -137,16 +140,13 @@ export class PinPage {
         const avatar = this.element.querySelector('#pinAuthorAvatar');
         const avatarUrl = isMyPin ? localStorage.getItem('userAvatarUrl') : '';
         avatar.replaceChildren();
-        if (avatarUrl) {
-            const avatarImage = document.createElement('img');
-            avatarImage.src = resolveImageUrl(avatarUrl);
-            avatarImage.alt = '';
-            avatar.append(avatarImage);
-            avatar.classList.add('pin-author-avatar--image');
-        } else {
-            avatar.textContent = authorName.charAt(0).toUpperCase();
-            avatar.classList.remove('pin-author-avatar--image');
-        }
+        const avatarImage = document.createElement('img');
+        avatarImage.src = resolveAvatarUrl(avatarUrl);
+        avatarImage.alt = '';
+        avatarImage.addEventListener('error', () => { avatarImage.src = DEFAULT_AVATAR_URL; }, { once: true });
+        avatar.append(avatarImage);
+        avatar.classList.add('pin-author-avatar--image');
+
 
         this.element.querySelector('#pinLoading').hidden = true;
         this.element.querySelector('#pinLayout').hidden = false;
@@ -174,11 +174,12 @@ export class PinPage {
         shareButton.addEventListener('click', async () => {
             try {
                 await navigator.clipboard.writeText(window.location.href);
-                shareButton.textContent = '✓';
+                const original = shareButton.innerHTML;
+                shareButton.innerHTML = '<svg class="icon pin-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
                 shareButton.classList.add('is-active');
                 setTimeout(() => {
                     if (!this.isDestroyed) {
-                        shareButton.textContent = '↗';
+                        shareButton.innerHTML = original;
                         shareButton.classList.remove('is-active');
                     }
                 }, 1500);
@@ -186,6 +187,11 @@ export class PinPage {
                 this.showActionMessage('Не удалось скопировать ссылку.');
             }
         });
+
+        const saveModal = this.element.querySelector('#pinSaveModal');
+        this.element.querySelector('[data-action="save"]').addEventListener('click', () => void this.openSaveModal());
+        this.element.querySelector('#pinSaveClose').addEventListener('click', () => { saveModal.hidden = true; });
+        saveModal.addEventListener('click', (e) => { if (e.target === saveModal) saveModal.hidden = true; });
 
         this.element.querySelector('#pinCommentForm').addEventListener('submit', (event) => {
             void this.submitComment(event);
@@ -224,10 +230,66 @@ export class PinPage {
         } catch (error) {
             if (error?.status === 404) {
                 this.setCommentComposerEnabled(false);
-                this.renderCommentsMessage(error.message);
+                this.renderCommentsMessage(COMMENTS_UNAVAILABLE);
+                return;
             }
             this.showActionMessage(error.message || 'Не удалось добавить комментарий.');
         }
+    }
+
+    async openSaveModal() {
+        if (localStorage.getItem('isAuth') !== 'true') {
+            this.showActionMessage('Войдите в аккаунт, чтобы сохранить пин на доску.');
+            return;
+        }
+        const modal = this.element.querySelector('#pinSaveModal');
+        const list = this.element.querySelector('#pinSaveList');
+        this.showSaveMessage('');
+        list.textContent = 'Загружаем доски…';
+        modal.hidden = false;
+
+        try {
+            const desks = await fetchMyDesks();
+            if (this.isDestroyed || !this.element?.isConnected) return;
+            list.replaceChildren();
+            if (!desks.length) {
+                list.textContent = 'У вас пока нет досок.';
+                return;
+            }
+            desks.forEach((desk) => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'pin-save-option';
+                option.textContent = desk.name || 'Без названия';
+                option.addEventListener('click', () => void this.saveToBoard(desk.desk_id, option));
+                list.append(option);
+            });
+        } catch (error) {
+            list.textContent = '';
+            this.showSaveMessage(error.message || 'Не удалось загрузить доски.');
+        }
+    }
+
+    async saveToBoard(deskId, option) {
+        option.disabled = true;
+        try {
+            await addPinsToBoard(deskId, [this.pinId]);
+            if (this.isDestroyed || !this.element?.isConnected) return;
+            this.element.querySelector('#pinSaveModal').hidden = true;
+            const saveBtn = this.element.querySelector('[data-action="save"]');
+            saveBtn.textContent = 'Сохранено ✓';
+            setTimeout(() => { if (!this.isDestroyed && saveBtn) saveBtn.textContent = 'Сохранить'; }, 2000);
+        } catch (error) {
+            option.disabled = false;
+            this.showSaveMessage(error.message || 'Не удалось сохранить пин.');
+        }
+    }
+
+    showSaveMessage(message) {
+        const el = this.element?.querySelector('#pinSaveMessage');
+        if (!el) return;
+        el.textContent = message;
+        el.hidden = !message;
     }
 
     /** Обновляет кнопку лайка по данным сервера. */
@@ -235,7 +297,6 @@ export class PinPage {
         const button = this.element?.querySelector('[data-action="like"]');
         if (!button) return;
         button.classList.toggle('is-active', Boolean(this.interactions.is_liked));
-        button.querySelector('.pin-heart').textContent = this.interactions.is_liked ? '♥' : '♡';
         button.querySelector('[data-like-count]').textContent = this.interactions.likes_count || 0;
         button.setAttribute('aria-pressed', String(Boolean(this.interactions.is_liked)));
     }

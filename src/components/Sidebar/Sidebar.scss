@@ -1,0 +1,143 @@
+.app-sidebar-root {
+    display: contents;
+}
+
+.app-sidebar {
+    position: fixed;
+    top: 82px;
+    left: 0;
+    bottom: 0;
+    width: 90px;
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
+    box-sizing: border-box;
+    background-color: var(--overlay-menu);
+    border-right: 1px solid var(--color-search);
+    transition: transform 0.3s ease;
+}
+
+body.sidebar-collapsed .app-sidebar {
+    transform: translateX(-100%);
+    visibility: hidden; /* скрытые ссылки не ловят фокус клавиатуры */
+    transition: transform 0.3s ease, visibility 0s 0.3s;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    width: 100%;
+}
+
+.sidebar-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    color: var(--color-text);
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar-item:hover {
+    background-color: var(--color-search);
+}
+
+.sidebar-icon {
+    width: 34px;
+    height: 34px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.sidebar-label {
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 95;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background-color: var(--color-text);
+    color: var(--color-back);
+    font-family: var(--font-main), sans-serif;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar-item:hover .sidebar-label {
+    opacity: 1;
+}
+
+.sidebar-toggle {
+    position: fixed;
+    top: 50%;
+    left: 90px;
+    transform: translateY(-50%);
+    z-index: 105;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 60px;
+    padding: 0;
+    border: 1px solid var(--color-search);
+    border-left: none;
+    border-radius: 0 20px 20px 0;
+    background-color: var(--overlay-menu);
+    color: var(--color-text);
+    cursor: pointer;
+    box-shadow: 4px 0 8px rgba(102, 81, 64, 0.1);
+    transition: left 0.3s ease, background-color 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+    background-color: var(--color-input);
+}
+
+.sidebar-toggle-icon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.3s ease;
+}
+
+body.sidebar-collapsed .sidebar-toggle {
+    left: 0;
+}
+
+body.sidebar-collapsed .sidebar-toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Когда меню открыто, контент сдвигается вправо и не прячется под ним */
+#root {
+    transition: padding-left 0.3s ease;
+}
+
+body:not(.sidebar-collapsed) #root {
+    padding-left: 90px;
+}
+
+@media (max-width: 768px) {
+    body:not(.sidebar-collapsed) #root {
+        padding-left: 0; /* на телефоне меню ложится поверх */
+    }
+}

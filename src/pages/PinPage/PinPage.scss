@@ -32,7 +32,7 @@
 
 .pin-layout {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 4fr) minmax(0, 2fr);
     align-items: start;
     gap: 12px;
     max-width: 1800px;
@@ -41,7 +41,7 @@
 
 .pin-primary {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: stretch;
     gap: 16px;
     min-width: 0;
@@ -50,23 +50,21 @@
 .pin-main-image-wrap {
     position: relative;
     align-self: start;
-    justify-self: start;
     display: flex;
     justify-content: center;
+    align-items: center;
+    width: 100%;
     min-width: 0;
-    width: fit-content;
-    max-width: 100%;
     overflow: hidden;
     border-radius: 16px;
     background: var(--color-input);
 }
 
-
 .pin-main-image {
     display: block;
     width: auto;
-    max-width: 100%;
     height: auto;
+    max-width: 100%;
     max-height: calc(100vh - 124px);
     object-fit: contain;
 }
@@ -87,15 +85,17 @@
     width: 48px;
     height: 48px;
     border-radius: 0 0 15px;
-    background: rgba(255, 255, 252, .80);
+    background: rgba(255, 255, 252);
     color: var(--color-text);
     text-decoration: none;
     font: 32px/1 Arial, sans-serif;
+    transition: background-color .2s ease;
 }
 
 .pin-back-button:hover {
-    background: #fff;
+    background: #F6DFC9;
 }
+
 
 .pin-detail-panel {
     display: flex;
@@ -107,10 +107,21 @@
 .pin-toolbar {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: 12px;
     min-height: 44px;
     margin-bottom: 16px;
+}
+
+.pin-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.pin-icon {
+    width: 26px;
+    height: 26px;
 }
 
 .pin-action-button {
@@ -139,25 +150,75 @@
     line-height: 1;
 }
 
+.pin-heart path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
+}
+
+.pin-action-button.is-active .pin-heart path {
+    fill: currentColor;
+}
+
+
 .pin-share-button {
     font-size: 25px;
 }
 
+.pin-share-icon {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
 .pin-save-button {
-    min-width: 100px;
-    height: 38px;
-    padding: 0 15px;
+    min-width: 110px;
+    height: 40px;
+    padding: 0 18px;
     border: 0;
-    border-radius: 13px;
+    border-radius: 14px;
     background: var(--color-text);
-    color: #fff;
-    font: 500 15px var(--font-main), sans-serif;
+    color: var(--color-back);
+    font: 600 16px var(--font-main), sans-serif;
+    cursor: pointer;
+    transition: background-color .2s ease;
+}
+.pin-save-button:hover {
+     background: var(--color-active);
+}
+.pin-save-button.is-active {
+    background: var(--color-accent);
+}
+
+.pin-save-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.pin-save-option {
+    padding: 12px 14px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--color-input);
+    color: var(--color-text);
+    font: 500 16px var(--font-main), sans-serif;
+    text-align: left;
     cursor: pointer;
 }
 
-.pin-save-button:hover,
-.pin-save-button.is-active {
-    background: var(--color-accent);
+.pin-save-option:hover { background: var(--color-search); }
+.pin-save-option:disabled { opacity: .55; cursor: wait; }
+
+.profile-modal-actions a.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
 .pin-author-row {
@@ -358,63 +419,31 @@
     white-space: nowrap;
 }
 
+.pin-back-button .icon {
+    width: 26px;
+    height: 26px;
+    stroke-width: 2.2;
+}
+
 @media (max-width: 1100px) {
-    .pin-layout {
-        grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
-    }
-
-    .pin-primary {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    }
-
-    .pin-recommendations-grid--bottom {
-        column-count: 3;
-    }
+    .pin-layout { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+    .pin-recommendations-grid--bottom { column-count: 3; }
 }
 
 @media (max-width: 800px) {
     .pin-layout,
-    .pin-primary {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .pin-side-recommendations {
-        grid-column: 1;
-    }
-
-    .pin-main-image {
-        height: min(72vh, 620px);
-        min-height: 300px;
-    }
-
-    .pin-detail-panel {
-        min-height: 500px;
-    }
-
-    .pin-recommendations-grid--bottom {
-        column-count: 3;
-    }
+    .pin-primary { grid-template-columns: minmax(0, 1fr); }
+    .pin-side-recommendations { grid-column: 1; }
+    .pin-detail-panel { min-height: 0; }
+    .pin-recommendations-grid--bottom { column-count: 3; }
 }
 
 @media (max-width: 520px) {
-    .pin-detail-main {
-        padding: 90px 10px 20px;
-    }
-
-    .pin-main-image {
-        height: 70vh;
-        min-height: 260px;
-    }
-
-    .pin-toolbar {
-        justify-content: flex-start;
-    }
-
+    .pin-detail-main { padding: 90px 10px 20px; }
     .pin-recommendations-grid--side,
-    .pin-recommendations-grid--bottom {
-        column-count: 2;
-    }
+    .pin-recommendations-grid--bottom { column-count: 2; }
 }
+
 .pin-action-message {
     margin: -8px 0 10px;
     color: var(--color-error);

@@ -1,7 +1,6 @@
 import template from './Header.hbs';
 import { SearchBar } from '../SearchBar/SearchBar';
-import { logoutUser, resolveImageUrl } from '../../api/user';
-
+import { logoutUser, resolveAvatarUrl, DEFAULT_AVATAR_URL } from '../../api/user';
 /**
  * Шапка сайта: логотип, слот по центру, меню пользователя.
  */
@@ -53,14 +52,15 @@ export class Header {
         const isAuth = localStorage.getItem('isAuth') === 'true';
         const userName = localStorage.getItem('userName') || 'Пользователь';
         const rawAvatarUrl = isAuth ? (localStorage.getItem('userAvatarUrl') || '') : '';
-        const userAvatarUrl = resolveImageUrl(rawAvatarUrl);
+        const userAvatarUrl = resolveAvatarUrl(rawAvatarUrl);
+        const showBack = !/^\/(?:home|login|signup|pin\/.*)?\/?$/.test(window.location.pathname);
 
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = template({ isAuth, userName, userAvatarUrl });
+        wrapper.innerHTML = template({ isAuth, userName, userAvatarUrl, showBack });
         const element = wrapper.firstElementChild;
         const avatarImage = element.querySelector('.user-avatar img');
         if (avatarImage) {
-            avatarImage.addEventListener('error', () => avatarImage.remove(), { once: true });
+            avatarImage.addEventListener('error', () => { avatarImage.src = DEFAULT_AVATAR_URL; }, { once: true });
         }
 
         const centerSlot = element.querySelector('.header-center');

@@ -30,6 +30,12 @@ export function resolveImageUrl(value: string | null | undefined): string {
     }
 }
 
+export const DEFAULT_AVATAR_URL = '/img/default-avatar.svg';
+
+/** Возвращает URL аватара или лапку по умолчанию, если аватара нет. */
+export function resolveAvatarUrl(value: string | null | undefined): string {
+    return resolveImageUrl(value) || DEFAULT_AVATAR_URL;
+}
 function getCsrfToken() {
     const matches = document.cookie.match(new RegExp(
         '(?:^|; )' + 'csrf_token'.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'

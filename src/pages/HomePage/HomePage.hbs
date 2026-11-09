@@ -1,27 +1,6 @@
 <div class="home-page">
-    <aside class="home-sidebar" id="homeSidebar">
-        <nav class="sidebar-nav">
-            <a class="sidebar-item" href="/home" title="Главная">
-                <img src="/img/home.png" alt="Главная" class="sidebar-icon">
-                <span class="sidebar-label">Главная</span>
-            </a>
-            <a class="sidebar-item" href="/create-pin" data-action="create" title="Создать пин">
-                <img src="/img/plus.png" alt="Создать пин" class="sidebar-icon">
-                <span class="sidebar-label">Создать пин</span>
-            </a>
-        </nav>
-    </aside>
-
     <main class="home-content">
         <p class="pins-load-error" id="pinsLoadError" role="alert" hidden></p>
-        <div class="pins-grid">
-            {{#each pins}}
-                <div class="pin-card"><img src="{{this}}" alt="Pin"></div>
-            {{/each}}
-        </div>
+        <div class="pins-grid"></div>
     </main>
-
-    <button class="sidebar-toggle" id="sidebarToggle" type="button" title="Меню">
-        <img src="/img/toggle.png" alt="Меню">
-    </button>
 </div>

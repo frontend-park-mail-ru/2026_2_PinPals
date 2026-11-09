@@ -42,15 +42,26 @@
 /* Иконка глазика внутри поля */
 .eye-icon-img {
     position: absolute;
-    right: 20px;
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
-    width: 24px;
-    height: 26px;
-    cursor: pointer;
-    user-select: none;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
     opacity: 0.7;
+    cursor: pointer;
 }
+
+.eye-icon-img:hover { opacity: 1; }
+.eye-icon-img .icon { width: 24px; height: 24px; }
+.eye-icon-img .eye-open { display: none; }
+.eye-icon-img.is-visible .eye-open { display: block; }
+.eye-icon-img.is-visible .eye-closed { display: none; }
 
 /* Стили для подсказок под полями */
 .field-hint {
@@ -129,4 +140,40 @@
     background-color: #ccc;
     color: #666;
     cursor: not-allowed;
+}
+
+.input-wrapper input[type="date"] {
+    accent-color: var(--color-accent);
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.input-wrapper input[type="date"]::-webkit-datetime-edit-day-field:focus,
+.input-wrapper input[type="date"]::-webkit-datetime-edit-month-field:focus,
+.input-wrapper input[type="date"]::-webkit-datetime-edit-year-field:focus {
+    background-color: var(--color-search);
+    color: var(--color-text);
+    outline: none;
+}
+
+.input-wrapper input:focus-visible {
+    outline: none;
+}
+
+/* Общие стили для векторных иконок */
+.icon {
+    width: 1em;
+    height: 1em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+/* Крестики «Закрыть» во всех окнах */
+button[aria-label="Закрыть"] .icon {
+    width: 26px;
+    height: 26px;
 }

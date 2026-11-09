@@ -1,4 +1,7 @@
-import { fetchMyDesks, fetchMyProfile, fetchUserSavedPins, resolveImageUrl } from '../../api/user';
+import { resolveImageUrl,
+    resolveAvatarUrl,
+    DEFAULT_AVATAR_URL
+} from '../../api/user';
 import { Header } from '../../components/Header/Header';
 import { PinCard } from '../../components/PinCard/PinCard';
 import { BoardCard } from '../../components/BoardCard/BoardCard';
@@ -52,7 +55,7 @@ export class ProfilePage {
         const userName = localStorage.getItem('userName')
             || localStorage.getItem('userTag')
             || 'Пользователь';
-        const userAvatarUrl = resolveImageUrl(localStorage.getItem('userAvatarUrl') || '');
+        const userAvatarUrl = resolveAvatarUrl(localStorage.getItem('userAvatarUrl') || '');
         const followersLabel = 'Подписчики: —';
 
         const wrapper = document.createElement('div');
@@ -68,9 +71,7 @@ export class ProfilePage {
 
         this.element = wrapper.firstElementChild;
         const initialAvatar = this.element.querySelector('.profile-avatar');
-        if (initialAvatar?.tagName === 'IMG') {
-            this.attachAvatarFallback(initialAvatar, userName);
-        }
+        if (initialAvatar) this.attachAvatarFallback(initialAvatar);
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
 
@@ -121,6 +122,7 @@ export class ProfilePage {
         const name = profile.name || profile.user_tag || 'Пользователь';
         const nameElement = this.element.querySelector('.profile-user-name');
         if (nameElement) nameElement.textContent = name;
+
         const followersElement = this.element.querySelector('.profile-followers');
         if (followersElement) {
             followersElement.textContent = Number.isFinite(profile.followers_count)
@@ -128,39 +130,16 @@ export class ProfilePage {
                 : 'Подписчики: —';
         }
 
-        const avatarElement = this.element.querySelector('.profile-avatar');
-        if (profile.avatar_url) {
-            if (avatarElement?.tagName === 'IMG') {
-                avatarElement.src = resolveImageUrl(profile.avatar_url);
-                avatarElement.alt = 'Аватар пользователя';
-                this.attachAvatarFallback(avatarElement, name);
-            } else if (avatarElement) {
-                const image = document.createElement('img');
-                image.className = 'profile-avatar';
-                image.src = resolveImageUrl(profile.avatar_url);
-                image.alt = 'Аватар пользователя';
-                this.attachAvatarFallback(image, name);
-                avatarElement.replaceWith(image);
-            }
-        } else if (avatarElement?.tagName === 'IMG') {
-            const placeholder = document.createElement('div');
-            placeholder.className = 'profile-avatar profile-avatar--placeholder';
-            placeholder.setAttribute('aria-hidden', 'true');
-            placeholder.textContent = name.trim().charAt(0).toUpperCase() || 'П';
-            avatarElement.replaceWith(placeholder);
-        } else if (avatarElement) {
-            avatarElement.textContent = name.trim().charAt(0).toUpperCase() || 'П';
+        const avatar = this.element.querySelector('.profile-avatar');
+        if (avatar) {
+            avatar.src = resolveAvatarUrl(profile.avatar_url);
+            this.attachAvatarFallback(avatar);
         }
     }
 
-    attachAvatarFallback(image, name) {
+    attachAvatarFallback(image) {
         image.addEventListener('error', () => {
-            if (!image.isConnected) return;
-            const placeholder = document.createElement('div');
-            placeholder.className = 'profile-avatar profile-avatar--placeholder';
-            placeholder.setAttribute('aria-hidden', 'true');
-            placeholder.textContent = name.trim().charAt(0).toUpperCase() || 'П';
-            image.replaceWith(placeholder);
+            if (!image.src.endsWith(DEFAULT_AVATAR_URL)) image.src = DEFAULT_AVATAR_URL;
         }, { once: true });
     }
 

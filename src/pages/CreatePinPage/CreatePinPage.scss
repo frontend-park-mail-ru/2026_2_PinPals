@@ -76,11 +76,10 @@
 
 .create-pin-upload-icon {
     display: block;
+    width: 72px;
+    height: 72px;
     color: var(--color-text);
-    font-family: Arial, sans-serif;
-    font-size: 82px;
-    font-weight: 700;
-    line-height: 1;
+    stroke-width: 1.3;
 }
 
 .create-pin-preview {

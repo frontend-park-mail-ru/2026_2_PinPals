@@ -192,3 +192,29 @@
         font-size: 22px;
     }
 }
+
+.header-left-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.header-back {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: var(--color-text);
+    transition: background-color 0.2s ease;
+}
+
+.header-back:hover {
+    background: var(--color-input);
+}
+
+.header-back .icon {
+    width: 26px;
+    height: 26px;
+}

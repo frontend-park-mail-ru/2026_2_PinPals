@@ -1,5 +1,6 @@
 import './styles';
 import { routes } from './routes';
+import { Sidebar } from './components/Sidebar/Sidebar';
 
 const root = document.getElementById('root');
 
@@ -174,6 +175,8 @@ window.addEventListener('popstate', () => {
 
 // Первый рендер при загрузке страницы
 renderPage();
+// Меню живёт вне стека страниц, поэтому доступно на любой странице
+document.body.append(new Sidebar().render());
 
 // Service Worker кэширует оболочку приложения и локальные ресурсы для запуска без сети.
 function registerServiceWorker() {

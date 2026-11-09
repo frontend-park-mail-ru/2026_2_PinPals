@@ -51,16 +51,13 @@ export class Input {
 
         this.inputElement.addEventListener('input', () => this.validate());
 
-        const eyeImg = this.element.querySelector('.eye-icon-img');
-        if (eyeImg) {
-            eyeImg.addEventListener('click', () => {
-                if (this.inputElement.type === 'password') {
-                    this.inputElement.type = 'text';
-                    eyeImg.src = '/img/eye-open.png';
-                } else {
-                    this.inputElement.type = 'password';
-                    eyeImg.src = '/img/eye-closed.png';
-                }
+        const eyeButton = this.element.querySelector('.eye-icon-img');
+        if (eyeButton) {
+            eyeButton.addEventListener('click', () => {
+                const makeVisible = this.inputElement.type === 'password';
+                this.inputElement.type = makeVisible ? 'text' : 'password';
+                eyeButton.classList.toggle('is-visible', makeVisible);
+                eyeButton.setAttribute('aria-pressed', String(makeVisible));
             });
         }
 

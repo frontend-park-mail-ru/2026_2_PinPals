@@ -1,6 +1,7 @@
 // Общие стили. Vite соберёт эти импорты в один CSS-файл.
 import './components/components.scss';
 import './components/Header/Header.scss';
+import './components/Sidebar/Sidebar.scss';
 import './components/SearchBar/SearchBar.scss';
 import './components/BoardCard/BoardCard.scss';
 import './components/SavedPinsPicker/SavedPinsPicker.scss';
