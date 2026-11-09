@@ -32,6 +32,7 @@ export class PinPage {
         this.isDestroyed = false;
         this.interactions = { is_liked: false, likes_count: 0 };
         this.comments = [];
+        this.recommendationsObserver = null;
     }
 
     render() {
@@ -101,18 +102,6 @@ export class PinPage {
         }
     }
 
-    /** Загружает ограниченный список рекомендаций (12 элементов вместо 36). */
-    async loadRecommendations() {
-        try {
-            const result = await fetchPins(12);
-            if (this.isDestroyed || !this.element?.isConnected) return;
-            const otherPins = (result.pins || []).filter((pin) => String(pin.pin_id) !== this.pinId);
-            this.renderRecommendations(otherPins);
-        } catch (error) {
-            console.warn('Не удалось загрузить рекомендации', error);
-        }
-    }
-
     /** Заполняет основной блок данными пина. */
     renderPin() {
         const img = this.element.querySelector('#pinMainImage');
@@ -154,14 +143,112 @@ export class PinPage {
         this.renderComments();
     }
 
-    /** Отрисовывает рекомендации по бокам и снизу. */
-    renderRecommendations(otherPins) {
-        const sideBox = this.element.querySelector('#pinSideRecommendations');
-        const bottomBox = this.element.querySelector('#pinBottomRecommendations');
-        sideBox.replaceChildren();
-        bottomBox.replaceChildren();
-        otherPins.slice(0, 10).forEach((pin) => sideBox.append(new PinCard(pin).render()));
-        otherPins.slice(10).forEach((pin) => bottomBox.append(new PinCard(pin).render()));
+    /**
+     * Лента рекомендаций под пином.
+     *
+     *  - Первые SIDE_LIMIT пинов идут в правый сайдбар (2 колонки).
+     *  - Все остальные — в нижнюю masonry-ленту на всю ширину (6/4/3/2 колонки).
+     *  - Подгрузка бесконечная: когда бэкенд перестаёт отдавать новый курсор,
+     *    лента стартует заново (после полного цикла 30 уникальных пинов
+     *    начинают появляться дубликаты — это и есть «infinite scroll»).
+     *  - Уже показанные пины отфильтровываются через Set, чтобы в первом
+     *    цикле не было дублей.
+     */
+    async loadRecommendations() {
+        const PAGE_SIZE = 30;
+        const SIDE_LIMIT = 6;
+
+        const sideBox = this.element?.querySelector('#pinSideRecommendations');
+        const bottomBox = this.element?.querySelector('#pinBottomRecommendations');
+        const sentinel = this.element?.querySelector('#pinRecommendationsSentinel');
+        if (!sideBox || !bottomBox || !sentinel) return;
+
+        let nextCursor: any = null;
+        let isLoading = false;
+        let sideFilled = false;
+        const seen = new Set<string>([this.pinId]);  // текущий пин не рекомендуем
+
+        const appendTo = (container: Element, pins: any[]) => {
+            const frag = document.createDocumentFragment();
+            pins.forEach((pin) => frag.appendChild(new PinCard(pin).render()));
+            container.appendChild(frag);
+        };
+
+        const load = async () => {
+            if (isLoading) return;
+            isLoading = true;
+
+            try {
+                const data = await fetchPins(PAGE_SIZE, nextCursor);
+                if (this.isDestroyed || !this.element?.isConnected) return;
+
+                const raw = data.pins || [];
+
+                // Пустой ответ от бэкенда — дальше грузить нечего.
+                if (raw.length === 0) {
+                    if (this.recommendationsObserver) {
+                        this.recommendationsObserver.disconnect();
+                        this.recommendationsObserver = null;
+                    }
+                    return;
+                }
+
+                // Убираем текущий пин и уже показанные.
+                const fresh = raw.filter((pin) => !seen.has(String(pin.pin_id)));
+                fresh.forEach((pin) => seen.add(String(pin.pin_id)));
+
+                if (fresh.length === 0) {
+                    // Все пины показаны → сбрасываем «память» и начинаем цикл заново.
+                    seen.clear();
+                    seen.add(this.pinId);
+                    nextCursor = null;
+                    return;  // observer перезапустится в finally
+                }
+
+                if (!sideFilled) {
+                    sideFilled = true;
+                    const toSide = fresh.slice(0, SIDE_LIMIT);
+                    const toBottom = fresh.slice(SIDE_LIMIT);
+                    if (toSide.length) appendTo(sideBox, toSide);
+                    if (toBottom.length) appendTo(bottomBox, toBottom);
+                } else {
+                    appendTo(bottomBox, fresh);
+                }
+
+                // null → следующий вызов начнёт цикл сначала (лента бесконечная).
+                nextCursor = data.next_cursor ?? null;
+            } catch (error) {
+                console.warn('Не удалось загрузить рекомендации', error);
+                if (this.recommendationsObserver) {
+                    this.recommendationsObserver.disconnect();
+                    this.recommendationsObserver = null;
+                }
+            } finally {
+                isLoading = false;
+                // Если sentinel всё ещё в зоне видимости, observer сам повторно
+                // не сработает — перезапускаем наблюдение.
+                if (this.recommendationsObserver && sentinel.isConnected) {
+                    this.recommendationsObserver.unobserve(sentinel);
+                    this.recommendationsObserver.observe(sentinel);
+                }
+            }
+        };
+
+        // Первая загрузка — сразу, чтобы не ждать, пока observer дёрнется.
+        await load();
+
+        if (sentinel.isConnected && 'IntersectionObserver' in window) {
+            this.recommendationsObserver = new IntersectionObserver((entries) => {
+                if (!sentinel.isConnected) {
+                    this.recommendationsObserver?.disconnect();
+                    this.recommendationsObserver = null;
+                    return;
+                }
+                if (entries.some((entry) => entry.isIntersecting)) void load();
+            }, { rootMargin: '600px 0px' });
+
+            this.recommendationsObserver.observe(sentinel);
+        }
     }
 
     /** Подключает кнопки лайка, поделиться и комментариев. */
@@ -362,6 +449,8 @@ export class PinPage {
     destroy() {
         this.isDestroyed = true;
         clearTimeout(this.loadingTimer);
+        this.recommendationsObserver?.disconnect();
+        this.recommendationsObserver = null;
         this.header?.destroy();
         this.header = null;
         this.element = null;

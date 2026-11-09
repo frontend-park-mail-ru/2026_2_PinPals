@@ -31,20 +31,31 @@
 }
 
 .pin-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 4fr) minmax(0, 2fr);
-    align-items: start;
-    gap: 12px;
     max-width: 1800px;
     margin: 0 auto;
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+
+/* Обёртка: пин + сайдбар. Сайдбар абсолютный — не влияет на высоту. */
+.pin-hero-wrap {
+    position: relative;
+    /* Оставляем 340px справа под абсолютный сайдбар */
+    padding-right: calc(320px + 16px);
+    box-sizing: border-box;
 }
 
 .pin-primary {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: stretch;
+    align-items: start;
     gap: 16px;
     min-width: 0;
+}
+
+.pin-bottom-recommendations {
+    margin-top: 24px;
+    width: 100%;
 }
 
 .pin-main-image-wrap {
@@ -366,7 +377,19 @@
 }
 
 .pin-side-recommendations {
-    min-width: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 320px;
+    max-height: calc(100vh - 108px);
+}
+
+.pin-side-sticky {
+    position: sticky;
+    top: 96px;
+    max-height: calc(100vh - 108px);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .pin-recommendations-grid {
@@ -379,13 +402,19 @@
 }
 
 .pin-recommendations-grid--bottom {
-    column-count: 4;
+    column-count: 6;
+    column-gap: 16px;
 }
 
 .pin-bottom-recommendations {
     grid-column: 1 / -1;
     min-width: 0;
-    margin-top: 4px;
+    margin-top: 12px;
+}
+
+.pin-bottom-recommendations .pin-card {
+    margin: 0 0 16px;
+    border-radius: 16px;
 }
 
 .pin-page .pin-card {
@@ -444,6 +473,23 @@
     .pin-recommendations-grid--bottom { column-count: 2; }
 }
 
+@media (max-width: 1400px) {
+    .pin-hero-wrap { padding-right: 0; }
+    .pin-side-recommendations { display: none; }  /* на узких — только нижняя лента */
+}
+
+@media (max-width: 1200px) {
+    .pin-recommendations-grid--bottom { column-count: 4; }
+}
+
+@media (max-width: 900px) {
+    .pin-recommendations-grid--bottom { column-count: 3; }
+}
+
+@media (max-width: 600px) {
+    .pin-recommendations-grid--bottom { column-count: 2; }
+}
+
 .pin-action-message {
     margin: -8px 0 10px;
     color: var(--color-error);
@@ -469,4 +515,27 @@
 .pin-comment-form button:disabled {
     cursor: not-allowed;
     opacity: 0.45;
+}
+
+.pin-recommendations-sentinel {
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
+}
+
+.pin-bottom-recommendations .pin-card {
+    display: inline-block;
+    width: 100%;
+    margin: 0 0 16px;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--color-input);
+    break-inside: avoid;
+    vertical-align: top;
+}
+
+.pin-recommendations-sentinel {
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
 }

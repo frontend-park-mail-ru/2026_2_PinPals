@@ -7,79 +7,88 @@
         </div>
 
         <div class="pin-layout" id="pinLayout" hidden>
-            <section class="pin-primary">
-                <div class="pin-main-image-wrap">
-                    <a class="pin-back-button" href="{{backUrl}}" aria-label="Назад">
-                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-                    </a>
-                    <img class="pin-main-image" id="pinMainImage" alt="">
-                </div>
+            <div class="pin-hero-wrap">
+                <section class="pin-primary">
+                    <div class="pin-main-image-wrap">
+                        <a class="pin-back-button" href="{{backUrl}}" aria-label="Назад">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+                        </a>
+                        <img class="pin-main-image" id="pinMainImage" alt="">
+                    </div>
 
-                <section class="pin-detail-panel">
-                    <div class="pin-toolbar">
-                        <div class="pin-toolbar-left">
-                            <button class="pin-action-button" type="button" data-action="like" aria-pressed="false" title="Нравится">
-                                <svg class="pin-icon pin-heart" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                </svg>
-                                <span data-like-count>0</span>
-                            </button>
-                            <button class="pin-action-button pin-share-button" type="button" data-action="share" title="Поделиться" aria-label="Поделиться">
-                                <svg class="pin-icon pin-share-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                                    <line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/>
-                                </svg>
-                            </button>
-                        </div>
-                        <button class="pin-save-button" type="button" data-action="save">Сохранить</button>
-                        <div class="profile-modal-backdrop" id="pinSaveModal" hidden>
-                            <div class="profile-modal-box" role="dialog" aria-modal="true" aria-labelledby="pinSaveTitle">
-                                <div class="profile-modal-header">
-                                    <h2 class="profile-modal-title" id="pinSaveTitle">Сохранить на доску</h2>
-                                      <button class="profile-modal-close" id="pinSaveClose" type="button" aria-label="Закрыть"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-                                </div>
-                                <div class="pin-save-list" id="pinSaveList"></div>
-                                <p class="profile-modal-message" id="pinSaveMessage" role="status" hidden></p>
-                                <div class="profile-modal-actions">
-                                    <a class="btn btn-second" href="/create-board">Создать доску</a>
+                    <section class="pin-detail-panel">
+                        <div class="pin-toolbar">
+                            <div class="pin-toolbar-left">
+                                <button class="pin-action-button" type="button" data-action="like" aria-pressed="false" title="Нравится">
+                                    <svg class="pin-icon pin-heart" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                    <span data-like-count>0</span>
+                                </button>
+                                <button class="pin-action-button pin-share-button" type="button" data-action="share" title="Поделиться" aria-label="Поделиться">
+                                    <svg class="pin-icon pin-share-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                                        <line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <button class="pin-save-button" type="button" data-action="save">Сохранить</button>
+                            <div class="profile-modal-backdrop" id="pinSaveModal" hidden>
+                                <div class="profile-modal-box" role="dialog" aria-modal="true" aria-labelledby="pinSaveTitle">
+                                    <div class="profile-modal-header">
+                                        <h2 class="profile-modal-title" id="pinSaveTitle">Сохранить на доску</h2>
+                                        <button class="profile-modal-close" id="pinSaveClose" type="button" aria-label="Закрыть">
+                                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="pin-save-list" id="pinSaveList"></div>
+                                    <p class="profile-modal-message" id="pinSaveMessage" role="status" hidden></p>
+                                    <div class="profile-modal-actions">
+                                        <a class="btn btn-second" href="/create-board">Создать доску</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <p class="pin-action-message" id="pinActionMessage" role="status" hidden></p>
+                        <p class="pin-action-message" id="pinActionMessage" role="status" hidden></p>
 
-                    <div class="pin-author-row">
-                        <div class="pin-author-avatar" id="pinAuthorAvatar" aria-hidden="true">P</div>
-                        <span class="pin-author-name" id="pinAuthorName">Автор пина</span>
-                    </div>
-
-                    <div class="pin-copy">
-                        <h1 class="pin-title" id="pinTitle" hidden></h1>
-                        <p class="pin-description" id="pinDescription"></p>
-                    </div>
-
-                    <section class="pin-comments" aria-label="Комментарии">
-                        <div class="pin-comments-heading">
-                            <h2>Комментарии</h2>
-                            <span id="pinCommentsCount">0</span>
+                        <div class="pin-author-row">
+                            <div class="pin-author-avatar" id="pinAuthorAvatar" aria-hidden="true">P</div>
+                            <span class="pin-author-name" id="pinAuthorName">Автор пина</span>
                         </div>
-                        <div class="pin-comments-list" id="pinCommentsList"></div>
-                        <form class="pin-comment-form" id="pinCommentForm">
-                            <label class="visually-hidden" for="pinCommentInput">Добавьте комментарий</label>
-                            <input id="pinCommentInput" name="comment" type="text" maxlength="500" placeholder="Добавьте комментарий" autocomplete="off">
-                            <button type="submit" aria-label="Отправить комментарий"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
-                        </form>
+
+                        <div class="pin-copy">
+                            <h1 class="pin-title" id="pinTitle" hidden></h1>
+                            <p class="pin-description" id="pinDescription"></p>
+                        </div>
+
+                        <section class="pin-comments" aria-label="Комментарии">
+                            <div class="pin-comments-heading">
+                                <h2>Комментарии</h2>
+                                <span id="pinCommentsCount">0</span>
+                            </div>
+                            <div class="pin-comments-list" id="pinCommentsList"></div>
+                            <form class="pin-comment-form" id="pinCommentForm">
+                                <label class="visually-hidden" for="pinCommentInput">Добавьте комментарий</label>
+                                <input id="pinCommentInput" name="comment" type="text" maxlength="500" placeholder="Добавьте комментарий" autocomplete="off">
+                                <button type="submit" aria-label="Отправить комментарий">
+                                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                </button>
+                            </form>
+                        </section>
                     </section>
                 </section>
 
-                <section class="pin-bottom-recommendations" aria-label="Другие пины">
-                    <div class="pin-recommendations-grid pin-recommendations-grid--bottom" id="pinBottomRecommendations"></div>
-                </section>
-            </section>
+                <aside class="pin-side-recommendations" aria-label="Другие пины">
+                    <div class="pin-side-sticky">
+                        <div class="pin-recommendations-grid pin-recommendations-grid--side" id="pinSideRecommendations"></div>
+                    </div>
+                </aside>
+            </div>
 
-            <aside class="pin-side-recommendations" aria-label="Другие пины">
-                <div class="pin-recommendations-grid pin-recommendations-grid--side" id="pinSideRecommendations"></div>
-            </aside>
+            <section class="pin-bottom-recommendations" aria-label="Другие пины">
+                <div class="pin-recommendations-grid pin-recommendations-grid--bottom" id="pinBottomRecommendations"></div>
+                <div class="pin-recommendations-sentinel" id="pinRecommendationsSentinel" aria-hidden="true"></div>
+            </section>
         </div>
     </main>
 </div>
