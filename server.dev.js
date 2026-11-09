@@ -477,48 +477,117 @@ app.get('/api/v1/users/me', requireAuth, requireActiveUser, (req, res) => {
     return res.status(200).json(publicUser(req.user));
 });
 
-app.patch('/api/v1/users/me', requireAuth, requireCsrf, requireActiveUser, (req, res) => {
-    const body = req.body || {};
-    const allowedFields = ['name', 'user_tag', 'description', 'avatar_url'];
-    const keys = Object.keys(body);
-    if (!keys.length || keys.some((key) => !allowedFields.includes(key))) {
-        return validationError(res, { body: 'empty_or_unknown_fields' });
-    }
+app.patch('/api/v1/users/me', requireAuth, requireCsrf, requireActiveUser, async (req, res, next) => {
+    try {
+        const contentType = req.get('Content-Type') || '';
+        const isMultipart = /^multipart\/form-data/i.test(contentType);
 
-    const fields = {};
-    if (Object.hasOwn(body, 'name')) {
-        if (typeof body.name !== 'string' || !body.name.trim()) fields.name = 'must_not_be_empty';
-        else if (body.name.trim().length > 255) fields.name = 'max_length_255';
-    }
-    if (Object.hasOwn(body, 'user_tag')) {
-        if (typeof body.user_tag !== 'string' || !body.user_tag.trim()) fields.user_tag = 'must_not_be_empty';
-        else if (body.user_tag.trim().length > 64) fields.user_tag = 'max_length_64';
-        else {
-            const candidate = users.get(body.user_tag.trim());
-            if (candidate && candidate.user_id !== req.user.user_id) {
-                return res.status(409).json({ error: 'conflict', fields: { user_tag: 'already_exists' } });
+        let body = {};
+        let avatarFile = null;
+
+        if (isMultipart) {
+            const { fields: multipartFields, files } = await readMultipart(req, MAX_MULTIPART_BYTES);
+            avatarFile = files.avatar || null;
+
+            // name и user_tag — только если реально переданы.
+            if (Object.hasOwn(multipartFields, 'name')) body.name = multipartFields.name;
+            if (Object.hasOwn(multipartFields, 'user_tag')) body.user_tag = multipartFields.user_tag;
+
+            // description: пустая строка → очистка (null).
+            if (Object.hasOwn(multipartFields, 'description')) {
+                body.description = multipartFields.description === '' ? null : multipartFields.description;
+            }
+
+            // clear_avatar=true → очистить аватар (только без файла).
+            if (multipartFields.clear_avatar === 'true') {
+                if (avatarFile) {
+                    return validationError(res, { avatar: 'cannot_combine_with_clear' });
+                }
+                body.avatar_url = null;
+            }
+        } else {
+            body = req.body || {};
+        }
+
+        // ---- Валидация полей (как раньше) ----
+        const allowedFields = ['name', 'user_tag', 'description', 'avatar_url'];
+        const keys = Object.keys(body);
+        const hasAvatar = Boolean(avatarFile);
+
+        if (!keys.length && !hasAvatar) {
+            return validationError(res, { body: 'empty_or_unknown_fields' });
+        }
+        if (keys.some((key) => !allowedFields.includes(key))) {
+            return validationError(res, { body: 'empty_or_unknown_fields' });
+        }
+
+        const validationFields = {};
+        if (Object.hasOwn(body, 'name')) {
+            if (typeof body.name !== 'string' || !body.name.trim()) validationFields.name = 'must_not_be_empty';
+            else if (body.name.trim().length > 255) validationFields.name = 'max_length_255';
+        }
+        if (Object.hasOwn(body, 'user_tag')) {
+            if (typeof body.user_tag !== 'string' || !body.user_tag.trim()) {
+                validationFields.user_tag = 'must_not_be_empty';
+            } else if (body.user_tag.trim().length > 64) {
+                validationFields.user_tag = 'max_length_64';
+            } else {
+                const candidate = users.get(body.user_tag.trim());
+                if (candidate && candidate.user_id !== req.user.user_id) {
+                    return res.status(409).json({ error: 'conflict', fields: { user_tag: 'already_exists' } });
+                }
             }
         }
-    }
-    for (const field of ['description', 'avatar_url']) {
-        if (Object.hasOwn(body, field) && body[field] !== null && typeof body[field] !== 'string') {
-            fields[field] = 'must_be_string_or_null';
+        for (const field of ['description', 'avatar_url']) {
+            if (Object.hasOwn(body, field) && body[field] !== null && typeof body[field] !== 'string') {
+                validationFields[field] = 'must_be_string_or_null';
+            }
         }
-    }
-    if (Object.keys(fields).length) return validationError(res, fields);
+        if (Object.keys(validationFields).length) return validationError(res, validationFields);
 
-    if (Object.hasOwn(body, 'name')) req.user.name = body.name.trim();
-    if (Object.hasOwn(body, 'user_tag')) {
-        const oldTag = req.user.user_tag;
-        const newTag = body.user_tag.trim();
-        users.delete(oldTag);
-        users.set(newTag, req.user);
-        req.user.user_tag = newTag;
-    }
-    if (Object.hasOwn(body, 'description')) req.user.description = body.description;
-    if (Object.hasOwn(body, 'avatar_url')) req.user.avatar_url = body.avatar_url;
+        // ---- Валидация и сохранение файла аватара ----
+        let newAvatarUrl = null;
+        if (hasAvatar) {
+            if (!avatarFile.data.length) {
+                return validationError(res, { avatar: 'required' });
+            }
+            if (avatarFile.data.length > MAX_IMAGE_BYTES) {
+                return res.status(413).json({
+                    error: 'payload_too_large',
+                    message: 'Размер изображения не должен превышать 10 MiB.',
+                });
+            }
+            const extension = detectImageExtension(avatarFile.data);
+            if (!extension) {
+                return validationError(res, { avatar: 'unsupported_image_format' });
+            }
+            const filename = `${crypto.randomUUID()}.${extension}`;
+            await writeFile(path.join(UPLOAD_DIR, filename), avatarFile.data, { flag: 'wx' });
+            newAvatarUrl = `/images/${filename}`;
+        }
 
-    return res.status(200).json(publicUser(req.user));
+        // ---- Применяем изменения ----
+        if (Object.hasOwn(body, 'name')) req.user.name = body.name.trim();
+        if (Object.hasOwn(body, 'user_tag')) {
+            const oldTag = req.user.user_tag;
+            const newTag = body.user_tag.trim();
+            users.delete(oldTag);
+            users.set(newTag, req.user);
+            req.user.user_tag = newTag;
+        }
+        if (Object.hasOwn(body, 'description')) req.user.description = body.description;
+
+        // Аватар: файл имеет приоритет над clear_avatar и над avatar_url.
+        if (newAvatarUrl) {
+            req.user.avatar_url = newAvatarUrl;
+        } else if (Object.hasOwn(body, 'avatar_url')) {
+            req.user.avatar_url = body.avatar_url;
+        }
+
+        return res.status(200).json(publicUser(req.user));
+    } catch (error) {
+        return next(error);
+    }
 });
 
 app.delete('/api/v1/users/me', requireAuth, requireCsrf, requireActiveUser, (req, res) => {

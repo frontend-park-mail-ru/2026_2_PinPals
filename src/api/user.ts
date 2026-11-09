@@ -199,23 +199,58 @@ export async function fetchMyProfile(): Promise<User> {
     return apiRequest<User>('/api/v1/users/me');
 }
 
-export async function updateMyProfile(patch: Partial<Pick<User, 'name' | 'user_tag' | 'description' | 'avatar_url'>>): Promise<User> {
+/**
+ * PATCH /users/me.
+ *
+ * Поддерживает два режима:
+ *  - JSON — если avatarFile не передан и не нужно очищать аватар.
+ *  - multipart/form-data — если передан файл аватара или patch.avatar_url === null
+ *    (специальный маркер «очистить аватар» → отправляем clear_avatar=true).
+ *
+ * @param patch       — name / user_tag / description / avatar_url (null = очистить).
+ * @param avatarFile  — новый файл аватара (JPEG/PNG/GIF/WebP ≤ 10 MiB).
+ */
+export async function updateMyProfile(
+    patch: Partial<Pick<User, 'name' | 'user_tag' | 'description' | 'avatar_url'>>,
+    avatarFile: File | null = null,
+): Promise<User> {
+    const needsMultipart = Boolean(avatarFile) || patch.avatar_url === null;
+
+    if (!needsMultipart) {
+        // Чистый JSON — avatar не трогаем.
+        const { avatar_url, ...rest } = patch;
+        return apiRequest<User>('/api/v1/users/me', {
+            method: 'PATCH',
+            body: JSON.stringify(rest),
+        });
+    }
+
+    // Unified multipart PATCH
+    const formData = new FormData();
+    if (patch.name !== undefined) formData.append('name', patch.name);
+    if (patch.user_tag !== undefined) formData.append('user_tag', patch.user_tag);
+    if (patch.description !== undefined) {
+        // Пустая строка = очистить description.
+        formData.append('description', patch.description ?? '');
+    }
+    if (avatarFile) {
+        formData.append('avatar', avatarFile);
+    } else if (patch.avatar_url === null) {
+        formData.append('clear_avatar', 'true');
+    }
+
     return apiRequest<User>('/api/v1/users/me', {
         method: 'PATCH',
-        body: JSON.stringify(patch),
+        body: formData,
     });
 }
 
+/**
+ * Удобный алиас: загрузить новый аватар, не меняя остальные поля.
+ * Больше не делает отдельный POST — использует тот же unified PATCH.
+ */
 export async function uploadMyAvatar(file: File): Promise<User> {
-    if (typeof File === 'undefined' || !(file instanceof File)) {
-        throw new TypeError('Для загрузки аватара необходимо выбрать файл изображения.');
-    }
-    const formData = new FormData();
-    formData.append('avatar', file);
-    return apiRequest<User>('/api/v1/users/me/avatar', {
-        method: 'POST',
-        body: formData,
-    });
+    return updateMyProfile({}, file);
 }
 
 export async function deleteMyProfile() {

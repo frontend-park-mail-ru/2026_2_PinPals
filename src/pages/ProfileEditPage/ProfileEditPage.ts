@@ -3,7 +3,6 @@ import {
     fetchMyProfile,
     logoutUser,
     updateMyProfile,
-    uploadMyAvatar,
     resolveAvatarUrl,
 } from '../../api/user';
 import { Header } from '../../components/Header/Header';
@@ -226,7 +225,7 @@ export class ProfileEditPage {
         }
     }
 
-    /** PATCH /users/me + (при необходимости) POST /users/me/avatar. */
+    /** PATCH /users/me — единый запрос (JSON или multipart) в зависимости от изменений. */
     async submitForm(event) {
         event.preventDefault();
 
@@ -252,7 +251,6 @@ export class ProfileEditPage {
             return;
         }
 
-        // Патч только из изменённых текстовых полей.
         const patch: any = {};
         const prev = this.profile || {};
 
@@ -262,12 +260,15 @@ export class ProfileEditPage {
         const prevDescription = prev.description || '';
         if (description !== prevDescription) patch.description = description || null;
 
-        // Аватар: либо новый файл, либо явная очистка, либо ничего не менялось.
-        const hasAvatarFile = this.pendingAvatarFile !== null;
-        const hasAvatarRemove = this.avatarCleared && Boolean(prev.avatar_url);
-        const hasTextChanges = Object.keys(patch).length > 0;
+        // Новый файл → загружаем. Пользователь нажал «Удалить» → чистим.
+        const avatarFile = this.pendingAvatarFile;
+        const shouldClearAvatar = this.avatarCleared && Boolean(prev.avatar_url);
+        if (shouldClearAvatar) {
+            patch.avatar_url = null;
+        }
 
-        if (!hasAvatarFile && !hasAvatarRemove && !hasTextChanges) {
+        const hasAvatarChanges = Boolean(avatarFile) || shouldClearAvatar;
+        if (!hasAvatarChanges && !Object.keys(patch).length) {
             this.showMessage('Нет изменений.');
             return;
         }
@@ -276,22 +277,9 @@ export class ProfileEditPage {
         submitBtn.textContent = 'Сохранение…';
 
         try {
-            let updated = this.profile;
-
-            // 1) Новый файл аватара — сначала загружаем.
-            if (hasAvatarFile) {
-                updated = await uploadMyAvatar(this.pendingAvatarFile);
-                if (this.isDestroyed || !this.element?.isConnected) return;
-            } else if (hasAvatarRemove) {
-                // 2) Пользователь нажал «Удалить» — чистим avatar_url через PATCH.
-                patch.avatar_url = null;
-            }
-
-            // 3) Остальные поля (или очистка аватара) — отдельным PATCH.
-            if (Object.keys(patch).length) {
-                updated = await updateMyProfile(patch);
-                if (this.isDestroyed || !this.element?.isConnected) return;
-            }
+            // Один запрос: либо JSON, либо unified multipart PATCH.
+            const updated = await updateMyProfile(patch, avatarFile);
+            if (this.isDestroyed || !this.element?.isConnected) return;
 
             this.profile = updated;
             this.pendingAvatarFile = null;
