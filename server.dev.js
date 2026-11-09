@@ -528,6 +528,35 @@ app.delete('/api/v1/users/me', requireAuth, requireCsrf, requireActiveUser, (req
 });
 
 // -----------------------------------------------------------------------------
+// Avatar upload — multipart, отдельный эндпоинт (dev-only).
+// -----------------------------------------------------------------------------
+app.post('/api/v1/users/me/avatar', requireAuth, requireCsrf, requireActiveUser, async (req, res, next) => {
+    try {
+        const { files } = await readMultipart(req, MAX_MULTIPART_BYTES);
+        const avatar = files.avatar;
+        if (!avatar || !avatar.data.length) {
+            return validationError(res, { avatar: 'required' });
+        }
+        if (avatar.data.length > MAX_IMAGE_BYTES) {
+            return res.status(413).json({
+                error: 'payload_too_large',
+                message: 'Размер изображения не должен превышать 10 MiB.',
+            });
+        }
+        const extension = detectImageExtension(avatar.data);
+        if (!extension) {
+            return validationError(res, { avatar: 'unsupported_image_format' });
+        }
+        const filename = `${crypto.randomUUID()}.${extension}`;
+        await writeFile(path.join(UPLOAD_DIR, filename), avatar.data, { flag: 'wx' });
+        req.user.avatar_url = `/images/${filename}`;
+        return res.status(200).json(publicUser(req.user));
+    } catch (error) {
+        return next(error);
+    }
+});
+
+// -----------------------------------------------------------------------------
 // Pins — соответствие PR #62.
 // -----------------------------------------------------------------------------
 app.post('/api/v1/pins/search', (req, res) => {

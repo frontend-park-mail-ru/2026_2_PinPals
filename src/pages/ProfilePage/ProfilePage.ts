@@ -1,4 +1,7 @@
-import { resolveImageUrl,
+import {
+    fetchMyProfile,
+    fetchUserSavedPins,
+    fetchMyDesks,
     resolveAvatarUrl,
     DEFAULT_AVATAR_URL
 } from '../../api/user';

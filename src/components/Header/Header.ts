@@ -58,7 +58,7 @@ export class Header {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({ isAuth, userName, userAvatarUrl, showBack });
         const element = wrapper.firstElementChild;
-        const avatarImage = element.querySelector('.user-avatar img');
+        const avatarImage = element.querySelector<HTMLImageElement>('.user-avatar img');
         if (avatarImage) {
             avatarImage.addEventListener('error', () => { avatarImage.src = DEFAULT_AVATAR_URL; }, { once: true });
         }

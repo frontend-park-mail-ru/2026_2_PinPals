@@ -206,6 +206,18 @@ export async function updateMyProfile(patch: Partial<Pick<User, 'name' | 'user_t
     });
 }
 
+export async function uploadMyAvatar(file: File): Promise<User> {
+    if (typeof File === 'undefined' || !(file instanceof File)) {
+        throw new TypeError('Для загрузки аватара необходимо выбрать файл изображения.');
+    }
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return apiRequest<User>('/api/v1/users/me/avatar', {
+        method: 'POST',
+        body: formData,
+    });
+}
+
 export async function deleteMyProfile() {
     return apiRequest('/api/v1/users/me', {
         method: 'DELETE',
@@ -306,7 +318,10 @@ export async function fetchUserSavedPins(userId: string | number): Promise<Pin[]
         // Не превращаем отсутствующий backend endpoint в пустой список:
         // иначе пользователь ошибочно решит, что сохранённых пинов нет.
         if (error?.status === 404) {
-            throw featureUnavailableError('Сохранённые пины', endpoint, error);
+            const customError = new Error('Пока не можем вам показать ваши Сохраненные пины') as Error & { status?: number; cause?: unknown };
+            customError.status = 404;
+            customError.cause = error;
+            throw customError;
         }
         throw error;
     }

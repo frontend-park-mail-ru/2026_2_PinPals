@@ -3,13 +3,17 @@ import {
     fetchMyProfile,
     logoutUser,
     updateMyProfile,
+    uploadMyAvatar,
+    resolveAvatarUrl,
 } from '../../api/user';
 import { Header } from '../../components/Header/Header';
 import template from './ProfileEditPage.hbs';
 
 /**
  * Страница редактирования и удаления профиля.
- * Эндпоинты: GET/PATCH/DELETE /api/v1/users/me.
+ * Эндпоинты:
+ *  - GET/PATCH/DELETE /api/v1/users/me
+ *  - POST /api/v1/users/me/avatar (multipart)
  */
 export class ProfileEditPage {
     [key: string]: any;
@@ -23,6 +27,12 @@ export class ProfileEditPage {
         this.header = null;
         this.profile = null;
         this.isDestroyed = false;
+        /** @type {File|null} */
+        this.pendingAvatarFile = null;
+        /** @type {string|null} objectURL для локального предпросмотра */
+        this.previewObjectUrl = null;
+        /** @type {boolean} пользователь нажал «Удалить» */
+        this.avatarCleared = false;
     }
 
     render() {
@@ -34,6 +44,8 @@ export class ProfileEditPage {
         this.element.prepend(this.header.render());
 
         this.setupEvents();
+        this.setupAvatarUpload();
+
         const submitButton = this.element.querySelector('#profileEditSubmit');
         const deleteButton = this.element.querySelector('#profileDeleteButton');
         if (submitButton) submitButton.disabled = true;
@@ -58,7 +70,13 @@ export class ProfileEditPage {
             this.element.querySelector('#profileEditName').value = this.profile.name || '';
             this.element.querySelector('#profileEditTag').value = this.profile.user_tag || '';
             this.element.querySelector('#profileEditDescription').value = this.profile.description ?? '';
-            this.element.querySelector('#profileEditAvatar').value = this.profile.avatar_url || '';
+
+            // Сбрасываем локальные состояния аватара — они относятся к «ещё не сохранённому» выбору.
+            this.pendingAvatarFile = null;
+            this.avatarCleared = false;
+            this.element.querySelector('#profileEditAvatarInput').value = '';
+            this.updateAvatarPreview(this.profile.avatar_url || '');
+
             this.element.querySelector('#profileEditSubmit').disabled = false;
             this.element.querySelector('#profileDeleteButton').disabled = false;
         } catch (error) {
@@ -87,20 +105,139 @@ export class ProfileEditPage {
         this.element.querySelector('#profileDeleteConfirm').addEventListener('click', () => void this.deleteAccount());
     }
 
-    /** PATCH /users/me — отправляет только изменённые поля. */
+    /**
+     * Подключает выбор файла аватара: drag&drop, выбор по клику, предпросмотр, удаление.
+     */
+    setupAvatarUpload() {
+        const fileInput = this.element.querySelector('#profileEditAvatarInput');
+        const dropzone = this.element.querySelector('#profileAvatarDropzone');
+        const removeBtn = this.element.querySelector('#profileAvatarRemoveBtn');
+        const errorEl = this.element.querySelector('#profileAvatarError');
+
+        const showError = (message) => {
+            if (!errorEl) return;
+            errorEl.textContent = message;
+            errorEl.hidden = !message;
+        };
+
+        const validateFile = (file) => {
+            const allowed = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+            if (file.type && !allowed.has(file.type.toLowerCase())) {
+                return 'Поддерживаются только JPEG, PNG, GIF и WebP.';
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                return 'Размер файла не должен превышать 10 МБ.';
+            }
+            return '';
+        };
+
+        const applyFile = (file) => {
+            const validation = validateFile(file);
+            if (validation) {
+                showError(validation);
+                fileInput.value = '';
+                return;
+            }
+            showError('');
+            this.avatarCleared = false;
+            this.pendingAvatarFile = file;
+            this.renderLocalPreview(file);
+        };
+
+        fileInput.addEventListener('change', () => {
+            const [file] = fileInput.files || [];
+            if (file) applyFile(file);
+        });
+
+        // Drag&drop на кружок
+        dropzone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropzone.classList.add('is-dragging');
+        });
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('is-dragging');
+        });
+        dropzone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropzone.classList.remove('is-dragging');
+            const [file] = event.dataTransfer?.files || [];
+            if (file) applyFile(file);
+        });
+
+        removeBtn.addEventListener('click', () => {
+            // Отменяем и локальный выбор, и текущее значение с сервера.
+            this.revokePreviewUrl();
+            this.pendingAvatarFile = null;
+            this.avatarCleared = true;
+            fileInput.value = '';
+            showError('');
+            this.updateAvatarPreview('');
+            // Кнопка «Удалить» больше не нужна — превью уже пустое.
+            removeBtn.hidden = true;
+        });
+    }
+
+    /** Создаёт objectURL и показывает предпросмотр выбранного файла. */
+    renderLocalPreview(file) {
+        this.revokePreviewUrl();
+        this.previewObjectUrl = URL.createObjectURL(file);
+        this.updateAvatarPreview(this.previewObjectUrl, true);
+        const removeBtn = this.element.querySelector('#profileAvatarRemoveBtn');
+        if (removeBtn) removeBtn.hidden = false;
+    }
+
+    /**
+     * Обновляет картинку/плейсхолдер и кнопку «Удалить».
+     *
+     * @param {string} srcOrRawUrl — либо готовый objectURL (isLocalPreview=true),
+     *   либо «сырое» значение avatar_url с сервера.
+     * @param {boolean} [isLocalPreview=false]
+     */
+    updateAvatarPreview(srcOrRawUrl, isLocalPreview = false) {
+        const preview = this.element.querySelector('#profileAvatarPreview');
+        const placeholder = this.element.querySelector('#profileAvatarPlaceholder');
+        const removeBtn = this.element.querySelector('#profileAvatarRemoveBtn');
+        if (!preview || !placeholder) return;
+
+        const hasValue = Boolean(srcOrRawUrl);
+        preview.onerror = null;
+
+        if (hasValue) {
+            preview.src = isLocalPreview ? srcOrRawUrl : resolveAvatarUrl(srcOrRawUrl);
+            preview.hidden = false;
+            placeholder.hidden = true;
+            preview.onerror = () => {
+                preview.hidden = true;
+                placeholder.hidden = false;
+            };
+        } else {
+            preview.removeAttribute('src');
+            preview.hidden = true;
+            placeholder.hidden = false;
+        }
+
+        if (removeBtn) removeBtn.hidden = !hasValue;
+    }
+
+    revokePreviewUrl() {
+        if (this.previewObjectUrl) {
+            URL.revokeObjectURL(this.previewObjectUrl);
+            this.previewObjectUrl = null;
+        }
+    }
+
+    /** PATCH /users/me + (при необходимости) POST /users/me/avatar. */
     async submitForm(event) {
         event.preventDefault();
 
         const nameInput = this.element.querySelector('#profileEditName');
         const tagInput = this.element.querySelector('#profileEditTag');
         const descriptionInput = this.element.querySelector('#profileEditDescription');
-        const avatarInput = this.element.querySelector('#profileEditAvatar');
         const submitBtn = this.element.querySelector('#profileEditSubmit');
 
         const name = nameInput.value.trim();
         const userTag = tagInput.value.trim();
         const description = descriptionInput.value.trim();
-        const avatarUrl = avatarInput.value.trim();
 
         this.showMessage('');
 
@@ -115,8 +252,7 @@ export class ProfileEditPage {
             return;
         }
 
-        // Формируем патч только из изменённых полей.
-        // description/avatar_url передаём как null, если пользователь очистил поле.
+        // Патч только из изменённых текстовых полей.
         const patch: any = {};
         const prev = this.profile || {};
 
@@ -126,10 +262,12 @@ export class ProfileEditPage {
         const prevDescription = prev.description || '';
         if (description !== prevDescription) patch.description = description || null;
 
-        const prevAvatar = prev.avatar_url || '';
-        if (avatarUrl !== prevAvatar) patch.avatar_url = avatarUrl || null;
+        // Аватар: либо новый файл, либо явная очистка, либо ничего не менялось.
+        const hasAvatarFile = this.pendingAvatarFile !== null;
+        const hasAvatarRemove = this.avatarCleared && Boolean(prev.avatar_url);
+        const hasTextChanges = Object.keys(patch).length > 0;
 
-        if (!Object.keys(patch).length) {
+        if (!hasAvatarFile && !hasAvatarRemove && !hasTextChanges) {
             this.showMessage('Нет изменений.');
             return;
         }
@@ -138,21 +276,37 @@ export class ProfileEditPage {
         submitBtn.textContent = 'Сохранение…';
 
         try {
-            const updated = await updateMyProfile(patch);
-            if (this.isDestroyed || !this.element?.isConnected) return;
+            let updated = this.profile;
+
+            // 1) Новый файл аватара — сначала загружаем.
+            if (hasAvatarFile) {
+                updated = await uploadMyAvatar(this.pendingAvatarFile);
+                if (this.isDestroyed || !this.element?.isConnected) return;
+            } else if (hasAvatarRemove) {
+                // 2) Пользователь нажал «Удалить» — чистим avatar_url через PATCH.
+                patch.avatar_url = null;
+            }
+
+            // 3) Остальные поля (или очистка аватара) — отдельным PATCH.
+            if (Object.keys(patch).length) {
+                updated = await updateMyProfile(patch);
+                if (this.isDestroyed || !this.element?.isConnected) return;
+            }
 
             this.profile = updated;
+            this.pendingAvatarFile = null;
+            this.avatarCleared = false;
+            this.revokePreviewUrl();
+            this.element.querySelector('#profileEditAvatarInput').value = '';
 
-            // Синхронизируем локальное состояние, чтобы Header и другие страницы
-            // показали новые значения без полной перезагрузки.
             localStorage.setItem('userName', updated.name || '');
             localStorage.setItem('userTag', updated.user_tag || '');
             localStorage.setItem('userAvatarUrl', updated.avatar_url || '');
 
+            this.updateAvatarPreview(updated.avatar_url || '');
             this.router.refreshHeader();
             this.showMessage('Профиль сохранён.');
         } catch (error) {
-            // 409 — занятый user_tag
             this.showMessage(error.message || 'Не удалось сохранить профиль.');
         } finally {
             submitBtn.disabled = false;
@@ -180,7 +334,6 @@ export class ProfileEditPage {
             return;
         }
 
-        // Пытаемся закрыть серверную сессию (logout), но не блокируемся на ошибке.
         try {
             await logoutUser();
         } catch {
@@ -210,6 +363,7 @@ export class ProfileEditPage {
 
     destroy() {
         this.isDestroyed = true;
+        this.revokePreviewUrl();
         this.header?.destroy();
         this.header = null;
         this.element = null;
