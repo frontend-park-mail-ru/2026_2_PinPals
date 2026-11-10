@@ -1,0 +1,111 @@
+/* ========================================= */
+/* Модальное окно авторизации / регистрации  */
+/* ========================================= */
+.sign-up-page,
+.login-page {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--overlay-shadow);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* ========================================= */
+/* Карточка формы (белый бокс)               */
+/* ========================================= */
+.sign-up-box,
+.login-box {
+    background-color: var(--color-back);
+    border-radius: 30px;
+    width: 100%;
+    max-width: 440px;
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1001;
+}
+
+/* Шапка карточки */
+.box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-img {
+    height: 48px;
+    object-fit: contain;
+}
+
+.logo-text {
+    font-family: var(--font-logo), cursive;
+    font-size: 40px;
+    font-weight: bold;
+    color: var(--color-text);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 40px;
+    color: var(--color-text);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+}
+
+.close-btn:hover {
+    color: var(--color-active);
+}
+
+/* Заголовок */
+.welcome-title {
+    font-family: var(--font-main), sans-serif;
+    font-size: 32px;
+    color: var(--color-text);
+    font-weight: 400;
+}
+
+/* Контейнер формы */
+.form-container {
+    margin-bottom: 0;
+}
+
+/* Ссылки */
+.forgot-link, .login-link {
+    display: block;
+    text-align: left;
+    padding: 0 10px;
+    color: var(--color-accent);
+    font-size: 15px;
+    text-decoration: underline;
+    margin-top: 10px;
+    margin-bottom: 0;
+    cursor: pointer;
+    font-family: var(--font-main), sans-serif;}
+
+.forgot-link:hover ,.login-link:hover{
+    color: var(--color-text);
+}
+
+.form-server-error {
+    font-family: var(--font-main), sans-serif;
+    color: var(--color-error);
+    font-size: 15px;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 12px;
+    min-height: 18px;
+    word-break: break-word;
+}

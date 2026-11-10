@@ -1,0 +1,48 @@
+<div class="create-pin-page">
+    <div class="create-pin-title-wrap">
+        <h1 class="create-pin-title">Создание пина</h1>
+    </div>
+
+    <main class="create-pin-main">
+        <form class="create-pin-form" id="createPinForm" novalidate>
+            <div class="create-pin-upload-column">
+                <label class="create-pin-upload" id="pinUploadLabel" for="pinImageInput">
+                    <input id="pinImageInput" class="create-pin-file-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+                    <span class="create-pin-upload-placeholder" id="pinUploadPlaceholder">
+                        <svg class="create-pin-upload-icon icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="M21 15l-5-5L5 21"/>
+                        </svg>
+                        <span>Загрузите медиафайлы</span>
+                    </span>
+                    <img class="create-pin-preview" id="pinImagePreview" alt="Предпросмотр пина" hidden>
+                </label>
+                <button class="create-pin-remove-image" id="removePinImage" type="button" hidden>Удалить изображение</button>
+                <p class="create-pin-field-error" id="pinImageError" role="alert"></p>
+            </div>
+
+            <div class="create-pin-fields">
+                <div class="create-pin-field">
+                    <label for="pinNameInput">Название</label>
+                    <input id="pinNameInput" name="name" type="text" maxlength="100" placeholder="Добавьте название" required>
+                </div>
+
+                <div class="create-pin-field">
+                    <label for="pinDescriptionInput">Описание</label>
+                    <textarea id="pinDescriptionInput" name="description" placeholder="Опишите ваш пин" rows="4"></textarea>
+                </div>
+
+                <div class="create-pin-field">
+                    <label for="pinTagsInput">Выбрать теги</label>
+                    <input id="pinTagsInput" name="tags" type="text" placeholder="Добавьте название">
+                    <span class="create-pin-hint">Несколько тегов можно разделить запятыми</span>
+                </div>
+
+                <p class="create-pin-error" id="createPinError" role="alert" hidden></p>
+                <div class="create-pin-actions">
+                    <button class="create-pin-submit" id="createPinSubmit" type="submit">Создать</button>
+                    <a class="create-pin-cancel" href="/profile/pins">Отмена</a>
+                </div>
+            </div>
+        </form>
+    </main>
+</div>
