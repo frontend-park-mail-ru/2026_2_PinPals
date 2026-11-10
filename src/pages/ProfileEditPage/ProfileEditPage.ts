@@ -274,18 +274,13 @@ export class ProfileEditPage {
         submitBtn.textContent = 'Сохранение…';
 
         try {
-            // Если пользователь удалил аватар,
-            // отправляем null в JSON-запросе.
-            if (hasAvatarRemove) {
-                patch.avatar_url = null;
-            }
-
             // Отправляем все изменения одним запросом.
             // Без файла — JSON.
             // С файлом — multipart/form-data.
             const updated = await updateMyProfile(
                 patch,
                 hasAvatarFile ? this.pendingAvatarFile : null,
+                hasAvatarRemove,
             );
 
             if (this.isDestroyed || !this.element?.isConnected) return;

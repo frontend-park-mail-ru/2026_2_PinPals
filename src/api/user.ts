@@ -233,19 +233,20 @@ export async function fetchMyProfile(): Promise<User> {
 }
 
 export async function updateMyProfile(
-    patch: Partial<Pick<User, 'name' | 'user_tag' | 'description' | 'avatar_url'>>,
+    patch: Partial<Pick<User, 'name' | 'user_tag' | 'description'>>,
     avatarFile?: File | null,
+    removeAvatar = false,
 ): Promise<User> {
 
-    // Если фотография не меняется — отправляем JSON.
-    if (!avatarFile) {
+    // Обычное редактирование текстовых полей.
+    if (!avatarFile && !removeAvatar) {
         return apiRequest<User>('/api/v1/users/me', {
             method: 'PATCH',
             body: JSON.stringify(patch),
         });
     }
 
-    // Если выбран файл — отправляем multipart/form-data.
+    // Загрузка или удаление аватара.
     const formData = new FormData();
 
     if (patch.name !== undefined) {
@@ -260,7 +261,13 @@ export async function updateMyProfile(
         formData.append('description', patch.description ?? '');
     }
 
-    formData.append('avatar', avatarFile);
+    if (avatarFile) {
+        formData.append('avatar', avatarFile);
+    }
+
+    if (removeAvatar) {
+        formData.append('remove_avatar', 'true');
+    }
 
     return apiRequest<User>('/api/v1/users/me', {
         method: 'PATCH',
