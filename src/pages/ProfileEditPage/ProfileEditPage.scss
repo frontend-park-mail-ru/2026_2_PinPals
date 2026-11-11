@@ -130,14 +130,18 @@
 }
 
 .profile-modal-message {
-    margin: 0;
-    color: var(--color-error);
-    font-size: 15px;
-    overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--color-error);
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.profile-modal-message--success {
+  color: var(--color-accent); /* Используем фирменный зеленый цвет темы */
 }
 
 .profile-modal-message[hidden] {
-    display: none;
+  display: none;
 }
 
 /* ===== Блок аватара ===== */

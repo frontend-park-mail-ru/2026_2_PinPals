@@ -20,8 +20,6 @@ export class BoardCard {
     [key: string]: any;
     /**
      * @param {Object} board - Объект доски, полученный от API.
-     *   По контракту v1: desk_id, name, description, avatar_img_url, entry_status.
-     *   Для совместимости со старым mock'ом принимаем board_id/title/pins_count.
      */
     constructor(board) {
         this.id = board.desk_id ?? board.board_id ?? board.id ?? '';

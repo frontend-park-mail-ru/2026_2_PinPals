@@ -59,7 +59,7 @@ export class BoardPage {
         this.savedPinsPicker = new SavedPinsPicker({
             loadPins: async () => {
                 const userId = localStorage.getItem('userId');
-                if (!userId) throw new Error('Войдите в аккаунт, чтобы выбрать сохранённые пины.');
+                if (!userId) throw new Error('Войдите в аккаунт, чтобы выбрать свои пины.');
                 return fetchUserSavedPins(userId);
             },
             excludePinIds: () => (this.board?.pins || []).map((pin) => pin.pin_id),
@@ -68,7 +68,9 @@ export class BoardPage {
                 await this.loadBoard();
             },
         });
-        this.element.querySelector('#savedPinsPickerMount').append(this.savedPinsPicker.render());
+        // Модалка находится непосредственно в body, чтобы её не перекрывали
+        // stacking context, overflow и элементы разметки самой страницы.
+        document.body.append(this.savedPinsPicker.render());
         this.setupEvents();
         void this.loadBoard();
         return this.element;
@@ -111,7 +113,19 @@ export class BoardPage {
         const grid = this.element.querySelector('#boardPinsGrid');
         grid.replaceChildren();
 
-        const fragment = document.createDocumentFragment();
+        // Динамически определяем количество колонок в зависимости от ширины экрана
+        const columnCount = window.innerWidth <= 600 ? 2 : window.innerWidth <= 900 ? 3 : window.innerWidth <= 1200 ? 4 : 6;
+
+        // Создаем элементы колонок внутри сетки
+        const columns = Array.from({ length: columnCount }, () => {
+            const column = document.createElement('div');
+            column.className = 'pin-masonry-column';
+            grid.appendChild(column);
+            return column;
+        });
+
+        let nextColumn = 0;
+
         pins.forEach((pin) => {
             const card = new PinCard(pin).render();
             // Кнопка удаления пина с доски — только для владельца
@@ -124,12 +138,15 @@ export class BoardPage {
                 removeBtn.innerHTML = CLOSE_ICON;
                 card.append(removeBtn);
             }
-            fragment.append(card);
+
+            // Распределяем пины поочередно по колонкам
+            columns[nextColumn % columns.length].appendChild(card);
+            nextColumn += 1;
         });
-        grid.append(fragment);
 
         this.showMessage(pins.length ? '' : 'В этой доске пока нет пинов.');
     }
+
 
     showMessage(message) {
         const messageElement = this.element?.querySelector('#boardMessage');

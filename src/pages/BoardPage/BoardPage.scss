@@ -79,27 +79,39 @@
 
 /* ===== Пины доски (плитка как на главной) ===== */
 .board-pins-grid {
-    column-count: 6;
-    column-gap: 12px;
-    width: 100%;
-    box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.board-pins-grid > .pin-card {
-    position: relative;
-    display: inline-block;
-    width: 100%;
-    margin: 0 0 12px;
-    overflow: hidden;
-    break-inside: avoid;
-    border-radius: 15px;
-    background: var(--color-input);
+/* Обертка колонки Masonry, предотвращающая пустые отступы */
+.pin-masonry-column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  min-width: 0;
 }
 
-.board-pins-grid > .pin-card img {
-    display: block;
-    width: 100%;
-    height: auto;
+.board-pins-grid .pin-card {
+  position: relative;
+  display: block;
+  align-self: start;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 15px;
+  background: var(--color-input);
+}
+
+.board-pins-grid .pin-card img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .board-message {
@@ -208,8 +220,8 @@
 }
 
 /* ===== Адаптив ===== */
-@media (max-width: 1200px) { .board-pins-grid { column-count: 4; } }
-@media (max-width: 900px)  { .board-pins-grid { column-count: 3; } }
+@media (max-width: 1200px) { .board-pins-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 900px)  { .board-pins-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 @media (max-width: 768px) {
     .board-heading { flex-direction: column; gap: 12px; }
@@ -225,8 +237,7 @@
 
 @media (max-width: 600px) {
     .board-main { padding: 12px 8px 24px; }
-    .board-pins-grid { column-count: 2; column-gap: 8px; }
-    .board-pins-grid > .pin-card { margin-bottom: 8px; }
+    .board-pins-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .profile-modal-actions { flex-direction: column; align-items: stretch; }
     .profile-modal-actions .btn { width: 100%; }
 }

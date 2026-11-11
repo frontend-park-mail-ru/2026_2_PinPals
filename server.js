@@ -12,11 +12,16 @@ const PORT = Number(process.env.PORT) || 3000;
 
 // В Docker указывайте адреса сервисов по DNS-именам из общей Docker-сети.
 // При локальном запуске на хосте используются опубликованные порты 8001–8003.
-const backendTargets = {
-    auth: process.env.AUTH_API_TARGET || DEFAULT_BACKEND_TARGETS.auth,
-    pin: process.env.PIN_API_TARGET || DEFAULT_BACKEND_TARGETS.pin,
-    user: process.env.USER_API_TARGET || DEFAULT_BACKEND_TARGETS.user,
-};
+const apiMode = String(process.env.API_MODE || 'backend').trim().toLowerCase();
+const mockApiPort = Number(process.env.MOCK_API_PORT) || 3001;
+const mockApiTarget = process.env.API_TARGET || `http://127.0.0.1:${mockApiPort}`;
+const backendTargets = apiMode === 'mock'
+    ? { auth: mockApiTarget, pin: mockApiTarget, user: mockApiTarget }
+    : {
+        auth: process.env.AUTH_API_TARGET || DEFAULT_BACKEND_TARGETS.auth,
+        pin: process.env.PIN_API_TARGET || DEFAULT_BACKEND_TARGETS.pin,
+        user: process.env.USER_API_TARGET || DEFAULT_BACKEND_TARGETS.user,
+    };
 
 const backendProxies = Object.fromEntries(
     Object.entries(backendTargets).map(([service, target]) => [service, createProxyMiddleware({
@@ -63,5 +68,6 @@ app.get('*any', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Frontend server started on http://localhost:${PORT}`);
+    console.log(`API mode: ${apiMode}`);
     console.log('Backend targets:', backendTargets);
 });

@@ -1,7 +1,19 @@
+import { SignUpPage } from './pages/SignUpPage/SignUpPage';
+import { LoginPage } from './pages/LoginPage/LoginPage';
+import { HomePage } from './pages/HomePage/HomePage';
+import { PinPage } from './pages/PinPage/PinPage';
+import { ProfilePage } from './pages/ProfilePage/ProfilePage';
+import { ProfileEditPage } from './pages/ProfileEditPage/ProfileEditPage';
+import { BoardPage } from './pages/BoardPage/BoardPage';
+import { CreatePinPage } from './pages/CreatePinPage/CreatePinPage';
+import { CreateBoardPage } from './pages/CreateBoardPage/CreateBoardPage';
+
+
 /** Объект роутера, который страницы используют для переходов. */
 export type Router = {
     navigateTo: (url: string) => void;
     getBackUrl?: (fallback?: string) => string;
+    navigateBack?: (fallback?: string) => void;
     refreshHeader?: () => void;
 };
 
@@ -17,16 +29,6 @@ export type AppRoute = {
         };
     }>;
 };
-
-import { SignUpPage } from './pages/SignUpPage/SignUpPage';
-import { LoginPage } from './pages/LoginPage/LoginPage';
-import { HomePage } from './pages/HomePage/HomePage';
-import { PinPage } from './pages/PinPage/PinPage';
-import { ProfilePage } from './pages/ProfilePage/ProfilePage';
-import { ProfileEditPage } from './pages/ProfileEditPage/ProfileEditPage';
-import { BoardPage } from './pages/BoardPage/BoardPage';
-import { CreatePinPage } from './pages/CreatePinPage/CreatePinPage';
-import { CreateBoardPage } from './pages/CreateBoardPage/CreateBoardPage';
 
 export const routes: AppRoute[] = [
     {

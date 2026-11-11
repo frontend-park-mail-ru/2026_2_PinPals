@@ -12,9 +12,10 @@ export class Header {
      *     по умолчанию — SearchBar с глобальным placeholder.
      * @param {import('../../routes').Router} [options.router] - роутер для переходов.
      */
-    constructor({ center, router }: any = {}) {
+    constructor({ center, router, backFallback = '/home' }: any = {}) {
         this.center = center;
         this.router = router;
+        this.backFallback = backFallback;
         this.searchBar = null;
         this.element = null;
     }
@@ -56,7 +57,8 @@ export class Header {
         const showBack = !/^\/(?:home|login|signup|pin\/.*)?\/?$/.test(window.location.pathname);
 
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = template({ isAuth, userName, userAvatarUrl, showBack });
+        const backUrl = this.router?.getBackUrl?.(this.backFallback) || this.backFallback;
+        wrapper.innerHTML = template({ isAuth, userName, userAvatarUrl, showBack, backUrl, backFallback: this.backFallback });
         const element = wrapper.firstElementChild;
         const avatarImage = element.querySelector<HTMLImageElement>('.user-avatar img');
         if (avatarImage) {

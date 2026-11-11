@@ -31,32 +31,33 @@
 }
 
 .pin-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    align-items: start;
+    gap: 16px;
     max-width: 1800px;
     margin: 0 auto;
     padding: 0 12px;
     box-sizing: border-box;
 }
 
-/* Обёртка: пин + сайдбар. Сайдбар абсолютный — не влияет на высоту. */
-.pin-hero-wrap {
-    position: relative;
-    /* Оставляем 340px справа под абсолютный сайдбар */
-    padding-right: calc(320px + 16px);
-    box-sizing: border-box;
+/* Левая колонка независима от высоты правых рекомендаций. */
+.pin-primary-column {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    min-width: 0;
 }
 
 .pin-primary {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
     gap: 16px;
     min-width: 0;
 }
 
-.pin-bottom-recommendations {
-    margin-top: 24px;
-    width: 100%;
-}
 
 .pin-main-image-wrap {
     position: relative;
@@ -116,12 +117,13 @@
 }
 
 .pin-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-height: 44px;
-    margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .pin-toolbar-left {
@@ -185,22 +187,23 @@
 }
 
 .pin-save-button {
-    min-width: 110px;
-    height: 40px;
-    padding: 0 18px;
-    border: 0;
-    border-radius: 14px;
-    background: var(--color-text);
-    color: var(--color-back);
-    font: 600 16px var(--font-main), sans-serif;
-    cursor: pointer;
-    transition: background-color .2s ease;
+
+  width: auto;
+  min-width: 110px;
+  height: 40px;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
 }
+
 .pin-save-button:hover {
-     background: var(--color-active);
+  background-color: var(--color-active);
 }
+
 .pin-save-button.is-active {
-    background: var(--color-accent);
+  background-color: var(--color-accent);
 }
 
 .pin-save-list {
@@ -377,55 +380,45 @@
 }
 
 .pin-side-recommendations {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 320px;
-    max-height: calc(100vh - 108px);
+    min-width: 0;
 }
 
 .pin-side-sticky {
-    position: sticky;
-    top: 96px;
-    max-height: calc(100vh - 108px);
-    overflow-y: auto;
-    overflow-x: hidden;
+    position: static;
+    min-width: 0;
 }
 
 .pin-recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px;
     min-width: 0;
-    column-gap: 12px;
 }
-
-.pin-recommendations-grid--side {
-    column-count: 2;
+.pin-recommendations-grid--bottom { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pin-recommendations-grid .pin-masonry-column {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    min-width: 0;
 }
-
-.pin-recommendations-grid--bottom {
-    column-count: 6;
-    column-gap: 16px;
-}
-
 .pin-bottom-recommendations {
-    grid-column: 1 / -1;
+    width: 100%;
     min-width: 0;
-    margin-top: 12px;
-}
-
-.pin-bottom-recommendations .pin-card {
-    margin: 0 0 16px;
-    border-radius: 16px;
+    margin: 0;
 }
 
 .pin-page .pin-card {
     display: inline-block;
+    vertical-align: top;
     width: 100%;
+    min-width: 0;
     margin: 0 0 12px;
+    break-inside: avoid;
     overflow: hidden;
     border-radius: 14px;
     background: var(--color-input);
-    break-inside: avoid;
-    vertical-align: top;
 }
 
 .pin-page .pin-card img {
@@ -454,45 +447,72 @@
     stroke-width: 2.2;
 }
 
-@media (max-width: 1100px) {
-    .pin-layout { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
-    .pin-recommendations-grid--bottom { column-count: 3; }
-}
-
-@media (max-width: 800px) {
-    .pin-layout,
-    .pin-primary { grid-template-columns: minmax(0, 1fr); }
-    .pin-side-recommendations { grid-column: 1; }
-    .pin-detail-panel { min-height: 0; }
-    .pin-recommendations-grid--bottom { column-count: 3; }
-}
-
-@media (max-width: 520px) {
-    .pin-detail-main { padding: 90px 10px 20px; }
-    .pin-recommendations-grid--side,
-    .pin-recommendations-grid--bottom { column-count: 2; }
-}
-
-@media (max-width: 1400px) {
-    .pin-hero-wrap { padding-right: 0; }
-    .pin-side-recommendations { display: none; }  /* на узких — только нижняя лента */
-}
-
-@media (max-width: 1200px) {
-    .pin-recommendations-grid--bottom { column-count: 4; }
+@media (max-width: 1050px) {
+    .pin-layout { grid-template-columns: minmax(0, 1fr); }
+    .pin-primary-column { order: 1; }
+    .pin-side-recommendations { order: 2; }
+    .pin-recommendations-grid--side { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 @media (max-width: 900px) {
-    .pin-recommendations-grid--bottom { column-count: 3; }
+    .pin-primary { grid-template-columns: minmax(0, 1fr); }
+    .pin-recommendations-grid--side,
+    .pin-recommendations-grid--bottom { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 600px) {
-    .pin-recommendations-grid--bottom { column-count: 2; }
+    .pin-detail-main { padding: 90px 10px 20px; }
+    .pin-layout { padding: 0; }
+    .pin-recommendations-grid--side,
+    .pin-recommendations-grid--bottom { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .pin-recommendations-grid .pin-masonry-column { gap: 8px; }
+    .pin-page .pin-card { margin-bottom: 8px; }
 }
+
+
+.pin-owner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pin-owner-actions[hidden] {
+  display: none;
+}
+
+.pin-owner-actions .btn {
+  width: auto;
+  min-width: 90px;
+  height: 40px;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+}
+
+.pin-owner-modal { max-height: calc(100vh - 36px); overflow-y: auto; }
+.pin-owner-form { display: flex; flex-direction: column; gap: 8px; }
+.pin-owner-form label { margin-top: 8px; font-weight: 600; }
+.pin-owner-form input,
+.pin-owner-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid var(--color-search);
+    border-radius: 10px;
+    background: var(--color-back);
+    color: var(--color-text);
+    font: 15px var(--font-main), sans-serif;
+}
+.pin-owner-form textarea { resize: vertical; }
+.pin-owner-modal .profile-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.pin-delete-confirm { background: var(--color-error); }
 
 .pin-action-message {
     margin: -8px 0 10px;
-    color: var(--color-error);
+    color: var(--color-accent);
     font-size: 13px;
 }
 
@@ -515,23 +535,6 @@
 .pin-comment-form button:disabled {
     cursor: not-allowed;
     opacity: 0.45;
-}
-
-.pin-recommendations-sentinel {
-    width: 100%;
-    height: 1px;
-    pointer-events: none;
-}
-
-.pin-bottom-recommendations .pin-card {
-    display: inline-block;
-    width: 100%;
-    margin: 0 0 16px;
-    overflow: hidden;
-    border-radius: 16px;
-    background: var(--color-input);
-    break-inside: avoid;
-    vertical-align: top;
 }
 
 .pin-recommendations-sentinel {

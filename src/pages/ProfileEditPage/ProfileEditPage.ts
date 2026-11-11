@@ -1,7 +1,6 @@
 import {
     deleteMyProfile,
     fetchMyProfile,
-    logoutUser,
     updateMyProfile,
     resolveAvatarUrl,
 } from '../../api/user';
@@ -39,7 +38,7 @@ export class ProfileEditPage {
         wrapper.innerHTML = template({});
         this.element = wrapper.firstElementChild;
 
-        this.header = new Header({ router: this.router });
+        this.header = new Header({ router: this.router, backFallback: '/profile' });
         this.element.prepend(this.header.render());
 
         this.setupEvents();
@@ -81,12 +80,11 @@ export class ProfileEditPage {
         } catch (error) {
             if (this.isDestroyed || !this.element?.isConnected) return;
             if (error.status === 401) {
-                this.showMessage('Сессия не найдена или истекла. Войдите в аккаунт, чтобы редактировать профиль.');
-                const submitButton = this.element.querySelector('#profileEditSubmit');
-                if (submitButton) submitButton.disabled = true;
-            } else {
-                this.showMessage(error.message || 'Не удалось загрузить профиль.');
+                this.router.refreshHeader();
+                this.router.navigateTo('/login');
+                return;
             }
+            this.showMessage(error.message || 'Не удалось загрузить профиль.');
         }
     }
 
@@ -225,7 +223,7 @@ export class ProfileEditPage {
         }
     }
 
-    /** PATCH /users/me — единый запрос (JSON или multipart) в зависимости от изменений. */
+    /** PATCH /users/me + (при необходимости) POST /users/me/avatar. */
     async submitForm(event) {
         event.preventDefault();
 
@@ -251,6 +249,7 @@ export class ProfileEditPage {
             return;
         }
 
+        // Патч только из изменённых текстовых полей.
         const patch: any = {};
         const prev = this.profile || {};
 
@@ -260,15 +259,12 @@ export class ProfileEditPage {
         const prevDescription = prev.description || '';
         if (description !== prevDescription) patch.description = description || null;
 
-        // Новый файл → загружаем. Пользователь нажал «Удалить» → чистим.
-        const avatarFile = this.pendingAvatarFile;
-        const shouldClearAvatar = this.avatarCleared && Boolean(prev.avatar_url);
-        if (shouldClearAvatar) {
-            patch.avatar_url = null;
-        }
+        // Аватар: либо новый файл, либо явная очистка, либо ничего не менялось.
+        const hasAvatarFile = this.pendingAvatarFile !== null;
+        const hasAvatarRemove = this.avatarCleared && Boolean(prev.avatar_url);
+        const hasTextChanges = Object.keys(patch).length > 0;
 
-        const hasAvatarChanges = Boolean(avatarFile) || shouldClearAvatar;
-        if (!hasAvatarChanges && !Object.keys(patch).length) {
+        if (!hasAvatarFile && !hasAvatarRemove && !hasTextChanges) {
             this.showMessage('Нет изменений.');
             return;
         }
@@ -277,14 +273,29 @@ export class ProfileEditPage {
         submitBtn.textContent = 'Сохранение…';
 
         try {
-            // Один запрос: либо JSON, либо unified multipart PATCH.
-            const updated = await updateMyProfile(patch, avatarFile);
+            // Если пользователь удалил аватар,
+            // отправляем null в JSON-запросе.
+            if (hasAvatarRemove) {
+                patch.avatar_url = null;
+            }
+
+            // Отправляем все изменения одним запросом.
+            // Без файла — JSON.
+            // С файлом — multipart/form-data.
+            const updated = await updateMyProfile(
+                patch,
+                hasAvatarFile ? this.pendingAvatarFile : null,
+            );
+
             if (this.isDestroyed || !this.element?.isConnected) return;
 
             this.profile = updated;
+
             this.pendingAvatarFile = null;
             this.avatarCleared = false;
+
             this.revokePreviewUrl();
+
             this.element.querySelector('#profileEditAvatarInput').value = '';
 
             localStorage.setItem('userName', updated.name || '');
@@ -292,10 +303,16 @@ export class ProfileEditPage {
             localStorage.setItem('userAvatarUrl', updated.avatar_url || '');
 
             this.updateAvatarPreview(updated.avatar_url || '');
+
             this.router.refreshHeader();
-            this.showMessage('Профиль сохранён.');
+
+            this.showMessage('Профиль сохранён.', true);
+
         } catch (error) {
-            this.showMessage(error.message || 'Не удалось сохранить профиль.');
+            this.showMessage(
+                error.message || 'Не удалось сохранить профиль.',
+            );
+
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Сохранить';
@@ -309,40 +326,58 @@ export class ProfileEditPage {
      */
     async deleteAccount() {
         const confirmBtn = this.element.querySelector('#profileDeleteConfirm');
+
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Удаление…';
 
         try {
             await deleteMyProfile();
+
         } catch (error) {
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Удалить';
+
             this.element.querySelector('#profileDeleteModal').hidden = true;
-            this.showMessage(error.message || 'Не удалось удалить аккаунт.');
+
+            this.showMessage(
+                error.message || 'Не удалось удалить аккаунт.',
+            );
+
             return;
         }
 
-        try {
-            await logoutUser();
-        } catch {
-            // сессия могла уже стать невалидной после soft-delete
-        }
+        // Бэкенд уже отозвал JWT и очистил auth-cookie.
+        // Убираем локальные данные пользователя.
+        const authKeys = [
+            'isAuth',
+            'userName',
+            'userId',
+            'userTag',
+            'userAvatarUrl',
+            'followersCount',
+            'userFollowersCount',
+        ];
 
-        localStorage.removeItem('isAuth');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userTag');
-        localStorage.removeItem('userAvatarUrl');
+        authKeys.forEach((key) => {
+            localStorage.removeItem(key);
+        });
 
         this.router.refreshHeader();
         this.router.navigateTo('/');
     }
 
-    showMessage(message) {
+    showMessage(message, isSuccess = false) {
         const el = this.element?.querySelector('#profileEditMessage');
         if (!el) return;
         el.textContent = message;
         el.hidden = !message;
+
+        // Переключаем классы в зависимости от статуса
+        if (isSuccess) {
+            el.classList.add('profile-modal-message--success');
+        } else {
+            el.classList.remove('profile-modal-message--success');
+        }
     }
 
     refreshHeader() {

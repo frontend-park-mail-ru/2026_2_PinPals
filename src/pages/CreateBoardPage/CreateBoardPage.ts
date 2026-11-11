@@ -4,7 +4,7 @@ import { SavedPinsPicker } from '../../components/SavedPinsPicker/SavedPinsPicke
 import template from './CreateBoardPage.hbs';
 
 /**
- * Страница создания доски с возможностью выбора сохранённых пинов.
+ * Страница создания доски с возможностью выбора своих пинов.
  */
 export class CreateBoardPage {
     [key: string]: any;
@@ -35,7 +35,7 @@ export class CreateBoardPage {
         this.savedPinsPicker = new SavedPinsPicker({
             loadPins: async () => {
                 const userId = localStorage.getItem('userId');
-                if (!userId) throw new Error('Войдите в аккаунт, чтобы выбрать сохранённые пины.');
+                if (!userId) throw new Error('Войдите в аккаунт, чтобы выбрать свои пины.');
                 return fetchUserSavedPins(userId);
             },
             preserveSelectionAfterConfirm: true,
@@ -44,7 +44,9 @@ export class CreateBoardPage {
                 this.renderSelectedPinsPreview(pins);
             },
         });
-        this.element.querySelector('#savedPinsPickerMount').append(this.savedPinsPicker.render());
+        // Модалка находится непосредственно в body, чтобы её не перекрывали
+        // stacking context, overflow и элементы разметки самой страницы.
+        document.body.append(this.savedPinsPicker.render());
 
         this.setupEvents();
         return this.element;
@@ -58,7 +60,7 @@ export class CreateBoardPage {
         this.element.querySelector('#createBoardForm')
             .addEventListener('submit', (e) => void this.submitBoard(e));
 
-        // Окно выбора сохранённых пинов управляется общим компонентом.
+        // Окно выбора пинов управляется общим компонентом.
         this.element.querySelector('#openSavedPins')
             .addEventListener('click', () => void this.savedPinsPicker?.open());
     }

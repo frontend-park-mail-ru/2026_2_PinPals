@@ -10,8 +10,7 @@ const root = document.getElementById('root');
  *
  * @type {Array<{ key: string, instance: { destroy?: () => void }, element: HTMLElement }>}
  */
-let currentStack = [];
-let previousPath = null;
+const currentStack = [];
 let lastRenderedPathname = window.location.pathname;
 let lastRenderedSearch = window.location.search;
 
@@ -30,9 +29,8 @@ const router = {
         const targetLocation = `${target.pathname}${target.search}`;
         if (currentLocation === targetLocation) return;
 
-        previousPath = currentLocation;
         const samePathname = target.pathname === window.location.pathname;
-        window.history.pushState({ from: previousPath }, '', `${target.pathname}${target.search}${target.hash}`);
+        window.history.pushState({ from: currentLocation }, '', `${target.pathname}${target.search}${target.hash}`);
         if (samePathname) destroyFrom(0);
         lastRenderedPathname = window.location.pathname;
         lastRenderedSearch = window.location.search;
@@ -45,14 +43,29 @@ const router = {
      * @returns {string}
      */
     getBackUrl(fallback = '/home') {
-        const stateFrom = window.history.state?.from;
-        const candidate = previousPath || stateFrom;
-
-        if (candidate && candidate !== window.location.pathname && candidate.startsWith('/')) {
+        const candidate = window.history.state?.from;
+        if (typeof candidate === 'string' && candidate.startsWith('/') && candidate !== window.location.pathname) {
             return candidate;
         }
-
         return fallback;
+    },
+
+    navigateBack(fallback = '/home') {
+        const candidate = window.history.state?.from;
+        if (typeof candidate === 'string' && candidate.startsWith('/') && candidate !== window.location.pathname) {
+            window.history.back();
+            return;
+        }
+
+        // При прямом открытии страницы предыдущей записи приложения может не быть.
+        // В этом случае заменяем текущую запись, иначе следующий Back вернёт на неё.
+        const target = new URL(fallback, window.location.href);
+        window.history.replaceState({ from: null }, '', `${target.pathname}${target.search}${target.hash}`);
+        destroyFrom(0);
+        lastRenderedPathname = window.location.pathname;
+        lastRenderedSearch = window.location.search;
+        window.scrollTo(0, 0);
+        renderPage();
     },
 
     refreshHeader() {
@@ -151,6 +164,12 @@ window.addEventListener('click', (event) => {
     const targetLink = target?.closest('a');
     const href = targetLink?.getAttribute('href');
 
+    if (targetLink && targetLink.hasAttribute('data-router-back')) {
+        event.preventDefault();
+        router.navigateBack(targetLink.getAttribute('data-router-back') || href || '/home');
+        return;
+    }
+
     if (
         targetLink &&
         href &&
@@ -164,7 +183,6 @@ window.addEventListener('click', (event) => {
 
 // Слушаем кнопки "Назад/Вперед" в браузере
 window.addEventListener('popstate', () => {
-    previousPath = null;
     if (window.location.pathname === lastRenderedPathname && window.location.search !== lastRenderedSearch) {
         destroyFrom(0);
     }
@@ -190,14 +208,18 @@ function registerServiceWorker() {
     }, { once: true });
 }
 
-function updateNetworkStatus() {
+async function updateNetworkStatus() {
     const status = document.getElementById('networkStatus');
-    if (status) {
-        status.hidden = navigator.onLine;
+    if (!status) return;
+    try {
+        await fetch('/manifest.webmanifest', { method: 'HEAD', cache: 'no-store', signal: AbortSignal.timeout(4000) });
+        status.hidden = true;
+    } catch {
+        status.hidden = false;
     }
 }
 
 registerServiceWorker();
-updateNetworkStatus();
-window.addEventListener('online', updateNetworkStatus);
-window.addEventListener('offline', updateNetworkStatus);
+void updateNetworkStatus();
+window.addEventListener('online', () => void updateNetworkStatus());
+window.addEventListener('offline', () => void updateNetworkStatus());

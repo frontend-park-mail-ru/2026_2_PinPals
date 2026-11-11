@@ -24,6 +24,14 @@ export class HomePage {
         }
 
         const grid = wrapper.querySelector('.pins-grid');
+        const columnCount = window.innerWidth <= 480 ? 2 : window.innerWidth <= 768 ? 3 : window.innerWidth <= 1200 ? 4 : 6;
+        const columns = Array.from({ length: columnCount }, () => {
+            const column = document.createElement('div');
+            column.className = 'pin-masonry-column';
+            grid?.appendChild(column);
+            return column;
+        });
+        let nextColumn = 0;
         const loadError = wrapper.querySelector<HTMLElement>('#pinsLoadError');
 
         let nextCursor = null;
@@ -33,9 +41,12 @@ export class HomePage {
 
         const appendPins = (pins) => {
             if (!grid) return;
-            const fragment = document.createDocumentFragment();
-            for (const pin of pins) fragment.appendChild(new PinCard(pin).render());
-            grid.appendChild(fragment);
+            for (const pin of pins) {
+                const card = new PinCard(pin).render();
+                // Round-robin распределение сохраняет положение уже загруженных карточек.
+                columns[nextColumn % columns.length].appendChild(card);
+                nextColumn += 1;
+            }
         };
 
         const loadPins = async () => {

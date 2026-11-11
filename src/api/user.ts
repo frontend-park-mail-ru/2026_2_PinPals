@@ -14,21 +14,43 @@ export function resolveImageUrl(value: string | null | undefined): string {
     const raw = value.trim();
 
     if (/^(?:data:|blob:)/i.test(raw)) return raw;
+
+    // Если путь уже начинается с нужного прокси-префикса картинок, отдаем как есть
     if (raw.startsWith('/images/')) return raw;
 
+    // Если это относительный путь со старого бэкенда/мока без ведущего слэша
+    if (raw.startsWith('images/')) return '/' + raw;
+
     try {
-        const parsed = new URL(raw, location.origin);
-        if (parsed.pathname.startsWith('/images/')) {
-            return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        // Если прилетел полный URL (например, с Unsplash)
+        if (/^https?:\/\//i.test(raw)) {
+            const parsed = new URL(raw);
+            // Если этот URL ведет на наш же домен и содержит uploads/ или images/
+            if (parsed.origin === location.origin) {
+                if (parsed.pathname.startsWith('/uploads/')) {
+                    return `/images/${parsed.pathname.split('/').pop()}`;
+                }
+                return parsed.pathname;
+            }
+            return raw;
         }
-        if (parsed.origin === location.origin) {
-            return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+
+        // Если это локальный путь вида /uploads/filename.png
+        if (raw.startsWith('/uploads/')) {
+            return `/images/${raw.split('/').pop()}`;
         }
+
+        // На случай, если бэкенд прислал просто чистое имя файла (например, "uuid.png")
+        if (!raw.includes('/')) {
+            return `/images/${raw}`;
+        }
+
         return raw;
     } catch {
         return raw;
     }
 }
+
 
 export const DEFAULT_AVATAR_URL = '/img/default-avatar.svg';
 
@@ -37,10 +59,8 @@ export function resolveAvatarUrl(value: string | null | undefined): string {
     return resolveImageUrl(value) || DEFAULT_AVATAR_URL;
 }
 function getCsrfToken() {
-    const matches = document.cookie.match(new RegExp(
-        '(?:^|; )' + 'csrf_token'.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'
-    ));
-    return matches ? decodeURIComponent(matches[1]) : '';
+    const cookie = document.cookie.split(';').map((part) => part.trim()).find((part) => part.startsWith('csrf_token='));
+    return cookie ? decodeURIComponent(cookie.slice('csrf_token='.length)) : '';
 }
 
 async function apiRequest<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
@@ -159,6 +179,19 @@ export async function fetchPinById(pinId: string | number): Promise<Pin> {
     return apiRequest<Pin>(`/api/v1/pins/${encodeURIComponent(pinId)}`);
 }
 
+export async function updatePin(pinId: string | number, patch: { name?: string; description?: string | null }): Promise<Pin> {
+    return apiRequest<Pin>(`/api/v1/pins/${encodeURIComponent(pinId)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+    });
+}
+
+export async function deletePin(pinId: string | number): Promise<void> {
+    await apiRequest(`/api/v1/pins/${encodeURIComponent(pinId)}`, {
+        method: 'DELETE',
+    });
+}
+
 export async function createPin({ name, description, tags = [], fileObject }: { name: string; description?: string; tags?: string[]; fileObject: File }): Promise<Pin & { pin?: Pin }> {
     if (typeof File === 'undefined' || !(fileObject instanceof File)) {
         throw new TypeError('Для создания пина необходимо выбрать файл изображения.');
@@ -199,45 +232,35 @@ export async function fetchMyProfile(): Promise<User> {
     return apiRequest<User>('/api/v1/users/me');
 }
 
-/**
- * PATCH /users/me.
- *
- * Поддерживает два режима:
- *  - JSON — если avatarFile не передан и не нужно очищать аватар.
- *  - multipart/form-data — если передан файл аватара или patch.avatar_url === null
- *    (специальный маркер «очистить аватар» → отправляем clear_avatar=true).
- *
- * @param patch       — name / user_tag / description / avatar_url (null = очистить).
- * @param avatarFile  — новый файл аватара (JPEG/PNG/GIF/WebP ≤ 10 MiB).
- */
 export async function updateMyProfile(
     patch: Partial<Pick<User, 'name' | 'user_tag' | 'description' | 'avatar_url'>>,
-    avatarFile: File | null = null,
+    avatarFile?: File | null,
 ): Promise<User> {
-    const needsMultipart = Boolean(avatarFile) || patch.avatar_url === null;
 
-    if (!needsMultipart) {
-        // Чистый JSON — avatar не трогаем.
-        const { avatar_url, ...rest } = patch;
+    // Если фотография не меняется — отправляем JSON.
+    if (!avatarFile) {
         return apiRequest<User>('/api/v1/users/me', {
             method: 'PATCH',
-            body: JSON.stringify(rest),
+            body: JSON.stringify(patch),
         });
     }
 
-    // Unified multipart PATCH
+    // Если выбран файл — отправляем multipart/form-data.
     const formData = new FormData();
-    if (patch.name !== undefined) formData.append('name', patch.name);
-    if (patch.user_tag !== undefined) formData.append('user_tag', patch.user_tag);
+
+    if (patch.name !== undefined) {
+        formData.append('name', patch.name);
+    }
+
+    if (patch.user_tag !== undefined) {
+        formData.append('user_tag', patch.user_tag);
+    }
+
     if (patch.description !== undefined) {
-        // Пустая строка = очистить description.
         formData.append('description', patch.description ?? '');
     }
-    if (avatarFile) {
-        formData.append('avatar', avatarFile);
-    } else if (patch.avatar_url === null) {
-        formData.append('clear_avatar', 'true');
-    }
+
+    formData.append('avatar', avatarFile);
 
     return apiRequest<User>('/api/v1/users/me', {
         method: 'PATCH',
@@ -245,11 +268,12 @@ export async function updateMyProfile(
     });
 }
 
-/**
- * Удобный алиас: загрузить новый аватар, не меняя остальные поля.
- * Больше не делает отдельный POST — использует тот же unified PATCH.
- */
+// Оставляем эту функцию как совместимую обёртку.
 export async function uploadMyAvatar(file: File): Promise<User> {
+    if (typeof File === 'undefined' || !(file instanceof File)) {
+        throw new TypeError('Для загрузки аватара необходимо выбрать файл изображения.');
+    }
+
     return updateMyProfile({}, file);
 }
 
@@ -345,21 +369,26 @@ function featureUnavailableError(feature: string, endpoint: string, cause: unkno
 }
 
 export async function fetchUserSavedPins(userId: string | number): Promise<Pin[]> {
-    const endpoint = `/api/v1/users/${encodeURIComponent(userId)}/saved-pins`;
-    try {
-        const result = await apiRequest<{ pins?: Pin[] }>(endpoint);
-        return result.pins || [];
-    } catch (error) {
-        // Не превращаем отсутствующий backend endpoint в пустой список:
-        // иначе пользователь ошибочно решит, что сохранённых пинов нет.
-        if (error?.status === 404) {
-            const customError = new Error('Пока не можем вам показать ваши Сохраненные пины') as Error & { status?: number; cause?: unknown };
-            customError.status = 404;
-            customError.cause = error;
-            throw customError;
-        }
-        throw error;
+    // Общий для mock и Go backend контракт: получаем пины через поиск и оставляем созданные пользователем
+    const result: Pin[] = [];
+    const seenCursors = new Set<string>();
+    let cursor: PinCursor | null = null;
+
+    for (let page = 0; page < 20; page += 1) {
+        const data = await fetchPins(100, cursor);
+        const pagePins = data.pins || [];
+        result.push(...pagePins.filter((pin) => String(pin.creator_id) === String(userId)));
+
+        const nextCursor = data.next_cursor ?? null;
+        if (!nextCursor) break;
+        const cursorKey = JSON.stringify(nextCursor);
+        if (seenCursors.has(cursorKey)) break;
+        seenCursors.add(cursorKey);
+        cursor = nextCursor;
+        if (pagePins.length === 0) break;
     }
+
+    return result;
 }
 
 // ===== Comments (маршруты пока отсутствуют в Go backend) =====

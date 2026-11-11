@@ -5,45 +5,20 @@
     position: relative;
     padding-top: 83px;
 }
-
-.home-content {
-    padding: 16px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
+.home-content { padding: 16px; width: 100%; box-sizing: border-box; }
+/* Каждая колонка независима: новые карточки добавляются только в конец
+   одной колонки и не перераспределяют уже показанные карточки. */
 .pins-grid {
-    column-count: 6;
-    column-gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
     width: 100%;
 }
-
-.pin-card {
-    display: inline-block;
-    width: 100%;
-    margin-bottom: 16px;
-    break-inside: avoid;
-    border: none;
-    border-radius: 20px;
-    overflow: hidden;
-    background-color: var(--color-back);
-}
-
-.pin-card img {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-
-.pins-load-error {
-    margin: 8px 16px 14px;
-    padding: 12px 16px;
-    border-radius: 12px;
-    color: var(--color-error);
-    background: var(--color-input);
-    font-size: 15px;
-}
-
-@media (max-width: 1200px) { .pins-grid { column-count: 4; } }
-@media (max-width: 768px)  { .pins-grid { column-count: 3; } }
-@media (max-width: 480px)  { .pins-grid { column-count: 2; } }
+.pin-masonry-column { display: flex; flex-direction: column; align-items: stretch; gap: 12px; min-width: 0; }
+.pin-card { display: block; width: 100%; min-width: 0; margin: 0; border: none; border-radius: 20px; overflow: hidden; background-color: var(--color-back); }
+.pin-card img { width: 100%; height: auto; display: block; }
+.pins-load-error { margin: 8px 16px 14px; padding: 12px 16px; border-radius: 12px; color: var(--color-error); background: var(--color-input); font-size: 15px; }
+@media (max-width: 1200px) { .pins-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 768px) { .pins-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .pin-masonry-column { gap: 10px; } }
+@media (max-width: 480px) { .pins-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .pin-masonry-column { gap: 8px; } }

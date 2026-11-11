@@ -8,11 +8,13 @@ import {
     fetchPinLikesStatistics,
     fetchPins,
     setPinLiked,
+    updatePin,
+    deletePin,
 } from '../../api/user';
 import { PinCard } from '../../components/PinCard/PinCard';
 import { Header } from '../../components/Header/Header';
 import template from './PinPage.hbs';
-const COMMENTS_UNAVAILABLE = 'Чатик пока не работает, но скоро будет :P'
+const COMMENTS_UNAVAILABLE = 'Чатик пока не работает, но скоро будет :P';
 
 /** Страница просмотра одного пина. */
 export class PinPage {
@@ -32,7 +34,7 @@ export class PinPage {
         this.isDestroyed = false;
         this.interactions = { is_liked: false, likes_count: 0 };
         this.comments = [];
-        this.recommendationsObserver = null;
+        this.recommendationsObservers = [];
     }
 
     render() {
@@ -97,7 +99,7 @@ export class PinPage {
             const isMissingEndpoint = error?.status === 404;
             this.renderCommentsMessage(isMissingEndpoint
                 ? COMMENTS_UNAVAILABLE
-                : 'Не удалось загрузить комментарии.');;
+                : 'Не удалось загрузить комментарии.');
             if (isMissingEndpoint) this.setCommentComposerEnabled(false);
         }
     }
@@ -123,6 +125,8 @@ export class PinPage {
         description.hidden = !this.pin.description;
 
         const isMyPin = String(this.pin.creator_id) === localStorage.getItem('userId');
+        const ownerActions = this.element.querySelector('#pinOwnerActions');
+        if (ownerActions) ownerActions.hidden = !isMyPin;
         const authorName = isMyPin ? (localStorage.getItem('userName') || 'Вы') : 'Автор пина';
         this.element.querySelector('#pinAuthorName').textContent = authorName;
 
@@ -144,111 +148,171 @@ export class PinPage {
     }
 
     /**
-     * Лента рекомендаций под пином.
-     *
-     *  - Первые SIDE_LIMIT пинов идут в правый сайдбар (2 колонки).
-     *  - Все остальные — в нижнюю masonry-ленту на всю ширину (6/4/3/2 колонки).
-     *  - Подгрузка бесконечная: когда бэкенд перестаёт отдавать новый курсор,
-     *    лента стартует заново (после полного цикла 30 уникальных пинов
-     *    начинают появляться дубликаты — это и есть «infinite scroll»).
-     *  - Уже показанные пины отфильтровываются через Set, чтобы в первом
-     *    цикле не было дублей.
+     * Две независимые бесконечные ленты рекомендаций
      */
     async loadRecommendations() {
         const PAGE_SIZE = 30;
-        const SIDE_LIMIT = 6;
+        const BATCH_SIZE = 8;
 
         const sideBox = this.element?.querySelector('#pinSideRecommendations');
         const bottomBox = this.element?.querySelector('#pinBottomRecommendations');
-        const sentinel = this.element?.querySelector('#pinRecommendationsSentinel');
-        if (!sideBox || !bottomBox || !sentinel) return;
+        const sideSentinel = this.element?.querySelector('#pinSideRecommendationsSentinel');
+        const bottomSentinel = this.element?.querySelector('#pinBottomRecommendationsSentinel');
+        if (!sideBox || !bottomBox || !sideSentinel || !bottomSentinel) return;
 
         let nextCursor: any = null;
-        let isLoading = false;
-        let sideFilled = false;
-        const seen = new Set<string>([this.pinId]);  // текущий пин не рекомендуем
+        const queue: any[] = [];
+        let pagePromise: Promise<void> | null = null;
+        let hasMore = true;
+        const seen = new Set<string>([this.pinId]);
 
+        const columnCount = (container: Element) => container.id === 'pinSideRecommendations' ? 2 : 4;
+        const columnsByContainer = new Map<Element, HTMLElement[]>();
+        const nextColumnByContainer = new Map<Element, number>();
+        const getColumns = (container: Element) => {
+            let columns = columnsByContainer.get(container);
+            if (!columns) {
+                columns = Array.from({ length: columnCount(container) }, () => {
+                    const column = document.createElement('div');
+                    column.className = 'pin-masonry-column';
+                    container.appendChild(column);
+                    return column;
+                });
+                columnsByContainer.set(container, columns);
+                nextColumnByContainer.set(container, 0);
+            }
+            return columns;
+        };
         const appendTo = (container: Element, pins: any[]) => {
-            const frag = document.createDocumentFragment();
-            pins.forEach((pin) => frag.appendChild(new PinCard(pin).render()));
-            container.appendChild(frag);
+            const columns = getColumns(container);
+            let next = nextColumnByContainer.get(container) || 0;
+            pins.forEach((pin) => {
+                // Не пересчитываем раскладку при догрузке: уже показанные карточки остаются на месте.
+                columns[next % columns.length].appendChild(new PinCard(pin).render());
+                next += 1;
+            });
+            nextColumnByContainer.set(container, next);
         };
 
-        const load = async () => {
-            if (isLoading) return;
-            isLoading = true;
+        const ensureQueue = async () => {
+            if (queue.length || !hasMore || this.isDestroyed) return;
 
-            try {
-                const data = await fetchPins(PAGE_SIZE, nextCursor);
-                if (this.isDestroyed || !this.element?.isConnected) return;
+            if (!pagePromise) {
+                pagePromise = (async () => {
+                    const data = await fetchPins(PAGE_SIZE, nextCursor);
+                    if (this.isDestroyed || !this.element?.isConnected) return;
 
-                const raw = data.pins || [];
-
-                // Пустой ответ от бэкенда — дальше грузить нечего.
-                if (raw.length === 0) {
-                    if (this.recommendationsObserver) {
-                        this.recommendationsObserver.disconnect();
-                        this.recommendationsObserver = null;
+                    const raw = data.pins || [];
+                    if (!raw.length) {
+                        // Конец выдачи: начинаем новый цикл с первой страницы,
+                        // чтобы бесконечная лента не останавливалась на последнем пине.
+                        if (seen.size <= 1) {
+                            hasMore = false;
+                            return;
+                        }
+                        seen.clear();
+                        seen.add(this.pinId);
+                        nextCursor = null;
+                        const restarted = await fetchPins(PAGE_SIZE, null);
+                        if (this.isDestroyed || !this.element?.isConnected) return;
+                        const restartedPins = restarted.pins || [];
+                        if (!restartedPins.length) {
+                            hasMore = false;
+                            return;
+                        }
+                        nextCursor = restarted.next_cursor ?? null;
+                        const restartedFresh = restartedPins.filter((pin) => !seen.has(String(pin.pin_id)));
+                        if (!restartedFresh.length) {
+                            hasMore = false;
+                            return;
+                        }
+                        restartedFresh.forEach((pin) => seen.add(String(pin.pin_id)));
+                        queue.push(...restartedFresh);
+                        return;
                     }
-                    return;
-                }
 
-                // Убираем текущий пин и уже показанные.
-                const fresh = raw.filter((pin) => !seen.has(String(pin.pin_id)));
-                fresh.forEach((pin) => seen.add(String(pin.pin_id)));
+                    nextCursor = data.next_cursor ?? null;
+                    let fresh = raw.filter((pin) => !seen.has(String(pin.pin_id)));
 
-                if (fresh.length === 0) {
-                    // Все пины показаны → сбрасываем «память» и начинаем цикл заново.
-                    seen.clear();
-                    seen.add(this.pinId);
-                    nextCursor = null;
-                    return;  // observer перезапустится в finally
-                }
+                    // Все пины текущего цикла уже показаны: начинаем следующий,
+                    // но по-прежнему исключаем открытый пин из рекомендаций.
+                    if (!fresh.length) {
+                        seen.clear();
+                        seen.add(this.pinId);
+                        nextCursor = null;
+                        const restarted = await fetchPins(PAGE_SIZE, null);
+                        if (this.isDestroyed || !this.element?.isConnected) return;
+                        const restartedPins = restarted.pins || [];
+                        if (!restartedPins.length) {
+                            hasMore = false;
+                            return;
+                        }
+                        nextCursor = restarted.next_cursor ?? null;
+                        fresh = restartedPins.filter((pin) => !seen.has(String(pin.pin_id)));
+                    }
 
-                if (!sideFilled) {
-                    sideFilled = true;
-                    const toSide = fresh.slice(0, SIDE_LIMIT);
-                    const toBottom = fresh.slice(SIDE_LIMIT);
-                    if (toSide.length) appendTo(sideBox, toSide);
-                    if (toBottom.length) appendTo(bottomBox, toBottom);
-                } else {
-                    appendTo(bottomBox, fresh);
-                }
+                    if (!fresh.length) {
+                        hasMore = false;
+                        return;
+                    }
+                    fresh.forEach((pin) => seen.add(String(pin.pin_id)));
+                    queue.push(...fresh);
+                })().finally(() => {
+                    pagePromise = null;
+                });
+            }
 
-                // null → следующий вызов начнёт цикл сначала (лента бесконечная).
-                nextCursor = data.next_cursor ?? null;
-            } catch (error) {
-                console.warn('Не удалось загрузить рекомендации', error);
-                if (this.recommendationsObserver) {
-                    this.recommendationsObserver.disconnect();
-                    this.recommendationsObserver = null;
-                }
-            } finally {
-                isLoading = false;
-                // Если sentinel всё ещё в зоне видимости, observer сам повторно
-                // не сработает — перезапускаем наблюдение.
-                if (this.recommendationsObserver && sentinel.isConnected) {
-                    this.recommendationsObserver.unobserve(sentinel);
-                    this.recommendationsObserver.observe(sentinel);
-                }
+            await pagePromise;
+        };
+
+        const appendBatch = async (container: Element, count = BATCH_SIZE) => {
+            let remaining = count;
+            while (remaining > 0 && hasMore && !this.isDestroyed && this.element?.isConnected) {
+                if (!queue.length) await ensureQueue();
+                if (!queue.length) break;
+                const portion = queue.splice(0, Math.min(remaining, queue.length));
+                appendTo(container, portion);
+                remaining -= portion.length;
             }
         };
 
-        // Первая загрузка — сразу, чтобы не ждать, пока observer дёрнется.
-        await load();
+        // Сначала наполняем обе колонки, чтобы лента была видна без прокрутки.
+        try {
+            await appendBatch(sideBox, BATCH_SIZE);
+            await appendBatch(bottomBox, BATCH_SIZE);
+        } catch (error) {
+            console.warn('Не удалось загрузить рекомендации', error);
+        }
 
-        if (sentinel.isConnected && 'IntersectionObserver' in window) {
-            this.recommendationsObserver = new IntersectionObserver((entries) => {
-                if (!sentinel.isConnected) {
-                    this.recommendationsObserver?.disconnect();
-                    this.recommendationsObserver = null;
+        if (!('IntersectionObserver' in window) || this.isDestroyed) return;
+
+        const observeFeed = (container: Element, sentinel: Element) => {
+            const observer = new IntersectionObserver((entries) => {
+                if (this.isDestroyed || !sentinel.isConnected) {
+                    observer.disconnect();
+                    this.recommendationsObservers = this.recommendationsObservers.filter((item) => item !== observer);
                     return;
                 }
-                if (entries.some((entry) => entry.isIntersecting)) void load();
-            }, { rootMargin: '600px 0px' });
+                if (!entries.some((entry) => entry.isIntersecting)) return;
 
-            this.recommendationsObserver.observe(sentinel);
-        }
+                void appendBatch(container, BATCH_SIZE)
+                    .catch((error) => console.warn('Не удалось догрузить рекомендации', error))
+                    .finally(() => {
+                        // Повторное наблюдение важно, если после вставки карточек
+                        // sentinel всё ещё остаётся в зоне rootMargin.
+                        if (!this.isDestroyed && sentinel.isConnected) {
+                            observer.unobserve(sentinel);
+                            observer.observe(sentinel);
+                        }
+                    });
+            }, { rootMargin: '800px 0px' });
+
+            this.recommendationsObservers.push(observer);
+            observer.observe(sentinel);
+        };
+
+        observeFeed(sideBox, sideSentinel);
+        observeFeed(bottomBox, bottomSentinel);
     }
 
     /** Подключает кнопки лайка, поделиться и комментариев. */
@@ -280,9 +344,77 @@ export class PinPage {
         this.element.querySelector('#pinSaveClose').addEventListener('click', () => { saveModal.hidden = true; });
         saveModal.addEventListener('click', (e) => { if (e.target === saveModal) saveModal.hidden = true; });
 
+        const editModal = this.element.querySelector('#pinEditModal');
+        const deleteModal = this.element.querySelector('#pinDeleteModal');
+        this.element.querySelector('#pinEditButton').addEventListener('click', () => this.openEditPin());
+        this.element.querySelector('#pinEditClose').addEventListener('click', () => { editModal.hidden = true; });
+        this.element.querySelector('#pinEditCancel').addEventListener('click', () => { editModal.hidden = true; });
+        editModal.addEventListener('click', (event) => { if (event.target === editModal) editModal.hidden = true; });
+        this.element.querySelector('#pinEditForm').addEventListener('submit', (event) => void this.saveEditPin(event));
+        this.element.querySelector('#pinDeleteButton').addEventListener('click', () => { deleteModal.hidden = false; });
+        this.element.querySelector('#pinDeleteClose').addEventListener('click', () => { deleteModal.hidden = true; });
+        this.element.querySelector('#pinDeleteCancel').addEventListener('click', () => { deleteModal.hidden = true; });
+        deleteModal.addEventListener('click', (event) => { if (event.target === deleteModal) deleteModal.hidden = true; });
+        this.element.querySelector('#pinDeleteConfirm').addEventListener('click', () => void this.deleteCurrentPin());
+
         this.element.querySelector('#pinCommentForm').addEventListener('submit', (event) => {
             void this.submitComment(event);
         });
+    }
+
+    openEditPin() {
+        if (!this.pin || String(this.pin.creator_id) !== localStorage.getItem('userId')) return;
+        this.element.querySelector('#pinEditName').value = this.pin.name || '';
+        this.element.querySelector('#pinEditDescription').value = this.pin.description || '';
+        this.element.querySelector('#pinEditMessage').hidden = true;
+        this.element.querySelector('#pinEditModal').hidden = false;
+    }
+
+    async saveEditPin(event) {
+        event.preventDefault();
+        const submitButton = this.element.querySelector('#pinEditSubmit');
+        const name = this.element.querySelector('#pinEditName').value.trim();
+        const description = this.element.querySelector('#pinEditDescription').value.trim();
+        if (!name) {
+            this.showEditMessage('Укажите название пина.');
+            return;
+        }
+        submitButton.disabled = true;
+        try {
+            const updatedPin = await updatePin(this.pinId, { name, description });
+            if (this.isDestroyed || !this.element?.isConnected) return;
+            this.pin = updatedPin;
+            this.renderPin();
+            this.element.querySelector('#pinEditModal').hidden = true;
+            this.showActionMessage('Пин обновлён.');
+        } catch (error) {
+            this.showEditMessage(error.message || 'Не удалось обновить пин.');
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
+    showEditMessage(message) {
+        const element = this.element?.querySelector('#pinEditMessage');
+        if (!element) return;
+        element.textContent = message;
+        element.hidden = !message;
+    }
+
+    async deleteCurrentPin() {
+        if (!this.pin || String(this.pin.creator_id) !== localStorage.getItem('userId')) return;
+        const button = this.element.querySelector('#pinDeleteConfirm');
+        button.disabled = true;
+        try {
+            await deletePin(this.pinId);
+            this.router?.navigateBack('/home');
+        } catch (error) {
+            if (this.isDestroyed || !this.element?.isConnected) return;
+            button.disabled = false;
+            const message = this.element.querySelector('#pinDeleteMessage');
+            message.textContent = error.message || 'Не удалось удалить пин.';
+            message.hidden = false;
+        }
     }
 
     async changeLike() {
@@ -449,8 +581,8 @@ export class PinPage {
     destroy() {
         this.isDestroyed = true;
         clearTimeout(this.loadingTimer);
-        this.recommendationsObserver?.disconnect();
-        this.recommendationsObserver = null;
+        this.recommendationsObservers.forEach((observer) => observer.disconnect());
+        this.recommendationsObservers = [];
         this.header?.destroy();
         this.header = null;
         this.element = null;

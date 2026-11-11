@@ -3,14 +3,14 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, unlink } from 'node:fs/promises';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
-// Vite занимает 3000; dev API по умолчанию работает на 3001.
-const PORT = Number(process.env.PORT) || 3001;
+// Мок API использует отдельный порт: переменная PORT принадлежит frontend/server.js.
+const PORT = Number(process.env.MOCK_API_PORT) || 3001;
 function parseTokenTtlSeconds(value) {
     if (value == null || value === '') return 24 * 60 * 60;
     const raw = String(value).trim();
@@ -26,8 +26,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'local-dev-only-change-this-secret-
 const scryptAsync = promisify(crypto.scrypt);
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_MULTIPART_BYTES = MAX_IMAGE_BYTES + 1024 * 1024;
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
-const ALLOWED_ORIGINS = new Set(
+const UPLOAD_DIR = process.env.UPLOAD_DIR
+    ? path.resolve(process.env.UPLOAD_DIR)
+    : path.join(__dirname, 'uploads');const ALLOWED_ORIGINS = new Set(
     (process.env.CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
         .split(',')
         .map((origin) => origin.trim().replace(/\/+$/, ''))
@@ -71,22 +72,57 @@ users.set(demoUser.user_tag, demoUser);
 usersById.set(demoUser.user_id, demoUser);
 savedPins.set(demoUser.user_id, new Set(Array.from({ length: 20 }, (_, index) => index + 1)));
 
-function demoImageUrl(id) {
-    return `/images/demo-pin-${Number(id)}.svg`;
-}
+// Изображения берутся с Unsplash CDN, а не генерируются цветными SVG-заглушками.
+// Параметры URL фиксируют размер и формат, а оригинальный CDN URL сохраняется в пине.
+const DEMO_PIN_IMAGES = [
+    { url: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Цветочное настроение', description: 'Букет нежных цветов для вдохновения' },
+    { url: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Горный пейзаж', description: 'Просторный пейзаж на рассвете' },
+    { url: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Океанские волны', description: 'Спокойствие и энергия моря' },
+    { url: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Золотой рассвет', description: 'Тёплый свет над зелёными холмами' },
+    { url: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Путешествие', description: 'Идея для следующего приключения' },
+    { url: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Домик у озера', description: 'Уютный отдых среди гор' },
+    { url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Зелёные холмы', description: 'Природная палитра и мягкие линии' },
+    { url: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Лесная тропа', description: 'Прогулка среди высоких деревьев' },
+    { url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Озеро в горах', description: 'Отражения гор в чистой воде' },
+    { url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Летний водопад', description: 'Яркая природная фотография' },
+    { url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Пляжный день', description: 'Песок, море и летнее настроение' },
+    { url: 'https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Лесной свет', description: 'Солнечные лучи сквозь листву' },
+    { url: 'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Тёплый вечер', description: 'Пастельные оттенки вечернего неба' },
+    { url: 'https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Зелёный интерьер', description: 'Комнатные растения и уютный декор' },
+    { url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Городской стиль', description: 'Повседневный образ для прогулки' },
+    { url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Портрет', description: 'Портретная фотография для мудборда' },
+    { url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Минималистичный портрет', description: 'Естественный портрет при дневном свете' },
+    { url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Летний образ', description: 'Светлый портрет на открытом воздухе' },
+    { url: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Модный образ', description: 'Современная идея для гардероба' },
+    { url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Гардероб', description: 'Палитра одежды и аксессуаров' },
+    { url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Уличная мода', description: 'Идея образа в городском стиле' },
+    { url: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Повседневный образ', description: 'Лёгкий образ на каждый день' },
+    { url: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Рабочее место художника', description: 'Краски и материалы для творчества' },
+    { url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Книжный уют', description: 'Книги и спокойная атмосфера' },
+    { url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Идея для ужина', description: 'Аппетитная сервировка стола' },
+    { url: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Полезный завтрак', description: 'Яркие ингредиенты для завтрака' },
+    { url: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Свежий салат', description: 'Вдохновение для домашней кухни' },
+    { url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Кофейная пауза', description: 'Чашка кофе и уютное утро' },
+    { url: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Кофейня', description: 'Атмосфера любимой кофейни' },
+    { url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1000&q=85', width: 800, height: 1000, name: 'Пейзаж для вдохновения', description: 'Путешествие по красивым местам' },
+    { url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1000&q=85', width: 1000, height: 700, name: 'Вечернее событие', description: 'Свет, музыка и праздничное настроение' },
+];
 
 function makeDemoPin(id) {
+    const image = DEMO_PIN_IMAGES[(id - 1) % DEMO_PIN_IMAGES.length];
     return {
         pin_id: id,
         creator_id: demoUser.user_id,
-        image_url: demoImageUrl(id),
-        name: `Идея ${id}`,
-        description: `Демонстрационное изображение ${id}`,
+        image_url: image.url,
+        image_width: image.width,
+        image_height: image.height,
+        name: image.name,
+        description: image.description,
         created_at: new Date(Date.now() - id * 60_000).toISOString(),
     };
 }
 
-for (let id = 1; id <= 30; id += 1) {
+for (let id = 1; id <= DEMO_PIN_IMAGES.length; id += 1) {
     pins.set(id, makeDemoPin(id));
 }
 
@@ -802,6 +838,69 @@ app.get('/api/v1/pins/:pinID', (req, res) => {
     const pin = pins.get(pinId);
     if (!pin) return res.status(404).json({ error: 'not_found', message: 'Пин не найден.' });
     return res.status(200).json(serializePin(pin));
+});
+
+app.patch('/api/v1/pins/:pinID', requireAuth, requireCsrf, requireActiveUser, (req, res) => {
+    const pinId = validId(req.params.pinID);
+    if (!pinId) return res.status(400).json({ error: 'invalid_id', message: 'Некорректный ID пина.' });
+    const pin = pins.get(pinId);
+    if (!pin) return res.status(404).json({ error: 'not_found', message: 'Пин не найден.' });
+    if (Number(pin.creator_id) !== Number(req.user.user_id)) {
+        return res.status(403).json({ error: 'forbidden', message: 'Изменять пин может только его автор.' });
+    }
+
+    const body = req.body || {};
+    const allowedFields = ['name', 'description'];
+    const keys = Object.keys(body);
+    if (!keys.length || keys.some((key) => !allowedFields.includes(key))) {
+        return validationError(res, { body: 'empty_or_unknown_fields' });
+    }
+    if (Object.hasOwn(body, 'name') && typeof body.name !== 'string') {
+        return validationError(res, { name: 'must_be_string' });
+    }
+    if (Object.hasOwn(body, 'description') && body.description !== null && typeof body.description !== 'string') {
+        return validationError(res, { description: 'must_be_string_or_null' });
+    }
+
+    if (Object.hasOwn(body, 'name')) {
+        const name = body.name.trim();
+        if (!name) return validationError(res, { name: 'required' });
+        pin.name = name;
+    }
+    if (Object.hasOwn(body, 'description')) {
+        pin.description = body.description === null ? '' : body.description.trim();
+    }
+    return res.status(200).json(serializePin(pin));
+});
+
+app.delete('/api/v1/pins/:pinID', requireAuth, requireCsrf, requireActiveUser, async (req, res, next) => {
+    const pinId = validId(req.params.pinID);
+    if (!pinId) return res.status(400).json({ error: 'invalid_id', message: 'Некорректный ID пина.' });
+    const pin = pins.get(pinId);
+    if (!pin) return res.status(404).json({ error: 'not_found', message: 'Пин не найден.' });
+    if (Number(pin.creator_id) !== Number(req.user.user_id)) {
+        return res.status(403).json({ error: 'forbidden', message: 'Удалять пин может только его автор.' });
+    }
+
+    pins.delete(pinId);
+    for (const desk of desks.values()) desk.pin_ids = desk.pin_ids.filter((id) => Number(id) !== pinId);
+    for (const userPins of savedPins.values()) userPins.delete(pinId);
+    likedPins.delete(pinId);
+    comments.delete(pinId);
+
+    // Загруженный пользователем файл больше не нужен. Удаляем его только
+    // внутри UPLOAD_DIR; внешние Unsplash URL и прочие пути не затрагиваем.
+    const uploadedFilename = typeof pin.image_url === 'string'
+        ? path.basename(pin.image_url)
+        : '';
+    if (/^[a-f0-9-]+\.(?:jpg|png|gif|webp)$/i.test(uploadedFilename)) {
+        try {
+            await unlink(path.join(UPLOAD_DIR, uploadedFilename));
+        } catch (error) {
+            if (error.code !== 'ENOENT') return next(error);
+        }
+    }
+    return res.status(204).end();
 });
 
 app.get('/api/v1/pins/:pinID/likes', (req, res) => {
