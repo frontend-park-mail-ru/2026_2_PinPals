@@ -1,4 +1,3 @@
-
 import './app.scss';
 import { routes } from './routes';
 import type { AppRoute, Router } from './routes';
@@ -8,7 +7,6 @@ const root = document.getElementById('root');
 
 /**
  * Текущий стек отрендеренных страниц.
-
  *
  * @type {Array<{ key: string, instance: { destroy?: () => void }, element: HTMLElement }>}
  */
@@ -25,6 +23,22 @@ type RenderedPage = {
 const currentStack: RenderedPage[] = [];
 let lastRenderedPathname = window.location.pathname;
 let lastRenderedSearch = window.location.search;
+
+function isAuthenticated(): boolean {
+    return localStorage.getItem('isAuth') === 'true';
+}
+
+function redirectWithReplace(targetUrl: string): void {
+    const target = new URL(targetUrl, window.location.href);
+    window.history.replaceState(
+        window.history.state,
+        '',
+        `${target.pathname}${target.search}${target.hash}`,
+    );
+    lastRenderedPathname = window.location.pathname;
+    lastRenderedSearch = window.location.search;
+    renderPage();
+}
 
 /**
  * Роутер приложения. Передаётся страницам через конструктор,
@@ -85,10 +99,16 @@ const router: Router = {
             layer.instance.refreshHeader?.();
         }
     },
- };
+};
 
 // API layer emits this event after a protected endpoint responds with 401.
-window.addEventListener('app:auth-expired', () => router.refreshHeader());
+window.addEventListener('app:auth-expired', () => {
+    router.refreshHeader();
+    const found = findRoute(window.location.pathname);
+    if (found?.route.requiresAuth) {
+        redirectWithReplace('/login');
+    }
+});
 
 /**
  * @param {string} path
@@ -136,9 +156,22 @@ function renderPage() {
         return;
     }
 
-    const found = findRoute(window.location.pathname);
+    const pathname = window.location.pathname;
+    const found = findRoute(pathname);
     if (!found) {
         destroyFrom(0);
+        return;
+    }
+
+    // Неавторизованного пользователя перенаправляем на /login
+    if (found.route.requiresAuth && !isAuthenticated()) {
+        redirectWithReplace('/login');
+        return;
+    }
+
+    // Авторизованному пользователю не показываем окна входа и регистрации
+    if (/^\/(login|signup)\/?$/.test(pathname) && isAuthenticated()) {
+        redirectWithReplace('/home');
         return;
     }
 

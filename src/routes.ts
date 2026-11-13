@@ -20,6 +20,7 @@ export type Router = {
 /** Описание одного маршрута приложения. */
 export type AppRoute = {
     pattern: RegExp;
+    requiresAuth?: boolean;
     pages: (match: RegExpExecArray, context: { router: Router }) => Array<{
         key: string;
         instance: {
@@ -33,18 +34,21 @@ export type AppRoute = {
 export const routes: AppRoute[] = [
     {
         pattern: /^\/profile\/edit\/?$/,
+        requiresAuth: true,
         pages: (match, { router }) => [
             { key: 'profile-edit', instance: new ProfileEditPage({ router }) },
         ],
     },
     {
         pattern: /^\/create-board\/?$/,
+        requiresAuth: true,
         pages: (match, { router }) => [
             { key: 'create-board', instance: new CreateBoardPage({ router }) },
         ],
     },
     {
         pattern: /^\/create-pin\/?$/,
+        requiresAuth: true,
         pages: (match, { router }) => [
             { key: 'create-pin', instance: new CreatePinPage({ router }) },
         ],
@@ -57,18 +61,21 @@ export const routes: AppRoute[] = [
     },
     {
         pattern: /^\/profile\/pins\/?$/,
+        requiresAuth: true,
         pages: (match, { router }) => [
             { key: 'profile-pins', instance: new ProfilePage({ router, activeTab: 'pins' }) },
         ],
     },
     {
         pattern: /^\/profile\/boards\/?$/,
+        requiresAuth: true,
         pages: (match, { router }) => [
             { key: 'profile-boards', instance: new ProfilePage({ router, activeTab: 'boards' }) },
         ],
     },
     {
         pattern: /^\/profile\/?$/,
+        requiresAuth: true,
         pages: (match, { router }) => [
             { key: 'profile-root', instance: new ProfilePage({ router, activeTab: 'pins' }) },
         ],

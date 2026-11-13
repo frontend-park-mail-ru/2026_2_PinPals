@@ -75,6 +75,7 @@ export class SavedPinsPicker {
         document.body.style.overflow = 'hidden';
         modal.hidden = false;
         modal.setAttribute('aria-hidden', 'false');
+        grid.classList.add('is-empty');
         grid.textContent = 'Загрузка ваших пинов…';
         this.pins = [];
         if (error) {
@@ -91,12 +92,14 @@ export class SavedPinsPicker {
             grid.replaceChildren();
 
             if (!this.pins.length) {
+                grid.classList.add('is-empty');
                 grid.textContent = pins.length
                     ? 'Все доступные пины уже добавлены.'
                     : 'У вас пока нет пинов.';
                 return;
             }
 
+            grid.classList.remove('is-empty');
             const fragment = document.createDocumentFragment();
             for (const pin of this.pins) {
                 const card = document.createElement('button');
@@ -126,6 +129,7 @@ export class SavedPinsPicker {
             grid.append(fragment);
             this.updateCount();
         } catch (cause: unknown) {
+            grid.classList.remove('is-empty')
             if (this.isDestroyed || !this.element?.isConnected) return;
             grid.textContent = '';
             if (error) {

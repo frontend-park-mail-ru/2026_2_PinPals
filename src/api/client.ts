@@ -1,6 +1,6 @@
 
 import type { ApiError, ApiResponseError, BackendValidationErrorPayload } from '../types/models';
-import { isApiResponseError } from '../utils/errors';
+import { formatFieldError, formatServerErrorCode, isApiResponseError } from '../utils/errors';
 
 const BASE_URL = location.origin;
 
@@ -69,12 +69,12 @@ export async function apiRequest<T = unknown>(path: string, options: RequestInit
             ? (payload as BackendValidationErrorPayload).fields
             : undefined;
         const fieldErrors = fields
-            ? Object.entries(fields).map(([field, code]) => `${field}: ${code}`).join(', ')
+            ? Object.entries(fields).map(([field, code]) => formatFieldError(field, code)).join(' ')
             : '';
         const serverMessage = payload && 'message' in payload && payload.message
             ? payload.message
             : payload && 'error' in payload
-                ? payload.error
+                ? formatServerErrorCode(payload.error)
                 : undefined;
         const message = fieldErrors || serverMessage || `Ошибка запроса: HTTP ${response.status}`;
         const error = new Error(message) as ApiError;

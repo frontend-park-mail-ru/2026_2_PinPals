@@ -1,5 +1,73 @@
 import type { ApiError, ApiResponseError } from '../types/models';
 
+const FIELD_LABELS: Record<string, string> = {
+    user_tag: 'Логин',
+    name: 'Имя',
+    password: 'Пароль',
+    birth_date: 'Дата рождения',
+    description: 'Описание',
+    avatar_url: 'Аватар',
+    avatar: 'Аватар',
+    image: 'Изображение',
+    tags: 'Теги',
+    text: 'Текст',
+    entry_status: 'Доступ',
+};
+
+const FIELD_CODE_MESSAGES: Record<string, Record<string, string>> = {
+    user_tag: {
+        already_exists: 'Этот логин уже занят. Выберите другой.',
+        required: 'Укажите логин.',
+        must_not_be_empty: 'Логин не может быть пустым.',
+        max_length_64: 'Логин не должен превышать 64 символа.',
+    },
+    name: {
+        required: 'Укажите имя.',
+        must_not_be_empty: 'Имя не может быть пустым.',
+        max_length_255: 'Имя не должно превышать 255 символов.',
+    },
+    password: {
+        min_length_8_and_letter_required: 'Пароль должен содержать минимум 8 символов и хотя бы одну букву.',
+    },
+    birth_date: {
+        required: 'Укажите дату рождения.',
+        invalid_date: 'Указана некорректная дата рождения.',
+        minimum_age_13: 'Регистрация доступна с 13 лет.',
+    },
+};
+
+const COMMON_CODE_MESSAGES: Record<string, string> = {
+    required: 'Поле обязательно для заполнения.',
+    must_not_be_empty: 'Поле не может быть пустым.',
+    already_exists: 'Такое значение уже используется.',
+    unsupported_image_format: 'Поддерживаются только изображения JPEG, PNG, GIF и WebP.',
+    invalid_credentials: 'Неверный логин или пароль.',
+    unauthorized: 'Необходима авторизация.',
+    forbidden: 'Недостаточно прав для выполнения действия.',
+    not_found: 'Запрашиваемый объект не найден.',
+    payload_too_large: 'Размер файла превышает допустимый лимит (10 МБ).',
+};
+
+/** Преобразует ошибку по конкретному полю в текст для пользователя. */
+export function formatFieldError(field: string, code: string): string {
+    const specificMessage = FIELD_CODE_MESSAGES[field]?.[code];
+    if (specificMessage) return specificMessage;
+
+    const commonMessage = COMMON_CODE_MESSAGES[code];
+    const label = FIELD_LABELS[field];
+    if (commonMessage) {
+        return label ? `${label}: ${commonMessage.toLowerCase()}` : commonMessage;
+    }
+
+    return label ? `${label}: некорректное значение` : 'Проверьте правильность заполнения полей.';
+}
+
+/** Преобразует код ошибки бэкенда в текст для пользователя. */
+export function formatServerErrorCode(code: string): string {
+    return COMMON_CODE_MESSAGES[code] || code;
+}
+
+
 /** Проверяет, что неизвестная ошибка содержит поля, добавляемые apiRequest. */
 export function isApiError(error: unknown): error is ApiError {
     return error instanceof Error

@@ -73,6 +73,11 @@
     overscroll-behavior: contain;
 }
 
+.saved-pins-grid.is-empty {
+    display: block;
+    white-space: nowrap;
+}
+
 .saved-pin-option {
     position: relative;
     display: block;
