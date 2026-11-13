@@ -1,0 +1,267 @@
+.create-pin-page {
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding-top: 80px;
+    background: var(--color-back);
+    color: var(--color-text);
+    font-family: var(--font-main), sans-serif;
+}
+
+.create-pin-title-wrap {
+    padding: 10px 14px 12px;
+    border-bottom: 3px solid var(--color-accent);
+}
+
+.create-pin-title {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.create-pin-main {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 14px 11px 32px;
+}
+
+.create-pin-form {
+    display: grid;
+    grid-template-columns: minmax(300px, 1fr) minmax(0, 2fr);
+    align-items: start;
+    gap: 16px;
+}
+
+.create-pin-upload-column {
+    min-width: 0;
+}
+
+.create-pin-upload {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: min(80vh, 570px);
+    min-height: 360px;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--color-input);
+    color: var(--overlay-input);
+    cursor: pointer;
+    transition: background-color .2s ease;
+}
+
+.create-pin-upload:hover {
+    background: var(--color-input-focus);
+}
+
+.create-pin-upload:has(.create-pin-preview:not([hidden])) {
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0 auto;
+  background: transparent;
+  border-radius: 16px;
+}
+
+.create-pin-upload:has(.create-pin-preview:not([hidden])):hover {
+  background: transparent;
+}
+
+.create-pin-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.create-pin-upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+    text-align: center;
+}
+
+.create-pin-upload-icon {
+    display: block;
+    width: 72px;
+    height: 72px;
+    color: var(--color-text);
+    stroke-width: 1.3;
+}
+
+.create-pin-preview {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.create-pin-preview[hidden],
+.create-pin-upload-placeholder[hidden] {
+    display: none;
+}
+
+.create-pin-remove-image {
+    display: block;
+    margin: 8px auto 0;
+    padding: 4px 10px;
+    border: 0;
+    background: transparent;
+    color: var(--color-accent);
+    font: 14px var(--font-main), sans-serif;
+    cursor: pointer;
+}
+
+.create-pin-remove-image[hidden] {
+    display: none;
+}
+
+.create-pin-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+    padding: 0 0 0 0;
+}
+
+.create-pin-field[hidden] {
+  display: none;
+}
+
+.create-pin-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.create-pin-field label {
+    padding: 0 9px;
+    color: var(--color-text);
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+.create-pin-field input,
+.create-pin-field textarea {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    border: 0;
+    outline: 0;
+    border-radius: 15px;
+    background: var(--color-input);
+    color: var(--color-text);
+    font: 17px var(--font-main), sans-serif;
+    transition: background-color .2s ease, box-shadow .2s ease;
+}
+
+.create-pin-field input {
+    height: 48px;
+    padding: 0 16px;
+}
+
+.create-pin-field textarea {
+    min-height: 155px;
+    padding: 14px 16px;
+    resize: vertical;
+}
+
+.create-pin-field input::placeholder,
+.create-pin-field textarea::placeholder {
+    color: #a99d92;
+}
+
+.create-pin-field input:focus,
+.create-pin-field textarea:focus {
+    background: var(--color-input-focus);
+    box-shadow: 0 0 0 1px var(--color-search);
+}
+
+.create-pin-hint {
+    padding: 1px 9px 0;
+    color: var(--overlay-input);
+    font-size: 12px;
+}
+
+.create-pin-error,
+.create-pin-field-error {
+    margin: 0;
+    color: var(--color-error);
+    font-size: 14px;
+}
+
+.create-pin-error[hidden] {
+    display: none;
+}
+
+.create-pin-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 0;
+}
+
+.create-pin-submit {
+    min-width: 95px;
+    min-height: 40px;
+    padding: 4px 16px;
+    border: 0;
+    border-radius: 14px;
+    background: var(--color-text);
+    color: var(--color-back);
+    font: 600 16px var(--font-main), sans-serif;
+    cursor: pointer;
+}
+
+.create-pin-submit:hover {
+    background: var(--color-active);
+}
+
+.create-pin-submit:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+.create-pin-cancel {
+    color: var(--color-accent);
+    font-size: 15px;
+    text-decoration: none;
+}
+
+.create-pin-cancel:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+    .create-pin-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .create-pin-upload {
+        height: 42vh;
+        min-height: 260px;
+    }
+
+    .create-pin-title { font-size: 28px; }
+    .create-pin-field textarea { min-height: 120px; }
+}
+
+@media (max-width: 430px) {
+    .create-pin-main { padding: 10px 8px 24px; }
+    .create-pin-upload { min-height: 220px; }
+    .create-pin-title-wrap { padding-left: 10px; }
+}
+
+.create-pin-upload.is-dragging {
+    background: var(--color-search);
+    outline: 2px dashed var(--color-accent);
+    outline-offset: -8px;
+}

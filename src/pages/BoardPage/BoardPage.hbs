@@ -1,0 +1,92 @@
+<div class="board-page">
+    <main class="board-main">
+        <section class="board-heading">
+            <div class="board-heading-copy">
+                <div class="board-title-row">
+                    <h1 class="board-title" id="boardTitle"></h1>
+                    <span class="board-visibility" id="boardVisibility"></span>
+                    <span class="board-pins-count" id="boardPinsCount"></span>
+                </div>
+                <p class="board-description" id="boardDescription"></p>
+            </div>
+
+            <div class="board-actions">
+                <button class="btn btn-first" id="boardEdit" type="button" hidden>Редактировать</button>
+                <button class="btn btn-first" id="boardAddPins" type="button" hidden>Добавить пины</button>
+                <button class="btn btn-second" id="boardDelete" type="button" hidden>Удалить доску</button>
+            </div>
+        </section>
+
+        <p class="board-message" id="boardMessage" role="status" hidden></p>
+
+        <section class="board-pins-grid" id="boardPinsGrid" aria-label="Пины доски"></section>
+    </main>
+
+    <!-- Подтверждение удаления -->
+    <div class="profile-modal-backdrop" id="deleteConfirmModal" hidden>
+        <div class="profile-modal-box" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+            <div class="profile-modal-header">
+                <h2 class="profile-modal-title" id="deleteModalTitle">Удаление доски</h2>
+                <button class="profile-modal-close" id="closeDeleteModal" type="button" aria-label="Закрыть">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+            </div>
+            <p style="font-size: 16px; margin: 0 0 20px; color: var(--color-text);">Вы действительно хотите удалить доску?</p>
+            <div class="profile-modal-actions">
+                <button class="btn btn-second" id="cancelDeleteBtn" type="button">Отмена</button>
+                <button class="btn btn-first" id="confirmDeleteBtn" type="button">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Редактирование доски -->
+    <div class="profile-modal-backdrop" id="editBoardModal" hidden>
+        <div class="profile-modal-box" role="dialog" aria-modal="true" aria-labelledby="editBoardTitle">
+            <div class="profile-modal-header">
+                <h2 class="profile-modal-title" id="editBoardTitle">Редактирование доски</h2>
+                <button class="profile-modal-close" id="editBoardClose" type="button" aria-label="Закрыть">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+            </div>
+
+            <div class="profile-modal-form profile-modal-form--stack">
+                <label class="profile-modal-field">
+                    <span>Название</span>
+                    <input type="text" id="editBoardName" maxlength="255">
+                </label>
+
+                <label class="profile-modal-field">
+                    <span>Описание</span>
+                    <textarea id="editBoardDescription" rows="3"></textarea>
+                </label>
+
+                <fieldset class="create-board-visibility">
+                    <legend>Доступ</legend>
+                    <label>
+                        <span>Публичный для всех</span>
+                        <input type="radio" name="editEntryStatus" value="0">
+                        <i></i>
+                    </label>
+                    <label class="create-board-visibility-unavailable" title="Этот режим пока не поддерживается backend">
+                        <span>Для подписчиков — пока недоступно</span>
+                        <input type="radio" name="editEntryStatus" value="1" disabled>
+                        <i></i>
+                    </label>
+                    <label>
+                        <span>Приватный</span>
+                        <input type="radio" name="editEntryStatus" value="2">
+                        <i></i>
+                    </label>
+                </fieldset>
+
+                <p class="profile-modal-message" id="editBoardMessage" role="status" hidden></p>
+            </div>
+
+            <div class="profile-modal-actions">
+                <button class="btn btn-second" id="editBoardCancel" type="button">Отмена</button>
+                <button class="btn btn-first" id="editBoardSave" type="button">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>

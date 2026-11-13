@@ -1,0 +1,184 @@
+.input-wrapper label {
+    display: none;
+}
+
+.password-gap {
+    margin-bottom: 16px;   /* отступ только там, где нужно */
+}
+
+.input-wrapper input {
+    width: 100%;
+    background-color: var(--color-input);
+    border: none;
+    border-radius: 16px;
+    height: 48px;
+    padding: 0 20px;
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 0;
+    color: var(--color-text);
+    box-sizing: border-box;
+    transition: background-color 0.2s;
+}
+
+
+.input-wrapper input[type="password"]{
+    padding-right: 50px;
+}
+
+.input-wrapper input[type="password"]::-ms-reveal,
+.input-wrapper input[type="password"]::-ms-clear {
+  display: none;
+}
+
+.input-wrapper input::placeholder {
+    color: var(--overlay-input);
+}
+
+.input-wrapper input:focus {
+    outline: none;
+    background-color: var(--color-input-focus);
+}
+
+.input-wrapper--error input {
+    border: 1px solid var(--color-error);
+}
+
+/* Иконка глазика внутри поля */
+.eye-icon-img {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+.eye-icon-img:hover { opacity: 1; }
+.eye-icon-img .icon { width: 24px; height: 24px; }
+.eye-icon-img .eye-open { display: none; }
+.eye-icon-img.is-visible .eye-open { display: block; }
+.eye-icon-img.is-visible .eye-closed { display: none; }
+
+/* Стили для подсказок под полями */
+.field-hint {
+    font-family: var(--font-main), sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--color-accent);
+    text-align: left;
+    text-decoration: none;
+    margin-bottom: 4px;
+    padding-left: 20px;
+}
+
+.error-msg {
+    font-family: var(--font-main), sans-serif;
+    display: block;
+    color: var(--color-error);
+    font-size: 14px;
+    margin-top: 2px;
+    padding-left: 20px;
+    min-height: 0;
+    line-height: 1;
+}
+
+
+.input-field-container {
+    position: relative;
+    width: 100%;
+}
+
+
+.btn {
+    font-family: var(--font-main), sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    height: 48px;
+    padding: 0 10px;
+    width: 100%;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-first {
+    background-color: var(--color-text);
+    color: var(--color-back);
+    border: none;
+}
+
+.btn-first:hover {
+    background-color: var(--color-active);
+}
+
+.btn-second {
+    background-color: var(--color-back);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+}
+
+.btn-second:hover {
+    background-color: var(--color-search);
+}
+
+.btn-danger {
+    background-color: var(--color-error);
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover {
+    background-color: #d63636;
+}
+
+
+.btn:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.input-wrapper input[type="date"] {
+    accent-color: var(--color-accent);
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.input-wrapper input[type="date"]::-webkit-datetime-edit-day-field:focus,
+.input-wrapper input[type="date"]::-webkit-datetime-edit-month-field:focus,
+.input-wrapper input[type="date"]::-webkit-datetime-edit-year-field:focus {
+    background-color: var(--color-search);
+    color: var(--color-text);
+    outline: none;
+}
+
+.input-wrapper input:focus-visible {
+    outline: none;
+}
+
+/* Общие стили для векторных иконок */
+.icon {
+    width: 1em;
+    height: 1em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+/* Крестики «Закрыть» во всех окнах */
+button[aria-label="Закрыть"] .icon {
+    width: 26px;
+    height: 26px;
+}

@@ -1,0 +1,29 @@
+/* Ссылка "Уже есть аккаунт?" */
+.sign-up-box .login-link-container {
+  text-align: center;
+  margin-top: 6px;
+}
+
+.sign-up-box .login-link-container .login-link {
+  display: inline-block;
+  text-align: center;
+  margin-top: 0;
+  padding: 0;
+}
+
+/* Прячем пустой блок серверной ошибки, чтобы он не создавал лишний отступ */
+.sign-up-box .form-server-error:empty {
+  display: none;
+}
+
+/* Прячем подсказку, если у предшествующего поля есть ошибка */
+.input-wrapper.input-wrapper--error + .field-hint {
+  display: none;
+}
+
+/* Сдвигаем блок ошибки на место подсказки */
+.input-wrapper.input-wrapper--error .error-msg {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}

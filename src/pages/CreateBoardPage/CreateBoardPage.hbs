@@ -1,0 +1,61 @@
+<div class="create-board-page">
+    <div class="create-board-title-wrap">
+        <h1>Создание Доски</h1>
+    </div>
+
+    <main class="create-board-main">
+        <!-- Превью коллажа доски -->
+        <section class="create-board-preview">
+            <div></div>
+            <div>
+                <i></i>
+                <i></i>
+            </div>
+            <div id="createBoardPreviewImages"></div>
+        </section>
+
+        <!-- Форма создания -->
+        <form id="createBoardForm" novalidate>
+            <div class="create-board-field">
+                <label for="boardTitleInput">Название</label>
+                <input
+                        id="boardTitleInput"
+                        type="text"
+                        maxlength="255"
+                        placeholder="Добавьте название"
+                        required
+                >
+            </div>
+
+            <fieldset class="create-board-visibility">
+                <legend>Статус доски</legend>
+
+                <label>
+                    <span>Публичный для всех</span>
+                    <input type="radio" name="visibility" value="public" checked>
+                    <i></i>
+                </label>
+
+                <label class="create-board-visibility-unavailable" title="Этот режим пока не поддерживается backend">
+                    <span>Для подписчиков — пока недоступно</span>
+                    <input type="radio" name="visibility" value="subscribers" disabled>
+                    <i></i>
+                </label>
+
+                <label>
+                    <span>Приватный</span>
+                    <input type="radio" name="visibility" value="private">
+                    <i></i>
+                </label>
+            </fieldset>
+
+            <p id="createBoardError" role="alert" hidden></p>
+
+            <div class="create-board-actions">
+                <button id="createBoardSubmit" type="submit" class="btn btn-first">Создать</button>
+                <button id="openSavedPins" type="button" class="btn btn-second">Добавить пины</button>
+            </div>
+        </form>
+    </main>
+
+</div>
