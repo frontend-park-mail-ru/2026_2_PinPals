@@ -1,3 +1,4 @@
+import './SearchBar.scss';
 import template from './SearchBar.hbs';
 
 /**

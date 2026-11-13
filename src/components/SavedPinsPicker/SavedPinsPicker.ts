@@ -1,3 +1,4 @@
+import './SavedPinsPicker.scss';
 import template from './SavedPinsPicker.hbs';
 import { resolveImageUrl } from '../../api/user';
 import type { Pin } from '../../types/models';

@@ -1,3 +1,4 @@
+import './BoardPage.scss';
 import {
     addPinsToBoard,
     deleteBoard,

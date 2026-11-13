@@ -1,3 +1,4 @@
+import './PinPage.scss';
 import { resolveImageUrl, resolveAvatarUrl, DEFAULT_AVATAR_URL } from '../../api/user';
 import {
     addPinsToBoard,

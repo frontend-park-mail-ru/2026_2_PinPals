@@ -1,3 +1,4 @@
+import './HomePage.scss';
 import { fetchPins } from '../../api/user';
 import { PinCard } from '../../components/PinCard/PinCard';
 import { Header } from '../../components/Header/Header';

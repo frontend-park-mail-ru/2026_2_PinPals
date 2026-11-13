@@ -1,3 +1,4 @@
+import './BoardCard.scss';
 import template from './BoardCard.hbs';
 import { resolveImageUrl } from '../../api/user';
 

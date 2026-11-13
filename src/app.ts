@@ -1,4 +1,4 @@
-import './styles';
+import './app.scss';
 import { routes } from './routes';
 import { Sidebar } from './components/Sidebar/Sidebar';
 

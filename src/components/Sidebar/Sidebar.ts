@@ -1,3 +1,4 @@
+import './Sidebar.scss';
 import template from './Sidebar.hbs';
 
 const STORAGE_KEY = 'sidebarCollapsed';

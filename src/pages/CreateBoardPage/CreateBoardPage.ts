@@ -1,3 +1,4 @@
+import './CreateBoardPage.scss';
 import { Header } from '../../components/Header/Header';
 import { addPinsToBoard, createBoard, fetchUserSavedPins, resolveImageUrl } from '../../api/user';
 import { SavedPinsPicker } from '../../components/SavedPinsPicker/SavedPinsPicker';

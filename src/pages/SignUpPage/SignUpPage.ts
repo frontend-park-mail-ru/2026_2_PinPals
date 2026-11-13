@@ -1,3 +1,5 @@
+import './SignUpPage.scss';
+import '../pages.scss';
 import { Input } from '../../components/Input/Input';
 import { Button } from '../../components/Button/Button';
 import { signUpUser, loginUser } from '../../api/user';

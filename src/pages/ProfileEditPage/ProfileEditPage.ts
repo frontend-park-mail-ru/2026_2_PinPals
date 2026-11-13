@@ -1,3 +1,4 @@
+import './ProfileEditPage.scss';
 import {
     deleteMyProfile,
     fetchMyProfile,

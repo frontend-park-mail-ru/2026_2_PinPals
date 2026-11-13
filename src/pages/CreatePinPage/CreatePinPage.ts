@@ -1,3 +1,4 @@
+import './CreatePinPage.scss';
 import { Header } from '../../components/Header/Header';
 import { addPinsToBoard, createPin } from '../../api/user';
 import template from './CreatePinPage.hbs';

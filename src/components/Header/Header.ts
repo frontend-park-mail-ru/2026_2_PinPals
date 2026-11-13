@@ -1,3 +1,4 @@
+import './Header.scss';
 import template from './Header.hbs';
 import { SearchBar } from '../SearchBar/SearchBar';
 import { logoutUser, resolveAvatarUrl, DEFAULT_AVATAR_URL } from '../../api/user';

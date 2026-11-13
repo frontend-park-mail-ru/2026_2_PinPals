@@ -1,3 +1,4 @@
+import './ProfilePage.scss';
 import {
     fetchMyProfile,
     fetchUserSavedPins,
