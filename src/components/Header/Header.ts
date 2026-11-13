@@ -1,19 +1,32 @@
+
 import './Header.scss';
 import template from './Header.hbs';
 import { SearchBar } from '../SearchBar/SearchBar';
 import { logoutUser, resolveAvatarUrl, DEFAULT_AVATAR_URL } from '../../api/user';
+import type { Router } from '../../routes';
+import type { DomRoot } from '../../types/dom';
+
+export interface HeaderOptions {
+    center?: HTMLElement;
+    router?: Router;
+    backFallback?: string;
+}
 /**
  * Шапка сайта: логотип, слот по центру, меню пользователя.
  */
 export class Header {
-    [key: string]: any;
+    center?: HTMLElement;
+    router?: Router;
+    backFallback: string;
+    searchBar: SearchBar | null;
+    element: DomRoot | null;
     /**
      * @param {Object} [options]
      * @param {HTMLElement} [options.center] - что положить в центральный слот;
      *     по умолчанию — SearchBar с глобальным placeholder.
      * @param {import('../../routes').Router} [options.router] - роутер для переходов.
      */
-    constructor({ center, router, backFallback = '/home' }: any = {}) {
+    constructor({ center, router, backFallback = '/home' }: HeaderOptions = {}) {
         this.center = center;
         this.router = router;
         this.backFallback = backFallback;
@@ -21,7 +34,7 @@ export class Header {
         this.element = null;
     }
 
-    render() {
+    render(): HTMLElement {
         this.element = this.buildElement();
         this.setupEvents();
         return this.element;
@@ -50,7 +63,7 @@ export class Header {
      *
      * @returns {HTMLElement}
      */
-    buildElement() {
+    buildElement(): HTMLElement {
         const isAuth = localStorage.getItem('isAuth') === 'true';
         const userName = localStorage.getItem('userName') || 'Пользователь';
         const rawAvatarUrl = isAuth ? (localStorage.getItem('userAvatarUrl') || '') : '';
@@ -60,13 +73,13 @@ export class Header {
         const wrapper = document.createElement('div');
         const backUrl = this.router?.getBackUrl?.(this.backFallback) || this.backFallback;
         wrapper.innerHTML = template({ isAuth, userName, userAvatarUrl, showBack, backUrl, backFallback: this.backFallback });
-        const element = wrapper.firstElementChild;
+        const element = wrapper.firstElementChild as HTMLElement;
         const avatarImage = element.querySelector<HTMLImageElement>('.user-avatar img');
         if (avatarImage) {
             avatarImage.addEventListener('error', () => { avatarImage.src = DEFAULT_AVATAR_URL; }, { once: true });
         }
 
-        const centerSlot = element.querySelector('.header-center');
+        const centerSlot = element.querySelector<HTMLElement>('.header-center');
         if (this.center) {
             centerSlot.append(this.center);
         } else {
@@ -86,7 +99,7 @@ export class Header {
         logoutBtn.addEventListener('click', async () => {
             try {
                 await logoutUser();
-            } catch (e) {
+            } catch (e: unknown) {
                 console.warn('Серверный логаут не удался или сессия уже истекла', e);
             }
 
@@ -103,7 +116,7 @@ export class Header {
         });
     }
 
-    destroy() {
+    destroy(): void {
         this.searchBar?.destroy();
     }
 }

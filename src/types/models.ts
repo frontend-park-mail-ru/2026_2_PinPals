@@ -1,3 +1,4 @@
+
 export interface User {
     user_id: number;
     name: string;
@@ -54,15 +55,26 @@ export interface LikeStatistics {
     is_liked?: boolean;
 }
 
-export interface ApiErrorPayload {
+/** Ошибка, сформированная Go-бэкендом. message поддерживается dev-моком. */
+export interface BackendErrorPayload {
+    error: string;
     message?: string;
-    error?: string;
-    fields?: Record<string, string>;
-    [key: string]: unknown;
 }
+
+/** Ошибка валидации Go-бэкенда с привязкой ошибок к полям. */
+export interface BackendValidationErrorPayload extends BackendErrorPayload {
+    fields: Record<string, string>;
+}
+
+/** Ошибка, сформированная Node-прокси (production server.js). */
+export interface ProxyErrorPayload {
+    message: string;
+}
+
+export type ApiResponseError = BackendErrorPayload | BackendValidationErrorPayload | ProxyErrorPayload;
 
 export interface ApiError extends Error {
     status?: number;
     fields?: Record<string, string>;
-    payload?: ApiErrorPayload | null;
+    payload?: ApiResponseError | null;
 }

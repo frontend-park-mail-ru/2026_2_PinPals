@@ -1,3 +1,4 @@
+
 import './BoardPage.scss';
 import {
     addPinsToBoard,
@@ -11,10 +12,14 @@ import { Header } from '../../components/Header/Header';
 import { PinCard } from '../../components/PinCard/PinCard';
 import { SavedPinsPicker } from '../../components/SavedPinsPicker/SavedPinsPicker';
 import template from './BoardPage.hbs';
+import type { Desk, Pin } from '../../types/models';
+import type { Router } from '../../routes';
+import type { DomRoot } from '../../types/dom';
+import { getErrorMessage } from '../../utils/errors';
 
 const CLOSE_ICON = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
-function getPinsLabel(count) {
+function getPinsLabel(count: number): string {
     const value = Math.max(0, Number(count) || 0);
     const lastTwoDigits = value % 100;
     const lastDigit = value % 10;
@@ -26,8 +31,8 @@ function getPinsLabel(count) {
     return `${value} ${word}`;
 }
 
-function getVisibilityLabel(entryStatus) {
-    const labels = {
+function getVisibilityLabel(entryStatus: Desk['entry_status']): string {
+    const labels: Record<Desk['entry_status'], string> = {
         0: 'Публичный для всех',
         1: 'Для подписчиков (доступ пока не поддерживается)',
         2: 'Приватный',
@@ -35,9 +40,23 @@ function getVisibilityLabel(entryStatus) {
     return labels[entryStatus] ?? labels[0];
 }
 
+type BoardWithPins = Desk & {
+    desk_pins?: Pin[];
+    items?: Pin[];
+};
+
 export class BoardPage {
-    [key: string]: any;
-    constructor(boardId, { router }: any = {}) {
+    boardId: string;
+    router?: Router;
+    board: BoardWithPins | null;
+    element: DomRoot | null;
+    header: Header | null;
+    isDestroyed: boolean;
+    isOwner: boolean;
+    savedPinsPicker: SavedPinsPicker | null;
+    notice: string | null;
+
+    constructor(boardId: string | number, { router }: { router?: Router } = {}) {
         this.boardId = String(boardId);
         this.router = router;
         this.board = null;
@@ -53,7 +72,7 @@ export class BoardPage {
     render() {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({});
-        this.element = wrapper.firstElementChild;
+        this.element = wrapper.firstElementChild as DomRoot;
 
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
@@ -83,10 +102,11 @@ export class BoardPage {
             if (this.isDestroyed || !this.element?.isConnected) return;
 
             // Пины могут прийти под разными ключами, берём первый непустой массив.
-            const raw: any = result;
-            const pins = [raw.pins, raw.desk_pins, raw.items].find((value) => Array.isArray(value)) || [];
+            const raw = result as BoardWithPins;
+            const pins = [raw.pins, raw.desk_pins, raw.items]
+                .find((value): value is Pin[] => Array.isArray(value)) || [];
 
-            this.board = { ...result, pins };
+            this.board = { ...raw, pins };
             const currentUserId = localStorage.getItem('userId');
             this.isOwner = String(this.board.creator_id) === String(currentUserId);
 
@@ -104,13 +124,13 @@ export class BoardPage {
                 this.showMessage('Доска создана, но не все выбранные пины удалось добавить. Их можно добавить через кнопку «Добавить пины».');
                 this.notice = null;
             }
-        } catch (error) {
+        } catch (error: unknown) {
             if (this.isDestroyed || !this.element?.isConnected) return;
-            this.showMessage(error.message || 'Не удалось загрузить доску.');
+            this.showMessage(getErrorMessage(error) || 'Не удалось загрузить доску.');
         }
     }
 
-    renderPins(pins) {
+    renderPins(pins: Pin[]): void {
         const grid = this.element.querySelector('#boardPinsGrid');
         grid.replaceChildren();
 
@@ -149,7 +169,7 @@ export class BoardPage {
     }
 
 
-    showMessage(message) {
+    showMessage(message: string): void {
         const messageElement = this.element?.querySelector('#boardMessage');
         if (!messageElement) return;
         messageElement.textContent = message;
@@ -158,8 +178,10 @@ export class BoardPage {
 
     setupEvents() {
         // Удаление пина с доски (делегирование)
-        this.element.querySelector('#boardPinsGrid').addEventListener('click', (event) => {
-            const removeBtn = event.target.closest('.board-pin-remove');
+        this.element.querySelector('#boardPinsGrid').addEventListener('click', (event: MouseEvent) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+            const removeBtn = target.closest<HTMLButtonElement>('.board-pin-remove');
             if (!removeBtn) return;
             event.preventDefault();
             void this.removePinFromBoard(removeBtn.dataset.pinId, removeBtn);
@@ -189,11 +211,11 @@ export class BoardPage {
 
     openEditModal() {
         const modal = this.element.querySelector('#editBoardModal');
-        this.element.querySelector('#editBoardName').value = this.board?.name || '';
-        this.element.querySelector('#editBoardDescription').value = this.board?.description || '';
+        this.element.querySelector<HTMLInputElement>('#editBoardName').value = this.board?.name || '';
+        this.element.querySelector<HTMLInputElement>('#editBoardDescription').value = this.board?.description || '';
 
         const status = String(this.board?.entry_status ?? 0);
-        this.element.querySelectorAll('input[name="editEntryStatus"]').forEach((radio) => {
+        this.element.querySelectorAll<HTMLInputElement>('input[name="editEntryStatus"]').forEach((radio) => {
             radio.checked = radio.value === status;
         });
 
@@ -201,7 +223,7 @@ export class BoardPage {
         modal.hidden = false;
     }
 
-    showEditMessage(message) {
+    showEditMessage(message: string): void {
         const el = this.element?.querySelector('#editBoardMessage');
         if (!el) return;
         el.textContent = message;
@@ -213,9 +235,9 @@ export class BoardPage {
      * Если description очистили, передаём null, чтобы бэкенд удалил значение.
      */
     async saveBoardEdit() {
-        const nameInput = this.element.querySelector('#editBoardName');
-        const descriptionInput = this.element.querySelector('#editBoardDescription');
-        const saveBtn = this.element.querySelector('#editBoardSave');
+        const nameInput = this.element.querySelector<HTMLInputElement>('#editBoardName');
+        const descriptionInput = this.element.querySelector<HTMLInputElement>('#editBoardDescription');
+        const saveBtn = this.element.querySelector<HTMLButtonElement>('#editBoardSave');
 
         const name = nameInput.value.trim();
         if (!name) {
@@ -224,8 +246,9 @@ export class BoardPage {
             return;
         }
 
-        const patch: any = {};
-        const prev = this.board || {};
+        const patch: Partial<Pick<Desk, 'name' | 'description' | 'entry_status'>> = {};
+        const prev = this.board;
+        if (!prev) return;
 
         if (name !== (prev.name || '')) patch.name = name;
 
@@ -234,8 +257,8 @@ export class BoardPage {
             patch.description = description || null;
         }
 
-        const checked = this.element.querySelector('input[name="editEntryStatus"]:checked');
-        const entryStatus = checked ? Number(checked.value) : Number(prev.entry_status ?? 0);
+        const checked = this.element.querySelector<HTMLInputElement>('input[name="editEntryStatus"]:checked');
+        const entryStatus = (checked ? Number(checked.value) : Number(prev.entry_status ?? 0)) as Desk['entry_status'];
         if (entryStatus !== Number(prev.entry_status ?? 0)) {
             patch.entry_status = entryStatus;
         }
@@ -253,29 +276,29 @@ export class BoardPage {
             if (this.isDestroyed) return;
             this.element.querySelector('#editBoardModal').hidden = true;
             await this.loadBoard();
-        } catch (error) {
-            this.showEditMessage(error.message || 'Не удалось сохранить доску.');
+        } catch (error: unknown) {
+            this.showEditMessage(getErrorMessage(error) || 'Не удалось сохранить доску.');
         } finally {
             saveBtn.disabled = false;
             saveBtn.textContent = 'Сохранить';
         }
     }
 
-    async removePinFromBoard(pinId, button) {
+    async removePinFromBoard(pinId: string | number, button: HTMLButtonElement): Promise<void> {
         if (!this.isOwner) return;
         button.disabled = true;
         try {
             await removePinFromBoard(this.boardId, pinId);
             if (this.isDestroyed || !this.element?.isConnected) return;
             await this.loadBoard();
-        } catch (error) {
+        } catch (error: unknown) {
             button.disabled = false;
-            this.showMessage(error.message || 'Не удалось убрать пин с доски.');
+            this.showMessage(getErrorMessage(error) || 'Не удалось убрать пин с доски.');
         }
     }
 
     async removeBoard() {
-        const button = this.element.querySelector('#confirmDeleteBtn');
+        const button = this.element.querySelector<HTMLButtonElement>('#confirmDeleteBtn');
         button.disabled = true;
         try {
             await deleteBoard(this.boardId);
@@ -283,9 +306,9 @@ export class BoardPage {
                 this.element.querySelector('#deleteConfirmModal').hidden = true;
                 this.router.navigateTo('/profile/boards');
             }
-        } catch (error) {
+        } catch (error: unknown) {
             button.disabled = false;
-            this.showMessage(error.message || 'Не удалось удалить доску.');
+            this.showMessage(getErrorMessage(error) || 'Не удалось удалить доску.');
         }
     }
 

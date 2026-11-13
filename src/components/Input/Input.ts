@@ -1,11 +1,28 @@
+
 import '../components.scss';
 import template from './Input.hbs';
+import type { DomRoot } from '../../types/dom';
+
+export interface InputOptions {
+    label: string;
+    type: string;
+    name: string;
+    placeholder: string;
+    validator?: (value: string) => string;
+}
 
 /**
  * Класс, представляющий переиспользуемый компонент поля ввода со встроенной валидацией и переключателем видимости пароля.
  */
 export class Input {
-    [key: string]: any;
+    label: string;
+    type: string;
+    name: string;
+    placeholder: string;
+    validator?: (value: string) => string;
+    error: string;
+    element: DomRoot | null;
+    inputElement: HTMLInputElement | null;
     /**
      * Создает экземпляр компонента Input.
      *
@@ -16,7 +33,7 @@ export class Input {
      * @param {string} options.placeholder - Плейсхолдер для поля.
      * @param {function} [options.validator] - Функция клиентской валидации, принимающая текущее значение поля ввода и возвращающая текст ошибки (или пустую строку).
      */
-    constructor({ label, type, name, placeholder, validator }) {
+    constructor({ label, type, name, placeholder, validator }: InputOptions) {
         this.label = label;
         this.type = type;
         this.name = name;
@@ -47,8 +64,8 @@ export class Input {
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
-        this.element = wrapper.firstElementChild;
-        this.inputElement = this.element.querySelector('input');
+        this.element = wrapper.firstElementChild as DomRoot;
+        this.inputElement = this.element.querySelector<HTMLInputElement>('input');
 
         this.inputElement.addEventListener('input', () => this.validate());
 
@@ -70,7 +87,7 @@ export class Input {
      *
      * @returns {string} Очищенное или исходное значение инпута.
      */
-    getValue() {
+    getValue(): string {
         return this.inputElement.value;
     }
 
@@ -79,7 +96,7 @@ export class Input {
      *
      * @returns {boolean} Возвращает true, если значение поля корректно и ошибок нет.
      */
-    validate() {
+    validate(): boolean {
         if (this.validator) {
             this.error = this.validator(this.getValue());
             this.showError();

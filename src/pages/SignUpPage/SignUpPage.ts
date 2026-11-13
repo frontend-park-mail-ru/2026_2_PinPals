@@ -1,13 +1,17 @@
+
 import './SignUpPage.scss';
 import '../pages.scss';
 import { Input } from '../../components/Input/Input';
 import { Button } from '../../components/Button/Button';
 import { signUpUser, loginUser } from '../../api/user';
 import template from './SignUpPage.hbs';
+import type { Router } from '../../routes';
+import type { DomRoot } from '../../types/dom';
+import { getErrorMessage } from '../../utils/errors';
 
-const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
+const validateRequired = (val: string): string => val.trim().length > 0 ? '' : 'Поле обязательно';
 
-const validatePassword = (val) => {
+const validatePassword = (val: string): string => {
     if (val.length < 8) return 'Пароль минимум 8 символов';
     if (!/\p{L}/u.test(val)) return 'Пароль должен содержать хотя бы одну букву';
     return '';
@@ -21,7 +25,7 @@ const MIN_AGE = 13;
  * @param {Date} today
  * @returns {number}
  */
-function calculateAge(birthDate, today) {
+function calculateAge(birthDate: Date, today: Date): number {
     let age = today.getFullYear() - birthDate.getFullYear();
 
     const hasHadBirthdayThisYear =
@@ -36,7 +40,7 @@ function calculateAge(birthDate, today) {
     return age;
 }
 
-const validateBirthdate = (val) => {
+const validateBirthdate = (val: string): string => {
     if (!val.trim()) return 'Поле обязательно';
 
     // Парсим "YYYY-MM-DD" как локальную дату
@@ -78,7 +82,7 @@ const validateBirthdate = (val) => {
  * Валидатор совпадения паролей.
  * Принимает функцию-геттер значения основного пароля.
  */
-const makePasswordMatchValidator = (getPassword) => (val) => {
+const makePasswordMatchValidator = (getPassword: () => string) => (val: string): string => {
     if (!val.trim()) return 'Поле обязательно';
     return val === getPassword() ? '' : 'Пароли не совпадают';
 };
@@ -87,12 +91,18 @@ const makePasswordMatchValidator = (getPassword) => (val) => {
  * Класс, управляющий отображением и логикой работы страницы создания учетной записи (регистрации).
  */
 export class SignUpPage {
-    [key: string]: any;
+    router?: Router;
+    loginInput: Input;
+    passInput: Input;
+    passConfirmInput: Input;
+    dateInput: Input;
+    submitBtn: Button;
+    element: DomRoot | null = null;
     /**
      * @param {Object} [options]
      * @param {import('../../routes').Router} [options.router] - роутер для переходов.
      */
-    constructor({ router }: any = {}) {
+    constructor({ router }: { router?: Router } = {}) {
         this.router = router;
 
         this.loginInput = new Input({
@@ -151,7 +161,7 @@ export class SignUpPage {
 
         // 1. Логин + подсказка снизу
         formContainer.append(this.loginInput.render());
-        const usernameInput = this.loginInput.element.querySelector('input');
+        const usernameInput = this.loginInput.element.querySelector<HTMLInputElement>('input');
         if (usernameInput) usernameInput.maxLength = 64;
         const loginHint = document.createElement('div');
         loginHint.className = 'field-hint';
@@ -210,7 +220,7 @@ export class SignUpPage {
      * @param {Event} e - Объект события клика.
      * @returns {Promise<void>}
      */
-    async handleSubmit(e) {
+    async handleSubmit(e: Event): Promise<void> {
         e.preventDefault();
 
         const isLoginValid = this.loginInput.validate();
@@ -246,10 +256,10 @@ export class SignUpPage {
 
             this.router.refreshHeader();
             this.router.navigateTo('/home');
-        } catch (error) {
+        } catch (error: unknown) {
             // Выводим ошибку бэкенда текстом прямо в интерфейс формы
             if (errorContainer) {
-                errorContainer.textContent = error.message;
+                errorContainer.textContent = getErrorMessage(error);
             }
         } finally {
             this.submitBtn.setDisabled(false);

@@ -1,11 +1,22 @@
 import '../components.scss';
 import template from './Button.hbs';
 
+export interface ButtonOptions {
+    title: string;
+    type?: 'button' | 'submit' | 'reset';
+    onClick?: (event: MouseEvent) => void;
+    className?: string;
+}
+
 /**
  * Класс, представляющий переиспользуемый компонент кнопки.
  */
 export class Button {
-    [key: string]: any;
+    title: string;
+    type: 'button' | 'submit' | 'reset';
+    onClick?: (event: MouseEvent) => void;
+    className: string;
+    element: HTMLButtonElement | null;
     /**
      * Создает экземпляр компонента Button.
      *
@@ -15,7 +26,7 @@ export class Button {
      * @param {function} [options.onClick] - Функция-обработчик события клика.
      * @param {string} [options.className='btn btn-primary'] - CSS-классы для стилизации кнопки.
      */
-    constructor({ title, type = 'button', onClick, className = 'btn btn-primary' }: any) {
+    constructor({ title, type = 'button', onClick, className = 'btn btn-primary' }: ButtonOptions) {
         this.title = title;
         this.type = type;
         this.onClick = onClick;
@@ -29,7 +40,7 @@ export class Button {
      *
      * @returns {HTMLElement} Корневой DOM-элемент кнопки.
      */
-    render() {
+    render(): HTMLButtonElement {
         const html = template({
             title: this.title,
             type: this.type,
@@ -38,7 +49,7 @@ export class Button {
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
-        this.element = wrapper.firstElementChild;
+        this.element = wrapper.firstElementChild as HTMLButtonElement;
 
         if (this.onClick) {
             this.element.addEventListener('click', this.onClick);
@@ -52,7 +63,7 @@ export class Button {
      *
      * @param {boolean} disabled - Флаг блокировки кнопки.
      */
-    setDisabled(disabled) {
+    setDisabled(disabled: boolean): void {
         if (this.element) {
             this.element.disabled = disabled;
         }

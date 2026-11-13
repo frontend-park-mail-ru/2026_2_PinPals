@@ -1,5 +1,7 @@
+
 import './app.scss';
 import { routes } from './routes';
+import type { AppRoute, Router } from './routes';
 import { Sidebar } from './components/Sidebar/Sidebar';
 
 const root = document.getElementById('root');
@@ -10,7 +12,17 @@ const root = document.getElementById('root');
  *
  * @type {Array<{ key: string, instance: { destroy?: () => void }, element: HTMLElement }>}
  */
-const currentStack = [];
+type RenderedPage = {
+    key: string;
+    instance: {
+        render: () => HTMLElement;
+        destroy?: () => void;
+        refreshHeader?: () => void;
+    };
+    element: HTMLElement;
+};
+
+const currentStack: RenderedPage[] = [];
 let lastRenderedPathname = window.location.pathname;
 let lastRenderedSearch = window.location.search;
 
@@ -19,7 +31,7 @@ let lastRenderedSearch = window.location.search;
  * чтобы они могли инициировать переходы без импорта из app.js
  * (это разрывает циклическую зависимость app - pages).
  */
-const router = {
+const router: Router = {
     /**
      * @param {string} url
      */
@@ -82,7 +94,7 @@ window.addEventListener('app:auth-expired', () => router.refreshHeader());
  * @param {string} path
  * @returns {{ route: import('./routes').AppRoute, match: RegExpExecArray } | null}
  */
-function findRoute(path) {
+function findRoute(path: string): { route: AppRoute; match: RegExpExecArray } | null {
     for (const route of routes) {
         // Сбрасываем lastIndex, чтобы регулярки с флагом g не «залипали»
         route.pattern.lastIndex = 0;
@@ -101,12 +113,12 @@ function findRoute(path) {
  *
  * @param {number} from
  */
-function destroyFrom(from) {
+function destroyFrom(from: number): void {
     for (let i = currentStack.length - 1; i >= from; i -= 1) {
         const layer = currentStack[i];
         try {
             layer.instance.destroy?.();
-        } catch (e) {
+        } catch (e: unknown) {
             console.warn('destroy() страницы упал', e);
         }
         layer.element.remove();
@@ -204,7 +216,7 @@ function registerServiceWorker() {
 
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-            .catch((error) => console.warn('Не удалось зарегистрировать Service Worker:', error));
+            .catch((error: unknown) => console.warn('Не удалось зарегистрировать Service Worker:', error));
     }, { once: true });
 }
 

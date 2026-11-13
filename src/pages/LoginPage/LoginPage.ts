@@ -1,23 +1,32 @@
+
 import './LoginPage.scss';
 import '../pages.scss';
 import { Input } from '../../components/Input/Input';
 import { Button } from '../../components/Button/Button';
 import { loginUser } from '../../api/user';
 import template from './LoginPage.hbs';
+import type { Router } from '../../routes';
+import type { DomRoot } from '../../types/dom';
+import { getErrorMessage } from '../../utils/errors';
 
-const validateRequired = (val) => val.trim().length > 0 ? '' : 'Поле обязательно';
-const validatePassword = (val) => val.length >= 8 ? '' : 'Пароль минимум 8 символов';
+const validateRequired = (val: string): string => val.trim().length > 0 ? '' : 'Поле обязательно';
+const validatePassword = (val: string): string => val.length >= 8 ? '' : 'Пароль минимум 8 символов';
 
 /**
  * Класс, управляющий отображением и логикой работы страницы авторизации (входа) пользователя.
  */
 export class LoginPage {
-    [key: string]: any;
+    router?: Router;
+    loginInput: Input;
+    passInput: Input;
+    loginBtn: Button;
+    registerBtn: Button;
+    element: DomRoot | null = null;
     /**
      * @param {Object} [options]
      * @param {import('../../routes').Router} [options.router] - роутер для переходов.
      */
-    constructor({ router }: any = {}) {
+    constructor({ router }: { router?: Router } = {}) {
         this.router = router;
 
         this.loginInput = new Input({
@@ -80,7 +89,7 @@ export class LoginPage {
      * @param {Event} e - Объект события отправки (клик/submit).
      * @returns {Promise<void>}
      */
-    async handleSubmit(e) {
+    async handleSubmit(e: Event): Promise<void> {
         e.preventDefault();
 
         const isLoginValid = this.loginInput.validate();
@@ -107,7 +116,7 @@ export class LoginPage {
 
             this.router.refreshHeader();
             this.router.navigateTo('/home');
-        } catch (error) {
+        } catch (error: unknown) {
             if (errorContainer) {
                 errorContainer.textContent = 'Неверный логин или пароль';
             }

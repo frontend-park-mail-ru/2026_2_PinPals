@@ -1,3 +1,4 @@
+
 import './ProfileEditPage.scss';
 import {
     deleteMyProfile,
@@ -7,6 +8,10 @@ import {
 } from '../../api/user';
 import { Header } from '../../components/Header/Header';
 import template from './ProfileEditPage.hbs';
+import type { User } from '../../types/models';
+import type { Router } from '../../routes';
+import type { DomRoot } from '../../types/dom';
+import { getErrorMessage, isApiError } from '../../utils/errors';
 
 /**
  * Страница редактирования и удаления профиля.
@@ -15,12 +20,19 @@ import template from './ProfileEditPage.hbs';
  *  - POST /api/v1/users/me/avatar (multipart)
  */
 export class ProfileEditPage {
-    [key: string]: any;
+    router?: Router;
+    element: DomRoot | null;
+    header: Header | null;
+    profile: User | null;
+    isDestroyed: boolean;
+    pendingAvatarFile: File | null;
+    previewObjectUrl: string | null;
+    avatarCleared: boolean;
     /**
      * @param {Object} [options]
      * @param {import('../../routes').Router} [options.router]
      */
-    constructor({ router }: any = {}) {
+    constructor({ router }: { router?: Router } = {}) {
         this.router = router;
         this.element = null;
         this.header = null;
@@ -37,7 +49,7 @@ export class ProfileEditPage {
     render() {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({});
-        this.element = wrapper.firstElementChild;
+        this.element = wrapper.firstElementChild as DomRoot;
 
         this.header = new Header({ router: this.router, backFallback: '/profile' });
         this.element.prepend(this.header.render());
@@ -45,8 +57,8 @@ export class ProfileEditPage {
         this.setupEvents();
         this.setupAvatarUpload();
 
-        const submitButton = this.element.querySelector('#profileEditSubmit');
-        const deleteButton = this.element.querySelector('#profileDeleteButton');
+        const submitButton = this.element.querySelector<HTMLButtonElement>('#profileEditSubmit');
+        const deleteButton = this.element.querySelector<HTMLButtonElement>('#profileDeleteButton');
         if (submitButton) submitButton.disabled = true;
         if (deleteButton) deleteButton.disabled = true;
         void this.loadProfile();
@@ -66,26 +78,26 @@ export class ProfileEditPage {
             localStorage.setItem('userAvatarUrl', this.profile.avatar_url || '');
             this.router.refreshHeader();
 
-            this.element.querySelector('#profileEditName').value = this.profile.name || '';
-            this.element.querySelector('#profileEditTag').value = this.profile.user_tag || '';
-            this.element.querySelector('#profileEditDescription').value = this.profile.description ?? '';
+            this.element.querySelector<HTMLInputElement>('#profileEditName').value = this.profile.name || '';
+            this.element.querySelector<HTMLInputElement>('#profileEditTag').value = this.profile.user_tag || '';
+            this.element.querySelector<HTMLInputElement>('#profileEditDescription').value = this.profile.description ?? '';
 
             // Сбрасываем локальные состояния аватара — они относятся к «ещё не сохранённому» выбору.
             this.pendingAvatarFile = null;
             this.avatarCleared = false;
-            this.element.querySelector('#profileEditAvatarInput').value = '';
+            this.element.querySelector<HTMLInputElement>('#profileEditAvatarInput').value = '';
             this.updateAvatarPreview(this.profile.avatar_url || '');
 
-            this.element.querySelector('#profileEditSubmit').disabled = false;
-            this.element.querySelector('#profileDeleteButton').disabled = false;
-        } catch (error) {
+            this.element.querySelector<HTMLButtonElement>('#profileEditSubmit').disabled = false;
+            this.element.querySelector<HTMLButtonElement>('#profileDeleteButton').disabled = false;
+        } catch (error: unknown) {
             if (this.isDestroyed || !this.element?.isConnected) return;
-            if (error.status === 401) {
+            if (isApiError(error) && error.status === 401) {
                 this.router.refreshHeader();
                 this.router.navigateTo('/login');
                 return;
             }
-            this.showMessage(error.message || 'Не удалось загрузить профиль.');
+            this.showMessage(getErrorMessage(error) || 'Не удалось загрузить профиль.');
         }
     }
 
@@ -107,18 +119,18 @@ export class ProfileEditPage {
      * Подключает выбор файла аватара: drag&drop, выбор по клику, предпросмотр, удаление.
      */
     setupAvatarUpload() {
-        const fileInput = this.element.querySelector('#profileEditAvatarInput');
+        const fileInput = this.element.querySelector<HTMLInputElement>('#profileEditAvatarInput');
         const dropzone = this.element.querySelector('#profileAvatarDropzone');
-        const removeBtn = this.element.querySelector('#profileAvatarRemoveBtn');
+        const removeBtn = this.element.querySelector<HTMLButtonElement>('#profileAvatarRemoveBtn');
         const errorEl = this.element.querySelector('#profileAvatarError');
 
-        const showError = (message) => {
+        const showError = (message: string): void => {
             if (!errorEl) return;
             errorEl.textContent = message;
             errorEl.hidden = !message;
         };
 
-        const validateFile = (file) => {
+        const validateFile = (file: File): string => {
             const allowed = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
             if (file.type && !allowed.has(file.type.toLowerCase())) {
                 return 'Поддерживаются только JPEG, PNG, GIF и WebP.';
@@ -129,7 +141,7 @@ export class ProfileEditPage {
             return '';
         };
 
-        const applyFile = (file) => {
+        const applyFile = (file: File): void => {
             const validation = validateFile(file);
             if (validation) {
                 showError(validation);
@@ -155,7 +167,7 @@ export class ProfileEditPage {
         dropzone.addEventListener('dragleave', () => {
             dropzone.classList.remove('is-dragging');
         });
-        dropzone.addEventListener('drop', (event) => {
+        dropzone.addEventListener('drop', (event: DragEvent) => {
             event.preventDefault();
             dropzone.classList.remove('is-dragging');
             const [file] = event.dataTransfer?.files || [];
@@ -176,11 +188,11 @@ export class ProfileEditPage {
     }
 
     /** Создаёт objectURL и показывает предпросмотр выбранного файла. */
-    renderLocalPreview(file) {
+    renderLocalPreview(file: File): void {
         this.revokePreviewUrl();
         this.previewObjectUrl = URL.createObjectURL(file);
         this.updateAvatarPreview(this.previewObjectUrl, true);
-        const removeBtn = this.element.querySelector('#profileAvatarRemoveBtn');
+        const removeBtn = this.element.querySelector<HTMLButtonElement>('#profileAvatarRemoveBtn');
         if (removeBtn) removeBtn.hidden = false;
     }
 
@@ -191,10 +203,10 @@ export class ProfileEditPage {
      *   либо «сырое» значение avatar_url с сервера.
      * @param {boolean} [isLocalPreview=false]
      */
-    updateAvatarPreview(srcOrRawUrl, isLocalPreview = false) {
-        const preview = this.element.querySelector('#profileAvatarPreview');
+    updateAvatarPreview(srcOrRawUrl: string, isLocalPreview = false): void {
+        const preview = this.element.querySelector<HTMLImageElement>('#profileAvatarPreview');
         const placeholder = this.element.querySelector('#profileAvatarPlaceholder');
-        const removeBtn = this.element.querySelector('#profileAvatarRemoveBtn');
+        const removeBtn = this.element.querySelector<HTMLButtonElement>('#profileAvatarRemoveBtn');
         if (!preview || !placeholder) return;
 
         const hasValue = Boolean(srcOrRawUrl);
@@ -225,13 +237,13 @@ export class ProfileEditPage {
     }
 
     /** PATCH /users/me + (при необходимости) POST /users/me/avatar. */
-    async submitForm(event) {
+    async submitForm(event: Event) {
         event.preventDefault();
 
-        const nameInput = this.element.querySelector('#profileEditName');
-        const tagInput = this.element.querySelector('#profileEditTag');
-        const descriptionInput = this.element.querySelector('#profileEditDescription');
-        const submitBtn = this.element.querySelector('#profileEditSubmit');
+        const nameInput = this.element.querySelector<HTMLInputElement>('#profileEditName');
+        const tagInput = this.element.querySelector<HTMLInputElement>('#profileEditTag');
+        const descriptionInput = this.element.querySelector<HTMLInputElement>('#profileEditDescription');
+        const submitBtn = this.element.querySelector<HTMLButtonElement>('#profileEditSubmit');
 
         const name = nameInput.value.trim();
         const userTag = tagInput.value.trim();
@@ -251,18 +263,18 @@ export class ProfileEditPage {
         }
 
         // Патч только из изменённых текстовых полей.
-        const patch: any = {};
-        const prev = this.profile || {};
+        const patch: Partial<Pick<User, 'name' | 'user_tag' | 'description' | 'avatar_url'>> = {};
+        const prev = this.profile;
 
-        if (name !== (prev.name || '')) patch.name = name;
-        if (userTag !== (prev.user_tag || '')) patch.user_tag = userTag;
+        if (name !== (prev?.name || '')) patch.name = name;
+        if (userTag !== (prev?.user_tag || '')) patch.user_tag = userTag;
 
-        const prevDescription = prev.description || '';
+        const prevDescription = prev?.description || '';
         if (description !== prevDescription) patch.description = description || null;
 
         // Аватар: либо новый файл, либо явная очистка, либо ничего не менялось.
         const hasAvatarFile = this.pendingAvatarFile !== null;
-        const hasAvatarRemove = this.avatarCleared && Boolean(prev.avatar_url);
+        const hasAvatarRemove = this.avatarCleared && Boolean(prev?.avatar_url);
         const hasTextChanges = Object.keys(patch).length > 0;
 
         if (!hasAvatarFile && !hasAvatarRemove && !hasTextChanges) {
@@ -297,7 +309,7 @@ export class ProfileEditPage {
 
             this.revokePreviewUrl();
 
-            this.element.querySelector('#profileEditAvatarInput').value = '';
+            this.element.querySelector<HTMLInputElement>('#profileEditAvatarInput').value = '';
 
             localStorage.setItem('userName', updated.name || '');
             localStorage.setItem('userTag', updated.user_tag || '');
@@ -309,9 +321,9 @@ export class ProfileEditPage {
 
             this.showMessage('Профиль сохранён.', true);
 
-        } catch (error) {
+        } catch (error: unknown) {
             this.showMessage(
-                error.message || 'Не удалось сохранить профиль.',
+                getErrorMessage(error) || 'Не удалось сохранить профиль.',
             );
 
         } finally {
@@ -325,8 +337,8 @@ export class ProfileEditPage {
      * Внимание: по контракту бэкенд не отзывает JWT и не чистит cookie,
      * поэтому фронт сам сбрасывает локальную авторизацию и уходит на главную.
      */
-    async deleteAccount() {
-        const confirmBtn = this.element.querySelector('#profileDeleteConfirm');
+    async deleteAccount(): Promise<void> {
+        const confirmBtn = this.element.querySelector<HTMLButtonElement>('#profileDeleteConfirm');
 
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Удаление…';
@@ -334,14 +346,14 @@ export class ProfileEditPage {
         try {
             await deleteMyProfile();
 
-        } catch (error) {
+        } catch (error: unknown) {
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Удалить';
 
             this.element.querySelector('#profileDeleteModal').hidden = true;
 
             this.showMessage(
-                error.message || 'Не удалось удалить аккаунт.',
+                getErrorMessage(error) || 'Не удалось удалить аккаунт.',
             );
 
             return;
@@ -367,7 +379,7 @@ export class ProfileEditPage {
         this.router.navigateTo('/');
     }
 
-    showMessage(message, isSuccess = false) {
+    showMessage(message: string, isSuccess = false): void {
         const el = this.element?.querySelector('#profileEditMessage');
         if (!el) return;
         el.textContent = message;

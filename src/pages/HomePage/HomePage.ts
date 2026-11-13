@@ -1,14 +1,20 @@
+
 import './HomePage.scss';
 import { fetchPins } from '../../api/user';
 import { PinCard } from '../../components/PinCard/PinCard';
 import { Header } from '../../components/Header/Header';
 import template from './HomePage.hbs';
+import type { Pin, PinCursor } from '../../types/models';
+import type { Router } from '../../routes';
 
 const PAGE_SIZE = 30;
 
 export class HomePage {
-    [key: string]: any;
-    constructor({ router }: any = {}) {
+    router?: Router;
+    header: Header | null;
+    observer: IntersectionObserver | null;
+
+    constructor({ router }: { router?: Router } = {}) {
         this.router = router;
         this.header = null;
         this.observer = null;
@@ -35,12 +41,12 @@ export class HomePage {
         let nextColumn = 0;
         const loadError = wrapper.querySelector<HTMLElement>('#pinsLoadError');
 
-        let nextCursor = null;
+        let nextCursor: PinCursor | null = null;
         let isLoading = false;
         let hasMore = true;
         let sentinel: HTMLElement | null = null;
 
-        const appendPins = (pins) => {
+        const appendPins = (pins: Pin[]): void => {
             if (!grid) return;
             for (const pin of pins) {
                 const card = new PinCard(pin).render();
@@ -73,7 +79,7 @@ export class HomePage {
                 // Если next_cursor пришёл пустым, курсор остаётся null,
                 // и следующая порция снова начнётся с самого начала. Лента бесконечная.
                 nextCursor = data.next_cursor ?? null;
-            } catch (error) {
+            } catch (error: unknown) {
                 hasMore = false;
                 if (loadError) {
                     loadError.textContent = 'Не удалось загрузить пины. Проверьте подключение и обновите страницу.';

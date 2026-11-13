@@ -1,12 +1,26 @@
+
 import './SearchBar.scss';
 import template from './SearchBar.hbs';
+import type { DomRoot } from '../../types/dom';
+
+export interface SearchBarOptions {
+    placeholder?: string;
+    initialQuery?: string;
+    debounceMs?: number;
+    onSearch?: (query: string) => void;
+}
 
 /**
  * Поле поиска. Не знает ничего о страницах и о том, что делать с запросом —
  * просто дебаунсит ввод и зовёт переданный onSearch.
  */
 export class SearchBar {
-    [key: string]: any;
+    placeholder: string;
+    initialQuery: string;
+    debounceMs: number;
+    onSearch?: (query: string) => void;
+    timer: ReturnType<typeof setTimeout> | null;
+    element: DomRoot | null;
     /**
      * @param {Object} [options]
      * @param {string} [options.placeholder='Поиск']
@@ -14,7 +28,7 @@ export class SearchBar {
      * @param {number} [options.debounceMs=300]
      * @param {(query: string) => void} [options.onSearch]
      */
-    constructor({ placeholder = 'Поиск', initialQuery = '', debounceMs = 300, onSearch }: any = {}) {
+    constructor({ placeholder = 'Поиск', initialQuery = '', debounceMs = 300, onSearch }: SearchBarOptions = {}) {
         this.placeholder = placeholder;
         this.initialQuery = initialQuery;
         this.debounceMs = debounceMs;
@@ -30,9 +44,9 @@ export class SearchBar {
             placeholder: this.placeholder,
             value: this.initialQuery,
         });
-        this.element = wrapper.firstElementChild;
+        this.element = wrapper.firstElementChild as DomRoot;
 
-        const input = this.element.querySelector('.search-input');
+        const input = this.element.querySelector<HTMLInputElement>('.search-input');
         input.addEventListener('input', () => {
             clearTimeout(this.timer);
             this.timer = setTimeout(() => {
@@ -47,11 +61,11 @@ export class SearchBar {
         return this.element;
     }
 
-    getValue() {
-        return this.element?.querySelector('.search-input')?.value.trim() ?? '';
+    getValue(): string {
+        return this.element?.querySelector<HTMLInputElement>('.search-input')?.value.trim() ?? '';
     }
 
-    destroy() {
+    destroy(): void {
         clearTimeout(this.timer);
     }
 }

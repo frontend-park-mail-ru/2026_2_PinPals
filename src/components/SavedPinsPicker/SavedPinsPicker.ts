@@ -1,3 +1,4 @@
+
 import './SavedPinsPicker.scss';
 import template from './SavedPinsPicker.hbs';
 import { resolveImageUrl } from '../../api/user';
@@ -124,7 +125,7 @@ export class SavedPinsPicker {
             }
             grid.append(fragment);
             this.updateCount();
-        } catch (cause) {
+        } catch (cause: unknown) {
             if (this.isDestroyed || !this.element?.isConnected) return;
             grid.textContent = '';
             if (error) {
@@ -173,7 +174,7 @@ export class SavedPinsPicker {
             await this.options.onConfirm(ids, pins);
             if (!this.options.preserveSelectionAfterConfirm) this.selectedPinIds.clear();
             this.close();
-        } catch (cause) {
+        } catch (cause: unknown) {
             if (error) {
                 error.textContent = cause instanceof Error ? cause.message : 'Не удалось применить выбор пинов.';
                 error.hidden = false;

@@ -1,5 +1,7 @@
+import { isApiError } from '../utils/errors';
+
 import { apiRequest } from './client';
-import type { ApiErrorPayload, Comment, Desk, LikeStatistics, Pin, PinCursor, PinSearchResponse, User } from '../types/models';
+import type { Comment, Desk, LikeStatistics, Pin, PinCursor, PinSearchResponse, User } from '../types/models';
 
 /**
  * Приводит URL изображений backend к same-origin маршруту.
@@ -265,7 +267,7 @@ export async function addPinsToBoard(deskId: string | number, pinIds: Array<stri
                 await apiRequest(`/api/v1/desks/${encodeURIComponent(deskId)}/pins/${encodeURIComponent(pinId)}`, {
                     method: 'POST',
                 });
-            } catch (error) {
+            } catch (error: unknown) {
                 if (!hasFailed) firstError = error;
                 hasFailed = true;
             }
@@ -319,8 +321,8 @@ export async function fetchPinComments(pinId: string | number): Promise<Comment[
     try {
         const result = await apiRequest<{ comments?: Comment[] }>(endpoint);
         return result.comments || [];
-    } catch (error) {
-        if (error?.status === 404) {
+    } catch (error: unknown) {
+        if (isApiError(error) && error.status === 404) {
             throw featureUnavailableError('Комментарии', endpoint, error);
         }
         throw error;
@@ -335,8 +337,8 @@ export async function createPinComment(pinId: string | number, text: string): Pr
             body: JSON.stringify({ text }),
         });
         return result.comment;
-    } catch (error) {
-        if (error?.status === 404) {
+    } catch (error: unknown) {
+        if (isApiError(error) && error.status === 404) {
             throw featureUnavailableError('Комментарии', endpoint, error);
         }
         throw error;

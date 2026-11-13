@@ -1,3 +1,4 @@
+
 {
   "compilerOptions": {
     "target": "ES2022",
@@ -13,7 +14,9 @@
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": false,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "useUnknownInCatchVariables": true
   },
   "include": [
     "src/**/*.ts",

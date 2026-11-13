@@ -1,4 +1,6 @@
-import type { ApiErrorPayload } from '../types/models';
+
+import type { ApiError, ApiResponseError, BackendValidationErrorPayload } from '../types/models';
+import { isApiResponseError } from '../utils/errors';
 
 const BASE_URL = location.origin;
 
@@ -41,40 +43,41 @@ export async function apiRequest<T = unknown>(path: string, options: RequestInit
     }
 
     const rawText = await response.text();
-    let payload = null;
+    let parsedPayload: unknown = null;
     if (rawText) {
         try {
-            payload = JSON.parse(rawText);
+            parsedPayload = JSON.parse(rawText) as unknown;
         } catch {
             if (!response.ok) {
-                const error = new Error(`HTTP ${response.status}`) as Error & { status?: number };
+                const error = new Error(`HTTP ${response.status}`) as ApiError;
                 error.status = response.status;
                 throw error;
             }
-            const error = new Error(`Сервер вернул невалидный JSON: HTTP ${response.status}`) as Error & { status?: number };
-            error.status = response.status;
+            const error = new Error(`Сервер вернул невалидный JSON: HTTP ${response.status}`);
             throw error;
         }
     }
 
     if (!response.ok) {
-        const fieldErrors = payload?.fields
-            ? Object.entries(payload.fields).map(([field, code]) => `${field}: ${code}`).join(', ')
+        const payload: ApiResponseError | null = isApiResponseError(parsedPayload) ? parsedPayload : null;
+        const fields = payload && 'fields' in payload
+            ? (payload as BackendValidationErrorPayload).fields
+            : undefined;
+        const fieldErrors = fields
+            ? Object.entries(fields).map(([field, code]) => `${field}: ${code}`).join(', ')
             : '';
-        const message = fieldErrors
-            || payload?.message
-            || payload?.error
-            || `Ошибка запроса: HTTP ${response.status}`;
-        const error = new Error(message) as Error & {
-            status?: number;
-            fields?: Record<string, string>;
-            payload?: ApiErrorPayload | null;
-        };
+        const serverMessage = payload && 'message' in payload && payload.message
+            ? payload.message
+            : payload && 'error' in payload
+                ? payload.error
+                : undefined;
+        const message = fieldErrors || serverMessage || `Ошибка запроса: HTTP ${response.status}`;
+        const error = new Error(message) as ApiError;
         error.status = response.status;
-        error.fields = payload?.fields;
-        error.payload = payload as ApiErrorPayload | null;
+        error.fields = fields;
+        error.payload = payload;
         throw error;
     }
 
-    return payload as T;
+    return parsedPayload as T;
 }

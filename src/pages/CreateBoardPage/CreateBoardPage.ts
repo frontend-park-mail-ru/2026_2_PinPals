@@ -1,19 +1,29 @@
+
 import './CreateBoardPage.scss';
 import { Header } from '../../components/Header/Header';
 import { addPinsToBoard, createBoard, fetchUserSavedPins, resolveImageUrl } from '../../api/user';
 import { SavedPinsPicker } from '../../components/SavedPinsPicker/SavedPinsPicker';
 import template from './CreateBoardPage.hbs';
+import type { Pin } from '../../types/models';
+import type { Router } from '../../routes';
+import type { DomRoot } from '../../types/dom';
+import { getErrorMessage } from '../../utils/errors';
 
 /**
  * Страница создания доски с возможностью выбора своих пинов.
  */
 export class CreateBoardPage {
-    [key: string]: any;
+    router?: Router;
+    element: DomRoot | null;
+    header: Header | null;
+    selectedPinIds: Set<string>;
+    savedPinsPicker: SavedPinsPicker | null;
+    isDestroyed: boolean;
     /**
      * @param {Object} [options]
      * @param {import('../../routes').Router} [options.router]
      */
-    constructor({ router }: any = {}) {
+    constructor({ router }: { router?: Router } = {}) {
         this.router = router;
         this.element = null;
         this.header = null;
@@ -29,7 +39,7 @@ export class CreateBoardPage {
     render() {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({});
-        this.element = wrapper.firstElementChild;
+        this.element = wrapper.firstElementChild as DomRoot;
 
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
@@ -40,7 +50,7 @@ export class CreateBoardPage {
                 return fetchUserSavedPins(userId);
             },
             preserveSelectionAfterConfirm: true,
-            onConfirm: (ids, pins) => {
+            onConfirm: (ids: string[], pins: Pin[]): void => {
                 this.selectedPinIds = new Set(ids);
                 this.renderSelectedPinsPreview(pins);
             },
@@ -67,7 +77,7 @@ export class CreateBoardPage {
     }
 
     /** Отображает выбранные пины в превью создаваемой доски. */
-    renderSelectedPinsPreview(selectedPins) {
+    renderSelectedPinsPreview(selectedPins: Pin[]): void {
         const preview = this.element.querySelector('#createBoardPreviewImages');
         preview.replaceChildren();
         selectedPins.slice(0, 3).forEach((pin) => {
@@ -82,12 +92,12 @@ export class CreateBoardPage {
      * Отправляет запрос на создание доски и добавление в неё пинов.
      * @param {SubmitEvent} event
      */
-    async submitBoard(event) {
+    async submitBoard(event: Event): Promise<void> {
         event.preventDefault();
 
-        const titleInput = this.element.querySelector('#boardTitleInput');
+        const titleInput = this.element.querySelector<HTMLInputElement>('#boardTitleInput');
         const errorContainer = this.element.querySelector('#createBoardError');
-        const submitButton = this.element.querySelector('#createBoardSubmit');
+        const submitButton = this.element.querySelector<HTMLButtonElement>('#createBoardSubmit');
 
         const title = titleInput.value.trim();
         errorContainer.hidden = true;
@@ -103,7 +113,7 @@ export class CreateBoardPage {
         submitButton.textContent = 'Создание…';
 
         try {
-            const visibility = this.element.querySelector('[name="visibility"]:checked').value;
+            const visibility = this.element.querySelector<HTMLInputElement>('[name="visibility"]:checked').value;
             const board = await createBoard({ title, visibility });
 
             const boardId = board.desk_id ?? board.board_id ?? board.id;
@@ -124,8 +134,8 @@ export class CreateBoardPage {
             }
 
             this.router.navigateTo(`/board/${encodeURIComponent(boardId)}`);
-        } catch (err) {
-            errorContainer.textContent = err.message || 'Не удалось создать доску.';
+        } catch (err: unknown) {
+            errorContainer.textContent = getErrorMessage(err) || 'Не удалось создать доску.';
             errorContainer.hidden = false;
 
             submitButton.disabled = false;

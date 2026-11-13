@@ -1,9 +1,24 @@
 import './BoardCard.scss';
 import template from './BoardCard.hbs';
 import { resolveImageUrl } from '../../api/user';
+import type { Pin } from '../../types/models';
+
+export interface BoardCardData {
+    desk_id?: number | string;
+    board_id?: number | string;
+    id?: number | string;
+    name?: string;
+    title?: string;
+    pins?: Array<Pick<Pin, 'image_url'>>;
+    pins_count?: number;
+    pinsCount?: number;
+    preview_images?: string[];
+    images?: string[];
+    avatar_img_url?: string | null;
+}
 
 /** Возвращает корректную подпись количества пинов. */
-function getPinsLabel(count) {
+function getPinsLabel(count: number): string {
     const value = Math.max(0, Number(count) || 0);
     const lastTwoDigits = value % 100;
     const lastDigit = value % 10;
@@ -18,11 +33,16 @@ function getPinsLabel(count) {
 
 /** Карточка доски с коллажем из трёх изображений. */
 export class BoardCard {
-    [key: string]: any;
+    id: number | string;
+    title: string;
+    pinsCount: number;
+    pinsLabel: string;
+    images: string[];
+    element: HTMLElement | null;
     /**
      * @param {Object} board - Объект доски, полученный от API.
      */
-    constructor(board) {
+    constructor(board: BoardCardData) {
         this.id = board.desk_id ?? board.board_id ?? board.id ?? '';
         this.title = board.name || board.title || 'Без названия';
 
@@ -37,7 +57,7 @@ export class BoardCard {
 
         let images = (board.preview_images || board.images || []).filter(Boolean);
         if (!images.length && Array.isArray(board.pins)) {
-            images = board.pins.map((pin) => pin.image_url).filter(Boolean);
+            images = board.pins.map((pin: Pick<Pin, 'image_url'>) => pin.image_url).filter(Boolean);
         }
         if (!images.length && board.avatar_img_url) {
             images = [board.avatar_img_url];
@@ -48,7 +68,7 @@ export class BoardCard {
     }
 
     /** @returns {HTMLElement} */
-    render() {
+    render(): HTMLElement {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({
             id: encodeURIComponent(this.id),
@@ -59,7 +79,7 @@ export class BoardCard {
             secondImage: resolveImageUrl(this.images[1]),
             thirdImage: resolveImageUrl(this.images[2]),
         });
-        this.element = wrapper.firstElementChild;
+        this.element = wrapper.firstElementChild as HTMLElement;
         return this.element;
     }
 }

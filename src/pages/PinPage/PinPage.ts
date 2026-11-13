@@ -1,3 +1,4 @@
+
 import './PinPage.scss';
 import { resolveImageUrl, resolveAvatarUrl, DEFAULT_AVATAR_URL } from '../../api/user';
 import {
@@ -15,17 +16,30 @@ import {
 import { PinCard } from '../../components/PinCard/PinCard';
 import { Header } from '../../components/Header/Header';
 import template from './PinPage.hbs';
+import type { Comment, LikeStatistics, Pin, PinCursor } from '../../types/models';
+import type { Router } from '../../routes';
+import type { DomRoot } from '../../types/dom';
+import { getErrorMessage, isApiError } from '../../utils/errors';
 const COMMENTS_UNAVAILABLE = 'Чатик пока не работает, но скоро будет :P';
 
 /** Страница просмотра одного пина. */
 export class PinPage {
-    [key: string]: any;
+    router?: Router;
+    pinId: string;
+    pin: Pin | null;
+    element: DomRoot | null;
+    header: Header | null;
+    loadingTimer: ReturnType<typeof setTimeout> | null;
+    isDestroyed: boolean;
+    interactions: Pick<LikeStatistics, 'is_liked' | 'likes_count'>;
+    comments: Comment[];
+    recommendationsObservers: IntersectionObserver[];
     /**
      * @param {string|number} pinId
      * @param {Object} [options]
      * @param {import('../../routes').Router} [options.router]
      */
-    constructor(pinId, { router }: any = {}) {
+    constructor(pinId: string | number, { router }: { router?: Router } = {}) {
         this.pinId = String(pinId);
         this.router = router;
         this.pin = null;
@@ -42,7 +56,7 @@ export class PinPage {
         const backUrl = this.router?.getBackUrl('/home') || '/home';
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({ backUrl });
-        this.element = wrapper.firstElementChild;
+        this.element = wrapper.firstElementChild as DomRoot;
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
         this.setupEvents();
@@ -62,11 +76,11 @@ export class PinPage {
             this.renderPin();
             void this.loadRecommendations();
             void this.loadPinDetails();
-        } catch (error) {
+        } catch (error: unknown) {
             if (this.isDestroyed || !this.element?.isConnected) return;
             this.element.querySelector('#pinLoading').hidden = true;
             this.element.querySelector('#pinError').hidden = false;
-            this.element.querySelector('#pinErrorMessage').textContent = error.message || 'Ошибка загрузки';
+            this.element.querySelector('#pinErrorMessage').textContent = getErrorMessage(error) || 'Ошибка загрузки';
         } finally {
             clearTimeout(this.loadingTimer);
             this.loadingTimer = null;
@@ -97,7 +111,7 @@ export class PinPage {
             this.renderComments();
         } else {
             const error = commentsResult.reason;
-            const isMissingEndpoint = error?.status === 404;
+            const isMissingEndpoint = isApiError(error) && error.status === 404;
             this.renderCommentsMessage(isMissingEndpoint
                 ? COMMENTS_UNAVAILABLE
                 : 'Не удалось загрузить комментарии.');
@@ -107,7 +121,7 @@ export class PinPage {
 
     /** Заполняет основной блок данными пина. */
     renderPin() {
-        const img = this.element.querySelector('#pinMainImage');
+        const img = this.element.querySelector<HTMLImageElement>('#pinMainImage');
         img.src = resolveImageUrl(this.pin.image_url);
         img.alt = this.pin.name || 'Пин';
         img.onerror = () => img.classList.add('pin-main-image--failed');
@@ -161,8 +175,8 @@ export class PinPage {
         const bottomSentinel = this.element?.querySelector('#pinBottomRecommendationsSentinel');
         if (!sideBox || !bottomBox || !sideSentinel || !bottomSentinel) return;
 
-        let nextCursor: any = null;
-        const queue: any[] = [];
+        let nextCursor: PinCursor | null = null;
+        const queue: Pin[] = [];
         let pagePromise: Promise<void> | null = null;
         let hasMore = true;
         const seen = new Set<string>([this.pinId]);
@@ -184,7 +198,7 @@ export class PinPage {
             }
             return columns;
         };
-        const appendTo = (container: Element, pins: any[]) => {
+        const appendTo = (container: Element, pins: Pin[]): void => {
             const columns = getColumns(container);
             let next = nextColumnByContainer.get(container) || 0;
             pins.forEach((pin) => {
@@ -281,13 +295,13 @@ export class PinPage {
         try {
             await appendBatch(sideBox, BATCH_SIZE);
             await appendBatch(bottomBox, BATCH_SIZE);
-        } catch (error) {
+        } catch (error: unknown) {
             console.warn('Не удалось загрузить рекомендации', error);
         }
 
         if (!('IntersectionObserver' in window) || this.isDestroyed) return;
 
-        const observeFeed = (container: Element, sentinel: Element) => {
+        const observeFeed = (container: Element, sentinel: Element): void => {
             const observer = new IntersectionObserver((entries) => {
                 if (this.isDestroyed || !sentinel.isConnected) {
                     observer.disconnect();
@@ -297,7 +311,7 @@ export class PinPage {
                 if (!entries.some((entry) => entry.isIntersecting)) return;
 
                 void appendBatch(container, BATCH_SIZE)
-                    .catch((error) => console.warn('Не удалось догрузить рекомендации', error))
+                    .catch((error: unknown) => console.warn('Не удалось догрузить рекомендации', error))
                     .finally(() => {
                         // Повторное наблюдение важно, если после вставки карточек
                         // sentinel всё ещё остаётся в зоне rootMargin.
@@ -318,7 +332,7 @@ export class PinPage {
 
     /** Подключает кнопки лайка, поделиться и комментариев. */
     setupEvents() {
-        this.element.querySelector('[data-action="like"]').addEventListener('click', () => {
+        this.element.querySelector<HTMLButtonElement>('[data-action="like"]').addEventListener('click', () => {
             void this.changeLike();
         });
 
@@ -341,8 +355,8 @@ export class PinPage {
         });
 
         const saveModal = this.element.querySelector('#pinSaveModal');
-        this.element.querySelector('[data-action="save"]').addEventListener('click', () => void this.openSaveModal());
-        this.element.querySelector('#pinSaveClose').addEventListener('click', () => { saveModal.hidden = true; });
+        this.element.querySelector<HTMLButtonElement>('[data-action="save"]').addEventListener('click', () => void this.openSaveModal());
+        this.element.querySelector<HTMLButtonElement>('#pinSaveClose').addEventListener('click', () => { saveModal.hidden = true; });
         saveModal.addEventListener('click', (e) => { if (e.target === saveModal) saveModal.hidden = true; });
 
         const editModal = this.element.querySelector('#pinEditModal');
@@ -356,7 +370,7 @@ export class PinPage {
         this.element.querySelector('#pinDeleteClose').addEventListener('click', () => { deleteModal.hidden = true; });
         this.element.querySelector('#pinDeleteCancel').addEventListener('click', () => { deleteModal.hidden = true; });
         deleteModal.addEventListener('click', (event) => { if (event.target === deleteModal) deleteModal.hidden = true; });
-        this.element.querySelector('#pinDeleteConfirm').addEventListener('click', () => void this.deleteCurrentPin());
+        this.element.querySelector<HTMLButtonElement>('#pinDeleteConfirm').addEventListener('click', () => void this.deleteCurrentPin());
 
         this.element.querySelector('#pinCommentForm').addEventListener('submit', (event) => {
             void this.submitComment(event);
@@ -365,17 +379,17 @@ export class PinPage {
 
     openEditPin() {
         if (!this.pin || String(this.pin.creator_id) !== localStorage.getItem('userId')) return;
-        this.element.querySelector('#pinEditName').value = this.pin.name || '';
-        this.element.querySelector('#pinEditDescription').value = this.pin.description || '';
+        this.element.querySelector<HTMLInputElement>('#pinEditName').value = this.pin.name || '';
+        this.element.querySelector<HTMLInputElement>('#pinEditDescription').value = this.pin.description || '';
         this.element.querySelector('#pinEditMessage').hidden = true;
         this.element.querySelector('#pinEditModal').hidden = false;
     }
 
-    async saveEditPin(event) {
+    async saveEditPin(event: Event): Promise<void> {
         event.preventDefault();
-        const submitButton = this.element.querySelector('#pinEditSubmit');
-        const name = this.element.querySelector('#pinEditName').value.trim();
-        const description = this.element.querySelector('#pinEditDescription').value.trim();
+        const submitButton = this.element.querySelector<HTMLButtonElement>('#pinEditSubmit');
+        const name = this.element.querySelector<HTMLInputElement>('#pinEditName').value.trim();
+        const description = this.element.querySelector<HTMLInputElement>('#pinEditDescription').value.trim();
         if (!name) {
             this.showEditMessage('Укажите название пина.');
             return;
@@ -388,14 +402,14 @@ export class PinPage {
             this.renderPin();
             this.element.querySelector('#pinEditModal').hidden = true;
             this.showActionMessage('Пин обновлён.');
-        } catch (error) {
-            this.showEditMessage(error.message || 'Не удалось обновить пин.');
+        } catch (error: unknown) {
+            this.showEditMessage(getErrorMessage(error) || 'Не удалось обновить пин.');
         } finally {
             submitButton.disabled = false;
         }
     }
 
-    showEditMessage(message) {
+    showEditMessage(message: string): void {
         const element = this.element?.querySelector('#pinEditMessage');
         if (!element) return;
         element.textContent = message;
@@ -404,22 +418,22 @@ export class PinPage {
 
     async deleteCurrentPin() {
         if (!this.pin || String(this.pin.creator_id) !== localStorage.getItem('userId')) return;
-        const button = this.element.querySelector('#pinDeleteConfirm');
+        const button = this.element.querySelector<HTMLButtonElement>('#pinDeleteConfirm');
         button.disabled = true;
         try {
             await deletePin(this.pinId);
             this.router?.navigateBack('/home');
-        } catch (error) {
+        } catch (error: unknown) {
             if (this.isDestroyed || !this.element?.isConnected) return;
             button.disabled = false;
             const message = this.element.querySelector('#pinDeleteMessage');
-            message.textContent = error.message || 'Не удалось удалить пин.';
+            message.textContent = getErrorMessage(error) || 'Не удалось удалить пин.';
             message.hidden = false;
         }
     }
 
     async changeLike() {
-        const button = this.element.querySelector('[data-action="like"]');
+        const button = this.element.querySelector<HTMLButtonElement>('[data-action="like"]');
         button.disabled = true;
         try {
             const result = await setPinLiked(this.pinId, !this.interactions.is_liked);
@@ -427,17 +441,17 @@ export class PinPage {
             this.interactions.is_liked = result.liked_by_me;
             this.updateLike();
             this.showActionMessage('');
-        } catch (error) {
-            this.showActionMessage(error.message || 'Не удалось изменить отметку «Нравится».');
+        } catch (error: unknown) {
+            this.showActionMessage(getErrorMessage(error));
         } finally {
             button.disabled = false;
         }
     }
 
     /** Отправляет новый комментарий на сервер. */
-    async submitComment(event) {
+    async submitComment(event: Event): Promise<void> {
         event.preventDefault();
-        const input = this.element.querySelector('#pinCommentInput');
+        const input = this.element.querySelector<HTMLInputElement>('#pinCommentInput');
         const text = input.value.trim();
         if (!text) return;
 
@@ -447,13 +461,13 @@ export class PinPage {
             input.value = '';
             this.renderComments();
             this.showActionMessage('');
-        } catch (error) {
-            if (error?.status === 404) {
+        } catch (error: unknown) {
+            if (isApiError(error) && error.status === 404) {
                 this.setCommentComposerEnabled(false);
                 this.renderCommentsMessage(COMMENTS_UNAVAILABLE);
                 return;
             }
-            this.showActionMessage(error.message || 'Не удалось добавить комментарий.');
+            this.showActionMessage(getErrorMessage(error) || 'Не удалось добавить комментарий.');
         }
     }
 
@@ -484,28 +498,28 @@ export class PinPage {
                 option.addEventListener('click', () => void this.saveToBoard(desk.desk_id, option));
                 list.append(option);
             });
-        } catch (error) {
+        } catch (error: unknown) {
             list.textContent = '';
-            this.showSaveMessage(error.message || 'Не удалось загрузить доски.');
+            this.showSaveMessage(getErrorMessage(error) || 'Не удалось загрузить доски.');
         }
     }
 
-    async saveToBoard(deskId, option) {
+    async saveToBoard(deskId: string | number, option: HTMLButtonElement): Promise<void> {
         option.disabled = true;
         try {
             await addPinsToBoard(deskId, [this.pinId]);
             if (this.isDestroyed || !this.element?.isConnected) return;
             this.element.querySelector('#pinSaveModal').hidden = true;
-            const saveBtn = this.element.querySelector('[data-action="save"]');
+            const saveBtn = this.element.querySelector<HTMLButtonElement>('[data-action="save"]');
             saveBtn.textContent = 'Сохранено ✓';
             setTimeout(() => { if (!this.isDestroyed && saveBtn) saveBtn.textContent = 'Сохранить'; }, 2000);
-        } catch (error) {
+        } catch (error: unknown) {
             option.disabled = false;
-            this.showSaveMessage(error.message || 'Не удалось сохранить пин.');
+            this.showSaveMessage(getErrorMessage(error) || 'Не удалось сохранить пин.');
         }
     }
 
-    showSaveMessage(message) {
+    showSaveMessage(message: string): void {
         const el = this.element?.querySelector('#pinSaveMessage');
         if (!el) return;
         el.textContent = message;
@@ -514,10 +528,10 @@ export class PinPage {
 
     /** Обновляет кнопку лайка по данным сервера. */
     updateLike() {
-        const button = this.element?.querySelector('[data-action="like"]');
+        const button = this.element?.querySelector<HTMLButtonElement>('[data-action="like"]');
         if (!button) return;
         button.classList.toggle('is-active', Boolean(this.interactions.is_liked));
-        button.querySelector('[data-like-count]').textContent = this.interactions.likes_count || 0;
+        button.querySelector('[data-like-count]').textContent = String(this.interactions.likes_count || 0);
         button.setAttribute('aria-pressed', String(Boolean(this.interactions.is_liked)));
     }
 
@@ -538,11 +552,11 @@ export class PinPage {
             list.append(item);
         });
         if (!this.comments.length) this.renderCommentsMessage('Пока нет комментариев.');
-        this.element.querySelector('#pinCommentsCount').textContent = this.comments.length;
+        this.element.querySelector('#pinCommentsCount').textContent = String(this.comments.length);
     }
 
     /** Показывает честное состояние вместо пустого списка при ошибке API. */
-    renderCommentsMessage(message) {
+    renderCommentsMessage(message: string): void {
         const list = this.element?.querySelector('#pinCommentsList');
         if (!list) return;
         list.replaceChildren();
@@ -551,13 +565,13 @@ export class PinPage {
         state.textContent = message;
         list.append(state);
         const count = this.element.querySelector('#pinCommentsCount');
-        if (count) count.textContent = this.comments.length;
+        if (count) count.textContent = String(this.comments.length);
     }
 
     /** Отключает отправку комментариев, если соответствующего API нет. */
-    setCommentComposerEnabled(enabled) {
-        const input = this.element?.querySelector('#pinCommentInput');
-        const button = this.element?.querySelector('#pinCommentForm button[type="submit"]');
+    setCommentComposerEnabled(enabled: boolean): void {
+        const input = this.element?.querySelector<HTMLInputElement>('#pinCommentInput');
+        const button = this.element?.querySelector<HTMLButtonElement>('#pinCommentForm button[type="submit"]');
         if (input) {
             input.disabled = !enabled;
             input.placeholder = enabled ? 'Добавьте комментарий' : 'Комментарии пока недоступны';
@@ -566,7 +580,7 @@ export class PinPage {
     }
 
     /** Показывает сообщение о результате действия. */
-    showActionMessage(message) {
+    showActionMessage(message: string): void {
         const element = this.element?.querySelector('#pinActionMessage');
         if (!element) return;
         element.textContent = message;

@@ -1,18 +1,27 @@
+
 import './CreatePinPage.scss';
 import { Header } from '../../components/Header/Header';
 import { addPinsToBoard, createPin } from '../../api/user';
 import template from './CreatePinPage.hbs';
+import type { Router } from '../../routes';
+import type { DomRoot } from '../../types/dom';
+import { getErrorMessage } from '../../utils/errors';
 
 /**
  * Страница создания пина.
  */
 export class CreatePinPage {
-    [key: string]: any;
+    router?: Router;
+    header: Header | null;
+    element: DomRoot | null;
+    selectedFile: File | null;
+    previewUrl: string | null;
+    boardId: string | null;
     /**
      * @param {Object} [options]
      * @param {import('../../routes').Router} [options.router]
      */
-    constructor({ router }: any = {}) {
+    constructor({ router }: { router?: Router } = {}) {
         this.router = router;
         this.header = null;
         this.element = null;
@@ -29,7 +38,7 @@ export class CreatePinPage {
     render() {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({});
-        this.element = wrapper.firstElementChild;
+        this.element = wrapper.firstElementChild as DomRoot;
 
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
@@ -42,7 +51,7 @@ export class CreatePinPage {
      * Подключает выбор файла и отправку формы.
      */
     setupEvents() {
-        const fileInput = this.element.querySelector('#pinImageInput');
+        const fileInput = this.element.querySelector<HTMLInputElement>('#pinImageInput');
         const uploadLabel = this.element.querySelector('#pinUploadLabel');
 
         fileInput.addEventListener('change', () => {
@@ -59,19 +68,19 @@ export class CreatePinPage {
             uploadLabel.classList.remove('is-dragging');
         });
 
-        uploadLabel.addEventListener('drop', (event) => {
+        uploadLabel.addEventListener('drop', (event: DragEvent) => {
             event.preventDefault();
             uploadLabel.classList.remove('is-dragging');
             const [file] = event.dataTransfer?.files || [];
             if (file) this.setSelectedFile(file);
         });
 
-        this.element.querySelector('#removePinImage').addEventListener('click', () => {
+        this.element.querySelector<HTMLButtonElement>('#removePinImage').addEventListener('click', () => {
             this.setSelectedFile(null);
             fileInput.value = '';
         });
 
-        this.element.querySelector('#createPinForm').addEventListener('submit', (event) => {
+        this.element.querySelector('#createPinForm').addEventListener('submit', (event: Event) => {
             void this.createPin(event);
         });
     }
@@ -81,15 +90,15 @@ export class CreatePinPage {
      *
      * @param {File|null} file
      */
-    setSelectedFile(file) {
+    setSelectedFile(file: File | null): void {
         const error = this.element.querySelector('#pinImageError');
-        const preview = this.element.querySelector('#pinImagePreview');
+        const preview = this.element.querySelector<HTMLImageElement>('#pinImagePreview');
         const placeholder = this.element.querySelector('#pinUploadPlaceholder');
         const removeButton = this.element.querySelector('#removePinImage');
 
         error.textContent = '';
         const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
-        const rejectFile = (message) => {
+        const rejectFile = (message: string): void => {
             if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
             this.previewUrl = null;
             this.selectedFile = null;
@@ -132,13 +141,13 @@ export class CreatePinPage {
      *
      * @param {SubmitEvent} event
      */
-    async createPin(event) {
+    async createPin(event: Event): Promise<void> {
         event.preventDefault();
-        const titleInput = this.element.querySelector('#pinNameInput');
-        const descriptionInput = this.element.querySelector('#pinDescriptionInput');
-        const tagsInput = this.element.querySelector('#pinTagsInput');
+        const titleInput = this.element.querySelector<HTMLInputElement>('#pinNameInput');
+        const descriptionInput = this.element.querySelector<HTMLInputElement>('#pinDescriptionInput');
+        const tagsInput = this.element.querySelector<HTMLInputElement>('#pinTagsInput');
         const error = this.element.querySelector('#createPinError');
-        const submitButton = this.element.querySelector('#createPinSubmit');
+        const submitButton = this.element.querySelector<HTMLButtonElement>('#createPinSubmit');
 
         error.hidden = true;
         if (!this.selectedFile) {
@@ -160,7 +169,7 @@ export class CreatePinPage {
             const createdPin = await createPin({
                 name: titleInput.value.trim(),
                 description: descriptionInput.value.trim(),
-                tags: tagsInput.value.split(',').map((tag) => tag.trim()).filter(Boolean),
+                tags: tagsInput.value.split(',').map((tag) => tag.trim()).filter((tag: string) => Boolean(tag)),
                 fileObject: this.selectedFile,
             });
 
@@ -179,8 +188,8 @@ export class CreatePinPage {
             }
 
             this.router.navigateTo('/profile/pins');
-        } catch (err) {
-            error.textContent = err.message || 'Не удалось создать пин.';
+        } catch (err: unknown) {
+            error.textContent = getErrorMessage(err) || 'Не удалось создать пин.';
             error.hidden = false;
             submitButton.disabled = false;
             submitButton.textContent = 'Создать';

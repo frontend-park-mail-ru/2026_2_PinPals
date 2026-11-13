@@ -1,3 +1,4 @@
+
 import './ProfilePage.scss';
 import {
     fetchMyProfile,
@@ -10,6 +11,10 @@ import { Header } from '../../components/Header/Header';
 import { PinCard } from '../../components/PinCard/PinCard';
 import { BoardCard } from '../../components/BoardCard/BoardCard';
 import template from './ProfilePage.hbs';
+import type { Desk, Pin, User } from '../../types/models';
+import type { Router } from '../../routes';
+import type { DomRoot } from '../../types/dom';
+import { getErrorMessage, isApiError } from '../../utils/errors';
 
 /**
  * Возвращает подпись количества подписчиков.
@@ -17,7 +22,7 @@ import template from './ProfilePage.hbs';
  * @param {number} count
  * @returns {string}
  */
-function formatFollowers(count) {
+function formatFollowers(count: number): string {
     const value = Math.max(0, Number(count) || 0);
     const lastTwoDigits = value % 100;
     const lastDigit = value % 10;
@@ -35,13 +40,18 @@ function formatFollowers(count) {
  * Страница профиля с вкладками «Пины» и «Доски».
  */
 export class ProfilePage {
-    [key: string]: any;
+    router?: Router;
+    activeTab: 'pins' | 'boards';
+    element: DomRoot | null;
+    header: Header | null;
+    isDestroyed: boolean;
+    profile: User | null;
     /**
      * @param {Object} options
      * @param {import('../../routes').Router} options.router
      * @param {'pins'|'boards'} [options.activeTab='pins']
      */
-    constructor({ router, activeTab = 'pins' }: any = {}) {
+    constructor({ router, activeTab = 'pins' }: { router?: Router; activeTab?: 'pins' | 'boards' } = {}) {
         this.router = router;
         this.activeTab = activeTab === 'boards' ? 'boards' : 'pins';
         this.element = null;
@@ -73,8 +83,8 @@ export class ProfilePage {
             actionText: this.activeTab === 'pins' ? 'Создать пин' : 'Создать доску',
         });
 
-        this.element = wrapper.firstElementChild;
-        const initialAvatar = this.element.querySelector('.profile-avatar');
+        this.element = wrapper.firstElementChild as DomRoot;
+        const initialAvatar = this.element.querySelector<HTMLImageElement>('.profile-avatar');
         if (initialAvatar) this.attachAvatarFallback(initialAvatar);
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
@@ -111,18 +121,18 @@ export class ProfilePage {
                 if (this.isDestroyed || !this.element?.isConnected) return;
                 this.renderBoards(boards);
             }
-        } catch (error) {
+        } catch (error: unknown) {
             if (this.isDestroyed || !this.element?.isConnected) return;
-            if (error.status === 401) {
+            if (isApiError(error) && error.status === 401) {
                 this.header?.refresh();
                 this.showContentMessage('Сессия истекла. Войдите в аккаунт, чтобы посмотреть свой профиль.');
                 return;
             }
-            this.showContentMessage(error.message || 'Не удалось загрузить данные профиля.');
+            this.showContentMessage(getErrorMessage(error) || 'Не удалось загрузить данные профиля.');
         }
     }
 
-    renderProfileSummary(profile) {
+    renderProfileSummary(profile: User): void {
         const name = profile.name || profile.user_tag || 'Пользователь';
         const nameElement = this.element.querySelector('.profile-user-name');
         if (nameElement) nameElement.textContent = name;
@@ -134,14 +144,14 @@ export class ProfilePage {
                 : 'Подписчики: —';
         }
 
-        const avatar = this.element.querySelector('.profile-avatar');
+        const avatar = this.element.querySelector<HTMLImageElement>('.profile-avatar');
         if (avatar) {
             avatar.src = resolveAvatarUrl(profile.avatar_url);
             this.attachAvatarFallback(avatar);
         }
     }
 
-    attachAvatarFallback(image) {
+    attachAvatarFallback(image: HTMLImageElement): void {
         image.addEventListener('error', () => {
             if (!image.src.endsWith(DEFAULT_AVATAR_URL)) image.src = DEFAULT_AVATAR_URL;
         }, { once: true });
@@ -152,8 +162,8 @@ export class ProfilePage {
      *
      * @param {Array<Object>} pins
      */
-    renderPins(pins) {
-        const grid = this.element.querySelector('#profilePinsGrid');
+    renderPins(pins: Pin[]): void {
+        const grid = this.element.querySelector<HTMLElement>('#profilePinsGrid');
         grid.replaceChildren();
 
         const fragment = document.createDocumentFragment();
@@ -167,8 +177,8 @@ export class ProfilePage {
      *
      * @param {Array<Object>} boards
      */
-    renderBoards(boards) {
-        const grid = this.element.querySelector('#profileBoardsGrid');
+    renderBoards(boards: Desk[]): void {
+        const grid = this.element.querySelector<HTMLElement>('#profileBoardsGrid');
         grid.replaceChildren();
 
         const fragment = document.createDocumentFragment();
@@ -182,7 +192,7 @@ export class ProfilePage {
      *
      * @param {string} message
      */
-    showContentMessage(message) {
+    showContentMessage(message: string): void {
         const state = this.element?.querySelector('#profileContentState');
         if (!state) return;
         state.textContent = message;
