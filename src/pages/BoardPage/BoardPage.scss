@@ -36,10 +36,15 @@
 }
 
 .board-title {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.3;
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .board-visibility,
@@ -203,7 +208,7 @@
     line-height: 1;
 }
 
-.profile-modal-close:hover { color: var(--color-error); }
+.profile-modal-close:hover { color: var(--color-active); }
 
 .profile-modal-actions {
     display: flex;

@@ -26,6 +26,11 @@
     padding-right: 50px;
 }
 
+.input-wrapper input[type="password"]::-ms-reveal,
+.input-wrapper input[type="password"]::-ms-clear {
+  display: none;
+}
+
 .input-wrapper input::placeholder {
     color: var(--overlay-input);
 }

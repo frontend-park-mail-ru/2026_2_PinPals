@@ -28,12 +28,12 @@
 
                 <div class="create-pin-field">
                     <label for="pinDescriptionInput">Описание</label>
-                    <textarea id="pinDescriptionInput" name="description" placeholder="Опишите ваш пин" rows="4"></textarea>
+                    <textarea id="pinDescriptionInput" name="description" maxlength="1000" placeholder="Опишите ваш пин" rows="4"></textarea>
                 </div>
 
-                <div class="create-pin-field">
+                <div class="create-pin-field" hidden>
                     <label for="pinTagsInput">Выбрать теги</label>
-                    <input id="pinTagsInput" name="tags" type="text" placeholder="Добавьте название">
+                    <input id="pinTagsInput" name="tags" type="text" maxlength="500" placeholder="Добавьте название">
                     <span class="create-pin-hint">Несколько тегов можно разделить запятыми</span>
                 </div>
 

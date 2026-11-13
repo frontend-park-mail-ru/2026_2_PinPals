@@ -106,23 +106,25 @@
 }
 
 .user-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
-    min-width: 200px;
-    background-color: #ffffff;
-    border: 1px solid #C9E3D8;
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(102, 81, 64, 0.15);
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-4px);
-    transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.18s ease;
-    z-index: 110;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 200px;
+  max-width: 260px;
+  background-color: #ffffff;
+  border: 1px solid #C9E3D8;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(102, 81, 64, 0.15);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.18s ease;
+  z-index: 110;
+  box-sizing: border-box;
 }
 
 .user-menu-wrapper:hover .user-dropdown,
@@ -133,14 +135,17 @@
 }
 
 .user-name {
-    font-family: var(--font-main), sans-serif;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--color-text);
-    text-align: center;
-    padding: 4px 6px 10px;
-    border-bottom: 1px solid #f0f0f0;
-    word-break: break-word;
+  font-family: var(--font-main), sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: center;
+  padding: 4px 6px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .btn-profile-menu {

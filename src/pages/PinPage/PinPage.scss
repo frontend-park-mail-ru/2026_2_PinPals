@@ -60,32 +60,39 @@
 
 
 .pin-main-image-wrap {
-    position: relative;
-    align-self: start;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-    border-radius: 16px;
-    background: var(--color-input);
+  position: relative;
+  align-self: start;
+  justify-self: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: transparent;
 }
 
 .pin-main-image {
-    display: block;
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: calc(100vh - 124px);
-    object-fit: contain;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 124px);
+  border-radius: 16px;
+  object-fit: contain;
 }
 
 .pin-main-image--failed {
-    object-fit: contain;
-    padding: 24px;
-    box-sizing: border-box;
+  width: 100%;
+  min-height: 260px;
+  background: var(--color-input);
+  object-fit: contain;
+  padding: 24px;
+  box-sizing: border-box;
 }
+
 
 .pin-back-button {
     position: absolute;
@@ -215,15 +222,21 @@
 }
 
 .pin-save-option {
-    padding: 12px 14px;
-    border: 0;
-    border-radius: 12px;
-    background: var(--color-input);
-    color: var(--color-text);
-    font: 500 16px var(--font-main), sans-serif;
-    text-align: left;
-    cursor: pointer;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--color-input);
+  color: var(--color-text);
+  font: 500 16px var(--font-main), sans-serif;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
 
 .pin-save-option:hover { background: var(--color-search); }
 .pin-save-option:disabled { opacity: .55; cursor: wait; }
@@ -236,11 +249,12 @@
 }
 
 .pin-author-row {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding-bottom: 11px;
-    border-bottom: 1px solid var(--color-search);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--color-search);
 }
 
 .pin-author-avatar {
@@ -257,8 +271,12 @@
 }
 
 .pin-author-name {
-    font-size: 15px;
-    font-weight: 600;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pin-author-avatar--image {
@@ -276,19 +294,30 @@
 }
 
 .pin-title {
-    margin: 0 0 5px;
-    color: var(--color-active);
-    font-size: 20px;
-    font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 5px;
+  color: var(--color-active);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
+
 .pin-description {
-    margin: 0;
-    color: #514a43;
-    font-size: 16px;
-    line-height: 1.45;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 15;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  color: #514a43;
+  font-size: 16px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .pin-comments {
@@ -334,7 +363,12 @@
 }
 
 .pin-comment strong {
-    font-size: 13px;
+  display: block;
+  min-width: 0;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pin-comment p {

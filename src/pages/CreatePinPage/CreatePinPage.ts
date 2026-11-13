@@ -1,4 +1,3 @@
-
 import './CreatePinPage.scss';
 import { Header } from '../../components/Header/Header';
 import { addPinsToBoard, createPin } from '../../api/user';
@@ -176,7 +175,7 @@ export class CreatePinPage {
             const createdPin = await createPin({
                 name: titleInput.value.trim(),
                 description: descriptionInput.value.trim(),
-                tags: tagsInput.value.split(',').map((tag) => tag.trim()).filter((tag: string) => Boolean(tag)),
+                tags: (tagsInput?.value || '').split(',').map((tag) => tag.trim()).filter((tag: string) => Boolean(tag)),
                 fileObject: this.selectedFile,
             });
 

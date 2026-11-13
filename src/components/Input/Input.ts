@@ -8,6 +8,7 @@ export interface InputOptions {
     type: string;
     name: string;
     placeholder: string;
+    maxLength?: number;
     validator?: (value: string) => string;
 }
 

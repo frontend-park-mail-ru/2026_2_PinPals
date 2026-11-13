@@ -32,12 +32,13 @@
 }
 
 .profile-user-card {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    min-width: 190px;
-    margin-right: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 260px;
+  margin-right: 4px;
 }
 
 .profile-avatar {

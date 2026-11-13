@@ -57,6 +57,20 @@
     background: var(--color-input-focus);
 }
 
+.create-pin-upload:has(.create-pin-preview:not([hidden])) {
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0 auto;
+  background: transparent;
+  border-radius: 16px;
+}
+
+.create-pin-upload:has(.create-pin-preview:not([hidden])):hover {
+  background: transparent;
+}
+
 .create-pin-file-input {
     position: absolute;
     width: 1px;
@@ -115,6 +129,10 @@
     gap: 9px;
     min-width: 0;
     padding: 0 0 0 0;
+}
+
+.create-pin-field[hidden] {
+  display: none;
 }
 
 .create-pin-field {
