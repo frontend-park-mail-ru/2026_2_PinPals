@@ -22,6 +22,22 @@ import type { DomRoot } from '../../types/dom';
 import { getErrorMessage, isApiError } from '../../utils/errors';
 const COMMENTS_UNAVAILABLE = 'Чатик пока не работает, но скоро будет :P';
 
+async function copyToClipboard(text: string): Promise<void> {
+    if (navigator.clipboard?.writeText) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return;
+        } catch { /* fallback ниже */ }
+    }
+    const input = Object.assign(document.createElement('textarea'), { value: text });
+    document.body.append(input);
+    input.select();
+    const ok = document.execCommand('copy');
+    input.remove();
+    if (!ok) throw new Error('copy failed');
+}
+
+
 /** Страница просмотра одного пина. */
 export class PinPage {
     router?: Router;
@@ -339,7 +355,8 @@ export class PinPage {
         const shareButton = this.element.querySelector('[data-action="share"]');
         shareButton.addEventListener('click', async () => {
             try {
-                await navigator.clipboard.writeText(window.location.href);
+                await copyToClipboard(window.location.href);
+                this.showActionMessage('');
                 const original = shareButton.innerHTML;
                 shareButton.innerHTML = '<svg class="icon pin-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
                 shareButton.classList.add('is-active');
@@ -433,6 +450,10 @@ export class PinPage {
     }
 
     async changeLike() {
+        if (localStorage.getItem('isAuth') !== 'true') {
+            this.showActionMessage('Войдите в аккаунт, чтобы поставить лайк.');
+            return;
+        }
         const button = this.element.querySelector<HTMLButtonElement>('[data-action="like"]');
         button.disabled = true;
         try {
@@ -447,6 +468,7 @@ export class PinPage {
             button.disabled = false;
         }
     }
+
 
     /** Отправляет новый комментарий на сервер. */
     async submitComment(event: Event): Promise<void> {

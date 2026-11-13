@@ -43,6 +43,7 @@ const COMMON_CODE_MESSAGES: Record<string, string> = {
     unsupported_image_format: 'Поддерживаются только изображения JPEG, PNG, GIF и WebP.',
     invalid_credentials: 'Неверный логин или пароль.',
     unauthorized: 'Необходима авторизация.',
+    'не авторизован': 'Необходима авторизация.',
     forbidden: 'Недостаточно прав для выполнения действия.',
     not_found: 'Запрашиваемый объект не найден.',
     payload_too_large: 'Размер файла превышает допустимый лимит (10 МБ).',
@@ -64,7 +65,8 @@ export function formatFieldError(field: string, code: string): string {
 
 /** Преобразует код ошибки бэкенда в текст для пользователя. */
 export function formatServerErrorCode(code: string): string {
-    return COMMON_CODE_MESSAGES[code] || code;
+    const normalized = code.trim().toLowerCase();
+    return COMMON_CODE_MESSAGES[code] || COMMON_CODE_MESSAGES[normalized] || code;
 }
 
 
