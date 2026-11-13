@@ -150,6 +150,13 @@ export class CreatePinPage {
         const submitButton = this.element.querySelector<HTMLButtonElement>('#createPinSubmit');
 
         error.hidden = true;
+
+        if (localStorage.getItem('isAuth') !== 'true') {
+            error.textContent = 'Войдите в аккаунт, чтобы создать пин.';
+            error.hidden = false;
+            return;
+        }
+
         if (!this.selectedFile) {
             this.element.querySelector('#pinImageError').textContent = 'Сначала загрузите изображение.';
             return;

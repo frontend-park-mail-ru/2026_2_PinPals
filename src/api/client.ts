@@ -24,11 +24,16 @@ export async function apiRequest<T = unknown>(path: string, options: RequestInit
         }
     }
 
-    const response = await fetch(`${BASE_URL}${path}`, {
-        ...options,
-        credentials: 'include',
-        headers,
-    });
+    let response: Response;
+    try {
+        response = await fetch(`${BASE_URL}${path}`, {
+            ...options,
+            credentials: 'include',
+            headers,
+        });
+    } catch {
+        throw new Error('Не удалось связаться с сервером. Проверьте подключение или авторизацию.');
+    }
 
     // Единая точка истечения сессии. Ошибки логина/регистрации не должны
     // очищать существующую авторизацию из-за неверно введённых данных.
