@@ -1,0 +1,163 @@
+/* Модальное окно выбора пинов всегда находится на верхнем уровне document.body. */
+.saved-pins-modal {
+    position: fixed;
+    z-index: 20000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: var(--overlay-shadow);
+    box-sizing: border-box;
+    pointer-events: auto;
+    font-family: var(--font-main), sans-serif;
+    color: var(--color-text);
+}
+
+.saved-pins-modal[hidden] {
+    display: none;
+}
+
+.saved-pins-dialog {
+    position: relative;
+    z-index: 20001;
+    display: flex;
+    flex-direction: column;
+    width: min(900px, 100%);
+    max-height: min(85vh, 900px);
+    padding: 20px;
+    border-radius: 18px;
+    background: var(--color-back);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    box-sizing: border-box;
+}
+
+.saved-pins-dialog header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.saved-pins-dialog h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.saved-pins-dialog header button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 30px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.saved-pins-dialog header button:hover {
+    background: var(--color-search);
+}
+
+.saved-pins-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    min-height: 80px;
+    overflow: auto;
+    padding: 3px;
+    overscroll-behavior: contain;
+}
+
+.saved-pins-grid.is-empty {
+    display: block;
+    white-space: nowrap;
+}
+
+.saved-pin-option {
+    position: relative;
+    display: block;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 12px;
+    background: var(--color-input);
+    cursor: pointer;
+    aspect-ratio: 3/4;
+    pointer-events: auto;
+}
+
+.saved-pin-option img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.saved-pin-option.has-image-error img {
+    opacity: .2;
+}
+
+.saved-pin-check {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 23px;
+    height: 23px;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.66);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    pointer-events: none;
+}
+
+.saved-pin-option.is-selected .saved-pin-check {
+    background: var(--color-active);
+}
+
+.saved-pin-option.is-selected .saved-pin-check:after {
+    content: '✓';
+    display: block;
+    color: white;
+    text-align: center;
+    font: bold 16px/20px sans-serif;
+}
+
+.saved-pins-dialog footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 14px;
+}
+
+.saved-pins-dialog footer button {
+    width: auto;
+    min-width: 120px;
+}
+
+.saved-pins-dialog footer button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.saved-pins-error {
+    margin: 4px 0 10px;
+    color: var(--color-error);
+}
+
+.saved-pins-error[hidden] {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .saved-pins-modal { padding: 10px; }
+    .saved-pins-dialog { padding: 14px; max-height: 90vh; }
+    .saved-pins-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .saved-pins-dialog footer { flex-direction: column-reverse; }
+    .saved-pins-dialog footer button { width: 100%; }
+}

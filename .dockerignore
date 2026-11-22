@@ -1,3 +1,4 @@
+.git
 node_modules
 dist
 .vite
@@ -10,3 +11,4 @@ dist
 server.dev.js
 Dockerfile
 .dockerignore
+uploads/

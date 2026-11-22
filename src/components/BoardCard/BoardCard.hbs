@@ -1,0 +1,36 @@
+<a class="board-card" href="/board/{{id}}" aria-label="Открыть доску {{title}}">
+    <div class="board-card-collage {{#if isSingleImage}}board-card-collage--single{{/if}}">
+        {{#if isSingleImage}}
+            <img class="board-card-single-image" src="{{firstImage}}" alt="{{title}}" loading="lazy">
+        {{else}}
+            <div class="board-card-primary">
+                {{#if firstImage}}
+                    <img src="{{firstImage}}" alt="" loading="lazy">
+                {{else}}
+                    <div class="board-card-placeholder"></div>
+                {{/if}}
+            </div>
+            <div class="board-card-secondary">
+                <div class="board-card-secondary-item">
+                    {{#if secondImage}}
+                        <img src="{{secondImage}}" alt="" loading="lazy">
+                    {{else}}
+                        <div class="board-card-placeholder"></div>
+                    {{/if}}
+                </div>
+                <div class="board-card-secondary-item">
+                    {{#if thirdImage}}
+                        <img src="{{thirdImage}}" alt="" loading="lazy">
+                    {{else}}
+                        <div class="board-card-placeholder"></div>
+                    {{/if}}
+                </div>
+            </div>
+        {{/if}}
+    </div>
+
+    <div class="board-card-info">
+        <h2 class="board-card-title">{{title}}</h2>
+        {{#if pinsLabel}}<span class="board-card-count">{{pinsLabel}}</span>{{/if}}
+    </div>
+</a>
