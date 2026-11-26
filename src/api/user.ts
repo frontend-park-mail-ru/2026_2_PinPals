@@ -191,15 +191,6 @@ export async function updateMyProfile(
     });
 }
 
-// Оставляем эту функцию как совместимую обёртку.
-export async function uploadMyAvatar(file: File): Promise<User> {
-    if (typeof File === 'undefined' || !(file instanceof File)) {
-        throw new TypeError('Для загрузки аватара необходимо выбрать файл изображения.');
-    }
-
-    return updateMyProfile({}, file);
-}
-
 export async function deleteMyProfile() {
     return apiRequest('/api/v1/users/me', {
         method: 'DELETE',
@@ -212,14 +203,6 @@ export async function fetchMyDesks(): Promise<Desk[]> {
     const result = await apiRequest<{ desks?: Desk[] }>('/api/v1/desks/me');
     return result.desks || [];
 }
-
-export async function fetchUserPublicDesks(userId: string | number): Promise<Desk[]> {
-    const result = await apiRequest<{ desks?: Desk[] }>(`/api/v1/users/${encodeURIComponent(userId)}/desks`);
-    return result.desks || [];
-}
-
-// Сохранено имя fetchUserBoards для совместимости с импортами
-export const fetchUserBoards = fetchUserPublicDesks;
 
 export async function fetchBoardById(deskId: string | number): Promise<Desk> {
     return apiRequest<Desk>(`/api/v1/desks/${encodeURIComponent(deskId)}`);

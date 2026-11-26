@@ -14,6 +14,7 @@ import {
     deletePin,
 } from '../../api/user';
 import { PinCard } from '../../components/PinCard/PinCard';
+import { Comment as CommentComponent } from '../../components/Comment/Comment';
 import { Header } from '../../components/Header/Header';
 import template from './PinPage.hbs';
 import type { Comment, LikeStatistics, Pin, PinCursor } from '../../types/models';
@@ -71,7 +72,7 @@ export class PinPage {
     render() {
         const backUrl = this.router?.getBackUrl('/home') || '/home';
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = template({ backUrl });
+        wrapper.innerHTML = template({ backUrl, createBoardUrl: `/create-board?pinId=${encodeURIComponent(this.pinId)}` });
         this.element = wrapper.firstElementChild as DomRoot;
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
@@ -566,14 +567,10 @@ export class PinPage {
         list.replaceChildren();
 
         this.comments.forEach((comment) => {
-            const item = document.createElement('article');
-            item.className = 'pin-comment';
-            const author = document.createElement('strong');
-            author.textContent = comment.author || 'Пользователь';
-            const text = document.createElement('p');
-            text.textContent = comment.text || '';
-            item.append(author, text);
-            list.append(item);
+            list.append(new CommentComponent({
+                author: comment.author || 'Пользователь',
+                text: comment.text || '',
+            }).render());
         });
         if (!this.comments.length) this.renderCommentsMessage('Пока нет комментариев.');
         this.element.querySelector('#pinCommentsCount').textContent = String(this.comments.length);

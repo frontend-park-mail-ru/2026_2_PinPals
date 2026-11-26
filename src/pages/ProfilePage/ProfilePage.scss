@@ -146,14 +146,6 @@
     background: var(--color-active);
 }
 
-.profile-action-message {
-    margin: -4px 6px 10px;
-    color: var(--overlay-input);
-    font-size: 13px;
-    text-align: right;
-}
-
-.profile-action-message[hidden],
 .profile-content-state[hidden] {
     display: none;
 }

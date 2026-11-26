@@ -1,7 +1,7 @@
 
 import './CreateBoardPage.scss';
 import { Header } from '../../components/Header/Header';
-import { addPinsToBoard, createBoard, fetchUserSavedPins, resolveImageUrl } from '../../api/user';
+import { addPinsToBoard, createBoard, fetchPinById, fetchUserSavedPins, resolveImageUrl } from '../../api/user';
 import { SavedPinsPicker } from '../../components/SavedPinsPicker/SavedPinsPicker';
 import template from './CreateBoardPage.hbs';
 import type { Pin } from '../../types/models';
@@ -17,17 +17,23 @@ export class CreateBoardPage {
     element: DomRoot | null;
     header: Header | null;
     selectedPinIds: Set<string>;
+    initialPinId: string | null;
+    initialPin: Pin | null;
+    selectedPins: Pin[];
     savedPinsPicker: SavedPinsPicker | null;
     isDestroyed: boolean;
     /**
      * @param {Object} [options]
      * @param {import('../../routes').Router} [options.router]
      */
-    constructor({ router }: { router?: Router } = {}) {
+    constructor({ router, pinId }: { router?: Router; pinId?: string | null } = {}) {
         this.router = router;
         this.element = null;
         this.header = null;
-        this.selectedPinIds = new Set();
+        this.initialPinId = pinId && /^[1-9]\d*$/.test(pinId) ? pinId : null;
+        this.initialPin = null;
+        this.selectedPins = [];
+        this.selectedPinIds = new Set(this.initialPinId ? [this.initialPinId] : []);
         this.savedPinsPicker = null;
         this.isDestroyed = false;
     }
@@ -50,8 +56,9 @@ export class CreateBoardPage {
                 return fetchUserSavedPins(userId);
             },
             preserveSelectionAfterConfirm: true,
+            excludePinIds: () => this.initialPinId ? [this.initialPinId] : [],
             onConfirm: (ids: string[], pins: Pin[]): void => {
-                this.selectedPinIds = new Set(ids);
+                this.selectedPinIds = new Set(this.initialPinId ? [this.initialPinId, ...ids] : ids);
                 this.renderSelectedPinsPreview(pins);
             },
         });
@@ -60,7 +67,20 @@ export class CreateBoardPage {
         document.body.append(this.savedPinsPicker.render());
 
         this.setupEvents();
+        if (this.initialPinId) void this.loadInitialPin();
         return this.element;
+    }
+
+    /** Показывает пин, который будет сохранён при создании доски. */
+    async loadInitialPin(): Promise<void> {
+        try {
+            const pin = await fetchPinById(this.initialPinId);
+            if (this.isDestroyed || !this.element?.isConnected) return;
+            this.initialPin = pin;
+            this.renderSelectedPinsPreview(this.selectedPins);
+        } catch {
+            // Загрузка превью не влияет на добавление пина по его ID.
+        }
     }
 
     /**
@@ -78,9 +98,11 @@ export class CreateBoardPage {
 
     /** Отображает выбранные пины в превью создаваемой доски. */
     renderSelectedPinsPreview(selectedPins: Pin[]): void {
+        this.selectedPins = selectedPins;
+        const pins = this.initialPin ? [this.initialPin, ...selectedPins] : selectedPins;
         const preview = this.element.querySelector('#createBoardPreviewImages');
         preview.replaceChildren();
-        selectedPins.slice(0, 3).forEach((pin) => {
+        pins.slice(0, 3).forEach((pin) => {
             const image = document.createElement('img');
             image.src = resolveImageUrl(pin.image_url);
             image.alt = pin.name || 'Превью доски';

@@ -43,7 +43,7 @@ export const routes: AppRoute[] = [
         pattern: /^\/create-board\/?$/,
         requiresAuth: true,
         pages: (match, { router }) => [
-            { key: 'create-board', instance: new CreateBoardPage({ router }) },
+            { key: 'create-board', instance: new CreateBoardPage({ router, pinId: new URLSearchParams(window.location.search).get('pinId') }) },
         ],
     },
     {
