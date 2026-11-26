@@ -12,6 +12,7 @@ ENV PORT=8080
 ENV AUTH_API_TARGET=http://auth_service:8000
 ENV PIN_API_TARGET=http://pin_service:8000
 ENV USER_API_TARGET=http://user_service:8000
+ENV CHAT_API_TARGET=http://chat_service:8000
 EXPOSE 8080
 
 USER node

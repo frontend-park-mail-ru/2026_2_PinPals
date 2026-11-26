@@ -2,6 +2,8 @@
 import './ProfilePage.scss';
 import {
     fetchMyProfile,
+    fetchUserProfile,
+    fetchUserPublicDesks,
     fetchUserSavedPins,
     fetchMyDesks,
     resolveAvatarUrl,
@@ -41,6 +43,8 @@ function formatFollowers(count: number): string {
  */
 export class ProfilePage {
     router?: Router;
+    userId?: number;
+    isOtherUser: boolean;
     activeTab: 'pins' | 'boards';
     element: DomRoot | null;
     header: Header | null;
@@ -51,8 +55,10 @@ export class ProfilePage {
      * @param {import('../../routes').Router} options.router
      * @param {'pins'|'boards'} [options.activeTab='pins']
      */
-    constructor({ router, activeTab = 'pins' }: { router?: Router; activeTab?: 'pins' | 'boards' } = {}) {
+    constructor({ router, activeTab = 'pins', userId }: { router?: Router; activeTab?: 'pins' | 'boards'; userId?: number } = {}) {
         this.router = router;
+        this.userId = userId;
+        this.isOtherUser = Boolean(userId && String(userId) !== localStorage.getItem('userId'));
         this.activeTab = activeTab === 'boards' ? 'boards' : 'pins';
         this.element = null;
         this.header = null;
@@ -74,8 +80,11 @@ export class ProfilePage {
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({
-            userName,
-            userAvatarUrl,
+            userName: this.isOtherUser ? 'Пользователь' : userName,
+            userAvatarUrl: this.isOtherUser ? DEFAULT_AVATAR_URL : userAvatarUrl,
+            isOtherUser: this.isOtherUser,
+            profilePath: this.isOtherUser ? `/profile/${this.userId}` : '/profile',
+            chatUrl: `/chats?user=${this.userId}`,
             userInitial: userName.trim().charAt(0).toUpperCase() || 'П',
             followersLabel,
             isPinsTab: this.activeTab === 'pins',
@@ -99,14 +108,16 @@ export class ProfilePage {
         try {
             // The profile endpoint is the source of truth. Do not rely only on
             // stale localStorage values after a refresh or profile update.
-            this.profile = await fetchMyProfile();
+            this.profile = this.isOtherUser ? await fetchUserProfile(this.userId) : await fetchMyProfile();
             if (this.isDestroyed || !this.element?.isConnected) return;
 
-            localStorage.setItem('isAuth', 'true');
-            localStorage.setItem('userId', String(this.profile.user_id));
-            localStorage.setItem('userName', this.profile.name || '');
-            localStorage.setItem('userTag', this.profile.user_tag || '');
-            localStorage.setItem('userAvatarUrl', this.profile.avatar_url || '');
+            if (!this.isOtherUser) {
+                localStorage.setItem('isAuth', 'true');
+                localStorage.setItem('userId', String(this.profile.user_id));
+                localStorage.setItem('userName', this.profile.name || '');
+                localStorage.setItem('userTag', this.profile.user_tag || '');
+                localStorage.setItem('userAvatarUrl', this.profile.avatar_url || '');
+            }
             this.renderProfileSummary(this.profile);
             this.header?.refresh();
 
@@ -117,7 +128,7 @@ export class ProfilePage {
                 this.renderPins(pins);
             } else {
                 // Contract endpoint: includes private desks owned by current user.
-                const boards = await fetchMyDesks();
+                const boards = this.isOtherUser ? await fetchUserPublicDesks(this.profile.user_id) : await fetchMyDesks();
                 if (this.isDestroyed || !this.element?.isConnected) return;
                 this.renderBoards(boards);
             }
@@ -184,7 +195,7 @@ export class ProfilePage {
         const fragment = document.createDocumentFragment();
         boards.forEach((board) => fragment.append(new BoardCard(board).render()));
         grid.append(fragment);
-        this.showContentMessage(boards.length ? '' : 'Пока нет досок. Создайте первую доску.');
+        this.showContentMessage(boards.length ? '' : this.isOtherUser ? 'Пока нет публичных досок.' : 'Пока нет досок. Создайте первую доску.');
     }
 
     /**
@@ -201,7 +212,7 @@ export class ProfilePage {
 
     /** Подключает обработчики элементов страницы. */
     setupEvents() {
-        this.element.querySelector('#profileActionButton').addEventListener('click', () => {
+        this.element.querySelector('#profileActionButton')?.addEventListener('click', () => {
             if (this.activeTab === 'pins') {
                 this.router.navigateTo('/create-pin');
                 return;

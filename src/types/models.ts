@@ -1,4 +1,25 @@
 
+export interface ChatMessage {
+    message_id: number;
+    chat_id: number;
+    author_id: number;
+    author_name: string;
+    author_tag: string;
+    body: string;
+    deleted_at?: string | null;
+    related_to?: number | null;
+    created_at: string;
+}
+
+export interface Chat {
+    chat_id: number;
+    participant: User;
+    name: string;
+    created_at: string;
+    last_message?: ChatMessage | null;
+    updated_at: string;
+}
+
 export interface User {
     user_id: number;
     name: string;

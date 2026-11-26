@@ -1,4 +1,5 @@
 import './app.scss';
+import './components/Modal/Modal.scss';
 import { routes } from './routes';
 import type { AppRoute, Router } from './routes';
 import { Sidebar } from './components/Sidebar/Sidebar';
