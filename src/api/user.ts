@@ -213,6 +213,11 @@ export async function fetchBoardById(deskId: string | number): Promise<Desk> {
     return apiRequest<Desk>(`/api/v1/desks/${encodeURIComponent(deskId)}`);
 }
 
+export async function fetchBoardPreview(deskId: string | number): Promise<Pin[]> {
+    const result = await apiRequest<{ pins: Pin[] }>(`/api/v1/desks/${encodeURIComponent(deskId)}/pins/preview`);
+    return result.pins;
+}
+
 export async function createBoard(board: { title: string; description?: string; visibility: string; avatar_img_url?: string }): Promise<Desk & { board_id?: number | string; id?: number | string }> {
     if (['subscribers', 'friends'].includes(board.visibility)) {
         throw new Error('Доступ для подписчиков пока не поддерживается текущим backend. Выберите публичную или приватную доску.');

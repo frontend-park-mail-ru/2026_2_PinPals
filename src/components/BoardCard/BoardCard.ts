@@ -1,6 +1,6 @@
 import './BoardCard.scss';
 import template from './BoardCard.hbs';
-import { resolveImageUrl } from '../../api/user';
+import { fetchBoardPreview, resolveImageUrl } from '../../api/user';
 import type { Pin } from '../../types/models';
 
 export interface BoardCardData {
@@ -38,6 +38,7 @@ export class BoardCard {
     pinsCount: number;
     pinsLabel: string;
     images: string[];
+    needsPreview: boolean;
     element: HTMLElement | null;
     /**
      * @param {Object} board - Объект доски, полученный от API.
@@ -63,6 +64,7 @@ export class BoardCard {
             images = [board.avatar_img_url];
         }
         this.images = images.slice(0, 3);
+        this.needsPreview = !this.images.length && !Array.isArray(board.pins);
 
         this.element = null;
     }
@@ -80,6 +82,21 @@ export class BoardCard {
             thirdImage: resolveImageUrl(this.images[2]),
         });
         this.element = wrapper.firstElementChild as HTMLElement;
+        if (this.needsPreview && this.id) void this.loadPreview();
         return this.element;
+    }
+
+    /** В списке досок реальный API не возвращает пины для коллажа. */
+    async loadPreview(): Promise<void> {
+        try {
+            const pins = await fetchBoardPreview(this.id);
+            if (!this.element?.isConnected) return;
+            this.images = pins.map((pin) => pin.image_url).filter(Boolean).slice(0, 3);
+            this.needsPreview = false;
+            const previousElement = this.element;
+            previousElement.replaceWith(this.render());
+        } catch {
+            // При ошибке загрузки оставляем заглушку доски.
+        }
     }
 }
