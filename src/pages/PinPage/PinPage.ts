@@ -158,11 +158,13 @@ export class PinPage {
         const isMyPin = String(this.pin.creator_id) === localStorage.getItem('userId');
         const ownerActions = this.element.querySelector('#pinOwnerActions');
         if (ownerActions) ownerActions.hidden = !isMyPin;
-        const authorName = isMyPin ? (localStorage.getItem('userName') || 'Вы') : 'Автор пина';
+        const author = this.pin.author;
+        const authorName = author?.name?.trim() || author?.user_tag?.trim()
+            || (isMyPin ? (localStorage.getItem('userName') || 'Вы') : 'Автор пина');
         this.element.querySelector('#pinAuthorName').textContent = authorName;
 
         const avatar = this.element.querySelector('#pinAuthorAvatar');
-        const avatarUrl = isMyPin ? localStorage.getItem('userAvatarUrl') : '';
+        const avatarUrl = author ? author.avatar_url : (isMyPin ? localStorage.getItem('userAvatarUrl') : '');
         avatar.replaceChildren();
         const avatarImage = document.createElement('img');
         avatarImage.src = resolveAvatarUrl(avatarUrl);
@@ -415,7 +417,7 @@ export class PinPage {
         try {
             const updatedPin = await updatePin(this.pinId, { name, description });
             if (this.isDestroyed || !this.element?.isConnected) return;
-            this.pin = updatedPin;
+            this.pin = { ...this.pin, ...updatedPin };
             this.renderPin();
             this.element.querySelector('#pinEditModal').hidden = true;
             this.showActionMessage('Пин обновлён.');
