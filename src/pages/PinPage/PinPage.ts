@@ -163,6 +163,13 @@ export class PinPage {
         const authorName = author?.name?.trim() || author?.user_tag?.trim()
             || (isMyPin ? (localStorage.getItem('userName') || 'Вы') : 'Автор пина');
         this.element.querySelector('#pinAuthorName').textContent = authorName;
+        const authorId = author?.user_id || this.pin.creator_id;
+        if (authorId) {
+            const profileUrl = isMyPin ? '/profile'
+                : `/profile/${encodeURIComponent(authorId)}?pinId=${encodeURIComponent(this.pinId)}`;
+            this.element.querySelector<HTMLAnchorElement>('#pinAuthorName').href = profileUrl;
+            this.element.querySelector<HTMLAnchorElement>('#pinAuthorAvatar').href = profileUrl;
+        }
 
         const avatar = this.element.querySelector('#pinAuthorAvatar');
         const avatarUrl = author ? author.avatar_url : (isMyPin ? localStorage.getItem('userAvatarUrl') : '');

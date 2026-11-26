@@ -1,7 +1,7 @@
 <div class="profile-page">
     <main class="profile-main">
         <section class="profile-heading-row">
-            <h1 class="profile-title">Ваши сохраненные идеи</h1>
+            <h1 class="profile-title">{{profileTitle}}</h1>
 
             <div class="profile-user-card">
                 {{#if userAvatarUrl}}
@@ -20,22 +20,24 @@
             <nav class="profile-tabs" aria-label="Сохранённые идеи">
                 <a
                         class="profile-tab {{#if isPinsTab}}is-active{{/if}}"
-                        href="/profile/pins"
+                        href="{{pinsUrl}}"
                         {{#if isPinsTab}}aria-current="page"{{/if}}
                 >Пины</a>
                 <a
                         class="profile-tab {{#if isBoardsTab}}is-active{{/if}}"
-                        href="/profile/boards"
+                        href="{{boardsUrl}}"
                         {{#if isBoardsTab}}aria-current="page"{{/if}}
                 >Доски</a>
             </nav>
 
+            {{#if isOwnProfile}}
             <div class="profile-toolbar-actions">
                 <a class="profile-edit-link" href="/profile/edit">Редактировать профиль</a>
                 <button class="profile-create-button" id="profileActionButton" type="button">
                     {{actionText}}
                 </button>
             </div>
+            {{/if}}
         </section>
 
         {{#if isPinsTab}}

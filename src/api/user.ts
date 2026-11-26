@@ -155,6 +155,11 @@ export async function fetchMyProfile(): Promise<User> {
     return apiRequest<User>('/api/v1/users/me');
 }
 
+export async function fetchUserPublicDesks(userId: string): Promise<Desk[]> {
+    const result = await apiRequest<{ desks?: Desk[] }>(`/api/v1/users/${encodeURIComponent(userId)}/desks`);
+    return result.desks || [];
+}
+
 export async function updateMyProfile(
     patch: Partial<Pick<User, 'name' | 'user_tag' | 'description' | 'avatar_url'>>,
     avatarFile?: File | null,

@@ -2,6 +2,8 @@
 import './ProfilePage.scss';
 import {
     fetchMyProfile,
+    fetchPinById,
+    fetchUserPublicDesks,
     fetchUserSavedPins,
     fetchMyDesks,
     resolveAvatarUrl,
@@ -46,13 +48,17 @@ export class ProfilePage {
     header: Header | null;
     isDestroyed: boolean;
     profile: User | null;
+    userId: string | null;
+    pinId: string | null;
     /**
      * @param {Object} options
      * @param {import('../../routes').Router} options.router
      * @param {'pins'|'boards'} [options.activeTab='pins']
      */
-    constructor({ router, activeTab = 'pins' }: { router?: Router; activeTab?: 'pins' | 'boards' } = {}) {
+    constructor({ router, activeTab = 'pins', userId = null, pinId = null }: { router?: Router; activeTab?: 'pins' | 'boards'; userId?: string | null; pinId?: string | null } = {}) {
         this.router = router;
+        this.userId = userId;
+        this.pinId = pinId;
         this.activeTab = activeTab === 'boards' ? 'boards' : 'pins';
         this.element = null;
         this.header = null;
@@ -66,15 +72,21 @@ export class ProfilePage {
      * @returns {HTMLElement}
      */
     render() {
-        const userName = localStorage.getItem('userName')
+        const userName = this.userId ? 'Пользователь' : localStorage.getItem('userName')
             || localStorage.getItem('userTag')
             || 'Пользователь';
-        const userAvatarUrl = resolveAvatarUrl(localStorage.getItem('userAvatarUrl') || '');
+        const userAvatarUrl = resolveAvatarUrl(this.userId ? '' : localStorage.getItem('userAvatarUrl'));
         const followersLabel = 'Подписчики: —';
+        const profileUrl = this.userId ? `/profile/${encodeURIComponent(this.userId)}` : '/profile';
+        const sourcePin = this.pinId ? `?pinId=${encodeURIComponent(this.pinId)}` : '';
 
         const wrapper = document.createElement('div');
         wrapper.innerHTML = template({
             userName,
+            isOwnProfile: !this.userId,
+            profileTitle: this.userId ? 'Идеи автора' : 'Ваши сохраненные идеи',
+            pinsUrl: `${profileUrl}/pins${sourcePin}`,
+            boardsUrl: `${profileUrl}/boards${sourcePin}`,
             userAvatarUrl,
             userInitial: userName.trim().charAt(0).toUpperCase() || 'П',
             followersLabel,
@@ -96,6 +108,10 @@ export class ProfilePage {
 
     /** Загружает содержимое вкладки с backend. */
     async loadContent() {
+        if (this.userId) {
+            await this.loadAuthorContent();
+            return;
+        }
         try {
             // The profile endpoint is the source of truth. Do not rely only on
             // stale localStorage values after a refresh or profile update.
@@ -129,6 +145,31 @@ export class ProfilePage {
                 return;
             }
             this.showContentMessage(getErrorMessage(error) || 'Не удалось загрузить данные профиля.');
+        }
+    }
+
+    /** Данные автора берём из пина, поскольку отдельного API чужого профиля пока нет. */
+    async loadAuthorContent(): Promise<void> {
+        try {
+            if (this.pinId) {
+                const pin = await fetchPinById(this.pinId);
+                if (this.isDestroyed || !this.element?.isConnected) return;
+                if (pin.author && String(pin.author.user_id) === this.userId) {
+                    this.renderProfileSummary(pin.author);
+                }
+            }
+            if (this.activeTab === 'boards') {
+                const boards = await fetchUserPublicDesks(this.userId);
+                if (this.isDestroyed || !this.element?.isConnected) return;
+                this.renderBoards(boards);
+            } else {
+                const pins = await fetchUserSavedPins(this.userId);
+                if (this.isDestroyed || !this.element?.isConnected) return;
+                this.renderPins(pins);
+            }
+        } catch (error: unknown) {
+            if (this.isDestroyed || !this.element?.isConnected) return;
+            this.showContentMessage(getErrorMessage(error) || 'Не удалось загрузить данные автора.');
         }
     }
 
@@ -169,7 +210,7 @@ export class ProfilePage {
         const fragment = document.createDocumentFragment();
         pins.forEach((pin) => fragment.append(new PinCard(pin).render()));
         grid.append(fragment);
-        this.showContentMessage(pins.length ? '' : 'Пока нет сохранённых пинов.');
+        this.showContentMessage(pins.length ? '' : (this.userId ? 'У автора пока нет пинов.' : 'Пока нет сохранённых пинов.'));
     }
 
     /**
@@ -184,7 +225,7 @@ export class ProfilePage {
         const fragment = document.createDocumentFragment();
         boards.forEach((board) => fragment.append(new BoardCard(board).render()));
         grid.append(fragment);
-        this.showContentMessage(boards.length ? '' : 'Пока нет досок. Создайте первую доску.');
+        this.showContentMessage(boards.length ? '' : (this.userId ? 'У автора пока нет публичных досок.' : 'Пока нет досок. Создайте первую доску.'));
     }
 
     /**
@@ -201,6 +242,7 @@ export class ProfilePage {
 
     /** Подключает обработчики элементов страницы. */
     setupEvents() {
+        if (this.userId) return;
         this.element.querySelector('#profileActionButton').addEventListener('click', () => {
             if (this.activeTab === 'pins') {
                 this.router.navigateTo('/create-pin');

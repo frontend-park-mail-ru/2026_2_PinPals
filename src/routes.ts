@@ -81,6 +81,17 @@ export const routes: AppRoute[] = [
         ],
     },
     {
+        pattern: /^\/profile\/(\d+)(?:\/(pins|boards))?\/?$/,
+        pages: (match, { router }) => [
+            { key: `profile:${match[1]}:${match[2] || 'pins'}`, instance: new ProfilePage({
+                router,
+                userId: match[1],
+                pinId: new URLSearchParams(window.location.search).get('pinId'),
+                activeTab: match[2] === 'boards' ? 'boards' : 'pins',
+            }) },
+        ],
+    },
+    {
         pattern: /^\/pin\/(\d+)\/?$/,
         pages: (match, { router }) => [
             { key: `pin:${match[1]}`, instance: new PinPage(match[1], { router }) },
