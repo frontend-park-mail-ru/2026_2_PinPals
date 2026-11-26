@@ -7,6 +7,7 @@ import { ProfileEditPage } from './pages/ProfileEditPage/ProfileEditPage';
 import { BoardPage } from './pages/BoardPage/BoardPage';
 import { CreatePinPage } from './pages/CreatePinPage/CreatePinPage';
 import { CreateBoardPage } from './pages/CreateBoardPage/CreateBoardPage';
+import { ChatPage } from './pages/ChatPage/ChatPage';
 
 
 /** Объект роутера, который страницы используют для переходов. */
@@ -32,6 +33,19 @@ export type AppRoute = {
 };
 
 export const routes: AppRoute[] = [
+    {
+        pattern: /^\/chats\/?$/,
+        requiresAuth: true,
+        pages: (match, { router }) => [{ key: 'chats', instance: new ChatPage({ router }) }],
+    },
+    {
+        pattern: /^\/profile\/(\d+)(?:\/(pins|boards))?\/?$/,
+        requiresAuth: true,
+        pages: (match, { router }) => [{
+            key: `profile:${match[1]}:${match[2] || 'pins'}`,
+            instance: new ProfilePage({ router, userId: Number(match[1]), activeTab: match[2] === 'boards' ? 'boards' : 'pins' }),
+        }],
+    },
     {
         pattern: /^\/profile\/edit\/?$/,
         requiresAuth: true,

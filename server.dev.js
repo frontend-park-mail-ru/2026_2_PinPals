@@ -50,6 +50,10 @@ const desks = new Map();
 const savedPins = new Map();
 const likedPins = new Map();
 const comments = new Map();
+const chats = new Map();
+const chatMessages = new Map();
+let nextChatId = 1;
+let nextMessageId = 1;
 
 let nextUserId = 2;
 let nextPinId = 31;
@@ -1092,6 +1096,116 @@ app.delete('/api/v1/desks/:deskID/pins/:pinID', requireAuth, requireCsrf, requir
     if (!isDeskOwner(desk, req.user)) return res.status(403).json({ error: 'forbidden', message: 'Вы не владелец доски.' });
     if (!pins.has(pinId)) return res.status(404).json({ error: 'not_found', message: 'Пин не найден.' });
     desk.pin_ids = desk.pin_ids.filter((id) => id !== pinId);
+    return res.status(204).end();
+});
+
+// -----------------------------------------------------------------------------
+// Личные сообщения: HTTP-контракт chat_service (WebSocket заменён polling).
+// -----------------------------------------------------------------------------
+function chatUser(user) {
+    if (!user || user.deleted_at) return { user_id: user?.user_id || 0, name: 'Пользователь удалён', user_tag: '', avatar_url: null };
+    return { user_id: user.user_id, name: user.name, user_tag: user.user_tag, avatar_url: user.avatar_url };
+}
+
+function serializeChat(chat, userId) {
+    const participantId = chat.members.find((id) => id !== userId);
+    const list = chatMessages.get(chat.chat_id) || [];
+    return {
+        chat_id: chat.chat_id,
+        name: '',
+        created_at: chat.created_at,
+        participant: { ...chatUser(usersById.get(participantId)), user_id: participantId },
+        last_message: list.findLast((message) => !message.deleted_at) || null,
+        updated_at: chat.updated_at,
+    };
+}
+
+function requireChatMember(req, res, next) {
+    const chat = chats.get(Number(req.params.chatID));
+    if (!chat || !chat.members.includes(req.user.user_id)) {
+        return res.status(404).json({ error: 'not_found', message: 'Чат не найден.' });
+    }
+    req.chat = chat;
+    return next();
+}
+
+app.get('/api/v1/users/:userID', requireAuth, requireActiveUser, (req, res) => {
+    const user = usersById.get(Number(req.params.userID));
+    if (!user || user.deleted_at) return res.status(404).json({ error: 'not_found', message: 'Пользователь не найден.' });
+    return res.json(chatUser(user));
+});
+
+// Будущий маршрут chat_service: поиск по имени и логину, без ввода ID.
+app.get('/api/v1/chats/users', requireAuth, requireActiveUser, (req, res) => {
+    const query = typeof req.query.q === 'string' ? req.query.q.trim().toLocaleLowerCase().slice(0, 100) : '';
+    const result = query ? [...usersById.values()].filter((user) => !user.deleted_at
+        && user.user_id !== req.user.user_id
+        && `${user.name} ${user.user_tag}`.toLocaleLowerCase().includes(query)).slice(0, 30).map(chatUser) : [];
+    return res.json(result);
+});
+
+app.get('/api/v1/chats', requireAuth, requireActiveUser, (req, res) => {
+    const result = [...chats.values()].filter((chat) => chat.members.includes(req.user.user_id))
+        .map((chat) => serializeChat(chat, req.user.user_id))
+        .sort((a, b) => b.updated_at.localeCompare(a.updated_at) || b.chat_id - a.chat_id);
+    return res.json(result);
+});
+
+app.post('/api/v1/chats', requireAuth, requireCsrf, requireActiveUser, (req, res) => {
+    const userId = req.body?.user_id;
+    if (!Number.isSafeInteger(userId) || userId <= 0 || userId === req.user.user_id) {
+        return res.status(400).json({ error: 'bad_request', message: 'Выберите другого пользователя.' });
+    }
+    const user = usersById.get(userId);
+    if (!user || user.deleted_at) return res.status(404).json({ error: 'not_found', message: 'Пользователь не найден.' });
+    let chat = [...chats.values()].find((item) => item.members.includes(userId) && item.members.includes(req.user.user_id));
+    if (chat) return res.status(201).json(serializeChat(chat, req.user.user_id));
+    const now = new Date().toISOString();
+    chat = { chat_id: nextChatId++, members: [req.user.user_id, userId], created_at: now, updated_at: now };
+    chats.set(chat.chat_id, chat);
+    chatMessages.set(chat.chat_id, []);
+    return res.status(201).json(serializeChat(chat, req.user.user_id));
+});
+
+app.get('/api/v1/chats/:chatID/messages', requireAuth, requireActiveUser, requireChatMember, (req, res) => {
+    const limit = req.query.limit === undefined ? 50 : Number(req.query.limit);
+    const beforeId = req.query.before_id === undefined ? 0 : Number(req.query.before_id);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100 || !Number.isSafeInteger(beforeId) || beforeId < 0) {
+        return res.status(400).json({ error: 'некорректные параметры пагинации' });
+    }
+    return res.json((chatMessages.get(req.chat.chat_id) || [])
+        .filter((message) => !beforeId || message.message_id < beforeId).slice(-limit));
+});
+
+app.post('/api/v1/chats/:chatID/messages', requireAuth, requireCsrf, requireActiveUser, requireChatMember, (req, res) => {
+    // body — контракт Go; text поддерживает старую вкладку фронта до обновления.
+    const rawBody = req.body?.body ?? req.body?.text;
+    const body = typeof rawBody === 'string' ? rawBody.trim() : '';
+    if (!body || Array.from(body).length > 4000) return res.status(400).json({ error: 'bad_request', message: 'Сообщение должно содержать от 1 до 4000 символов.' });
+    const participant = usersById.get(req.chat.members.find((id) => id !== req.user.user_id));
+    if (!participant || participant.deleted_at) return res.status(404).json({ error: 'not_found', message: 'Собеседник удалил аккаунт.' });
+    const list = chatMessages.get(req.chat.chat_id);
+    const relatedTo = req.body.related_to ?? null;
+    if (relatedTo !== null && (!Number.isSafeInteger(relatedTo) || !list.some((item) => item.message_id === relatedTo && !item.deleted_at))) {
+        return res.status(400).json({ error: 'bad_request', message: 'Сообщение для ответа не найдено в этом чате.' });
+    }
+    const message = {
+        message_id: nextMessageId++, chat_id: req.chat.chat_id, author_id: req.user.user_id,
+        author_name: req.user.name, author_tag: req.user.user_tag,
+        body, related_to: relatedTo, created_at: new Date().toISOString(), deleted_at: null,
+    };
+    list.push(message);
+    req.chat.updated_at = message.created_at;
+    return res.status(201).json(message);
+});
+
+// Будущий маршрут chat_service. В mock — мягкое удаление для обоих участников.
+app.delete('/api/v1/chats/:chatID/messages/:messageID', requireAuth, requireCsrf, requireActiveUser, requireChatMember, (req, res) => {
+    const message = chatMessages.get(req.chat.chat_id).find((item) => item.message_id === Number(req.params.messageID));
+    if (!message) return res.status(404).json({ error: 'not_found', message: 'Сообщение не найдено.' });
+    if (message.author_id !== req.user.user_id) return res.status(403).json({ error: 'forbidden', message: 'Можно удалить только свои сообщения.' });
+    message.body = '';
+    message.deleted_at ||= new Date().toISOString();
     return res.status(204).end();
 });
 

@@ -1,0 +1,43 @@
+<div class="chat-page">
+    <main class="chat-layout">
+        <aside class="chat-sidebar" aria-label="Диалоги">
+            <div class="chat-sidebar-heading"><h1>Чаты</h1><button type="button" data-action="new">Новый чат</button></div>
+            <label class="chat-search-label" for="chatSearch">Поиск по имени собеседника</label>
+            <input id="chatSearch" type="search" placeholder="Поиск чатов" autocomplete="off">
+            <p id="chatNewHint" hidden>Если поиск пользователей недоступен, откройте профиль собеседника и нажмите «Написать».</p>
+            <p id="chatListStatus" role="status">Загружаем чаты…</p>
+            <div id="chatList" class="chat-list"></div>
+        </aside>
+        <section class="chat-conversation" aria-label="Переписка">
+            <p id="chatEmpty" class="chat-empty">Выберите чат или начните новый диалог</p>
+            <header id="chatHeading" class="chat-heading" hidden>
+                <button type="button" data-action="back" class="chat-back">К чатам</button>
+                <a id="chatParticipant" class="chat-person"></a>
+            </header>
+            <div id="chatHistory" class="chat-history" aria-label="Сообщения" tabindex="0" hidden></div>
+            <p id="chatError" class="chat-error" role="alert" hidden></p>
+            <form id="chatForm" class="chat-composer" hidden>
+                <div id="chatReply" class="chat-reply" hidden><span id="chatReplyText"></span><button type="button" data-action="cancel-reply" aria-label="Отменить ответ">×</button></div>
+                <div class="chat-compose-row">
+                    <textarea id="chatText" aria-label="Сообщение" aria-describedby="chatLength chatLengthError" placeholder="Напишите сообщение" rows="2" required></textarea>
+                    <button type="submit" id="chatSend" aria-label="Отправить сообщение" title="Отправить (Enter)" disabled>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 9-18 9 4-9-4-9Zm4 9h14"/></svg>
+                    </button>
+                </div>
+                <span id="chatLength" class="chat-length">0 / 4000</span>
+                <p id="chatLengthError" class="chat-length-error" role="status" hidden>Сообщение слишком длинное. Максимум — 4000 символов.</p>
+            </form>
+        </section>
+    </main>
+    <dialog id="chatDeleteDialog" class="profile-modal-box chat-delete-dialog" aria-labelledby="chatDeleteTitle">
+        <div class="profile-modal-header">
+            <h2 id="chatDeleteTitle" class="profile-modal-title">Удалить сообщение?</h2>
+            <button type="button" class="profile-modal-close" data-action="cancel-delete" aria-label="Закрыть">×</button>
+        </div>
+        <p>Сообщение будет удалено для обоих участников. Вместо текста останется «Сообщение удалено».</p>
+        <div class="profile-modal-actions">
+            <button type="button" class="btn btn-second" data-action="cancel-delete" autofocus>Отмена</button>
+            <button type="button" class="btn btn-danger" data-action="confirm-delete">Удалить</button>
+        </div>
+    </dialog>
+</div>

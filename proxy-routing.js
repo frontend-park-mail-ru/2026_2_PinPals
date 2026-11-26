@@ -8,13 +8,14 @@ export const DEFAULT_BACKEND_TARGETS = Object.freeze({
     auth: 'http://localhost:8001',
     pin: 'http://localhost:8002',
     user: 'http://localhost:8003',
+    chat: 'http://localhost:8004',
 });
 
 /**
  * Определяет backend-сервис по исходному pathname.
  *
  * @param {string} pathname URL path (query string допустим)
- * @returns {'auth'|'pin'|'user'|null}
+ * @returns {'auth'|'pin'|'user'|'chat'|null}
  */
 export function resolveBackendService(pathname) {
     const path = String(pathname || '/').split('?')[0].replace(/\/+$/, '') || '/';
@@ -22,6 +23,8 @@ export function resolveBackendService(pathname) {
     if (path === '/api/v1/auth' || path.startsWith('/api/v1/auth/')) {
         return 'auth';
     }
+
+    if (path === '/api/v1/chats' || path.startsWith('/api/v1/chats/')) return 'chat';
 
     // Единственный пользовательский маршрут в user_service.
     // Остальные /users/{id}/... обслуживаются pin_service (desks и др.).
@@ -45,7 +48,7 @@ export function resolveBackendService(pathname) {
  * Строит proxy-конфигурацию Vite. Более специфичный /users/me
  * расположен раньше общего /users, чтобы запрос профиля шёл в user_service.
  *
- * @param {{auth:string,pin:string,user:string}} targets
+ * @param {{auth:string,pin:string,user:string,chat:string}} targets
  * @returns {Record<string, {target:string, changeOrigin:boolean}>}
  */
 export function createViteProxyConfig(targets) {
@@ -56,6 +59,7 @@ export function createViteProxyConfig(targets) {
         '/api/v1/users/me': proxy(targets.user),
         '/api/v1/users': proxy(targets.pin),
         '/api/v1/pins': proxy(targets.pin),
+        '/api/v1/chats': { ...proxy(targets.chat), ws: true },
         '/api/v1/desks': proxy(targets.pin),
         '/images': proxy(targets.pin),
     };
@@ -71,12 +75,13 @@ export function createViteProxyConfig(targets) {
 export function resolveBackendTargets(env = {}) {
     if (env.API_MODE === 'mock') {
         const mockTarget = env.API_TARGET || 'http://localhost:3001';
-        return { auth: mockTarget, pin: mockTarget, user: mockTarget };
+        return { auth: mockTarget, pin: mockTarget, user: mockTarget, chat: mockTarget };
     }
 
     return {
         auth: env.AUTH_API_TARGET || DEFAULT_BACKEND_TARGETS.auth,
         pin: env.PIN_API_TARGET || DEFAULT_BACKEND_TARGETS.pin,
         user: env.USER_API_TARGET || DEFAULT_BACKEND_TARGETS.user,
+        chat: env.CHAT_API_TARGET || DEFAULT_BACKEND_TARGETS.chat,
     };
 }

@@ -155,6 +155,10 @@ export async function fetchMyProfile(): Promise<User> {
     return apiRequest<User>('/api/v1/users/me');
 }
 
+export function fetchUserProfile(userId: number): Promise<User> {
+    return apiRequest<User>(`/api/v1/users/${userId}`);
+}
+
 export async function updateMyProfile(
     patch: Partial<Pick<User, 'name' | 'user_tag' | 'description' | 'avatar_url'>>,
     avatarFile?: File | null,

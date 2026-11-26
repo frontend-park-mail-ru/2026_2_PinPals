@@ -1,3 +1,5 @@
+import process from 'node:process';
+import console from 'node:console';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,8 +27,8 @@ function stopAll(exitCode = 0) {
     }
 }
 
-function start(label, script) {
-    const child = spawn(process.execPath, [script], {
+function start(label, script, nodeArgs = []) {
+    const child = spawn(process.execPath, [...nodeArgs, script], {
         cwd: projectRoot,
         env,
         stdio: 'inherit',
@@ -45,7 +47,7 @@ function start(label, script) {
 }
 
 if (apiMode === 'mock') {
-    start('mock API', 'server.dev.js');
+    start('mock API', 'server.dev.js', ['--watch']);
 }
 start('Vite', path.join('node_modules', 'vite', 'bin', 'vite.js'));
 

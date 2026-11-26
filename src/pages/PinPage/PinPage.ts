@@ -156,6 +156,9 @@ export class PinPage {
         description.hidden = !this.pin.description;
 
         const isMyPin = String(this.pin.creator_id) === localStorage.getItem('userId');
+        const chatLink = this.element.querySelector<HTMLAnchorElement>('#pinChatLink');
+        chatLink.hidden = isMyPin || !this.pin.creator_id;
+        chatLink.href = `/chats?user=${encodeURIComponent(String(this.pin.creator_id))}`;
         const ownerActions = this.element.querySelector('#pinOwnerActions');
         if (ownerActions) ownerActions.hidden = !isMyPin;
         const authorName = isMyPin ? (localStorage.getItem('userName') || 'Вы') : 'Автор пина';
