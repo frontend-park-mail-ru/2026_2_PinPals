@@ -73,6 +73,13 @@ export class CreatePinPage {
             const [file] = event.dataTransfer?.files || [];
             if (file) this.setSelectedFile(file);
         });
+        
+        const descriptionInput = this.element.querySelector<HTMLTextAreaElement>('#pinDescriptionInput');
+        const descriptionCounter = this.element.querySelector('#pinDescriptionCounter');
+
+        descriptionInput.addEventListener('input', () => {
+            descriptionCounter.textContent = String(descriptionInput.value.length);
+        });
 
         this.element.querySelector<HTMLButtonElement>('#removePinImage').addEventListener('click', () => {
             this.setSelectedFile(null);

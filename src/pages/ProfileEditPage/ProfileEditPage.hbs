@@ -35,31 +35,42 @@
 
             <label class="profile-modal-field">
                 <span>Имя</span>
-                <input id="profileEditName" name="name" type="text" maxlength="255" autocomplete="name" required>
+                <input id="profileEditName" name="name" type="text" maxlength="32" autocomplete="name" required>
             </label>
 
             <label class="profile-modal-field">
                 <span>Никнейм (user_tag)</span>
-                <input id="profileEditTag" name="user_tag" type="text" maxlength="64" autocomplete="username" required>
+                <input id="profileEditTag" name="user_tag" type="text" maxlength="32" autocomplete="username" required>
             </label>
 
             <label class="profile-modal-field">
                 <span>Описание</span>
-                <textarea id="profileEditDescription" name="description" rows="4" placeholder="Расскажите о себе"></textarea>
+                <textarea id="profileEditDescription" name="description" rows="4"  maxlength="300" placeholder="Расскажите о себе"></textarea>
             </label>
 
             <p class="profile-modal-message" id="profileEditMessage" role="status" aria-live="polite" hidden></p>
 
             <div class="profile-edit-actions">
-                <button type="submit" class="btn btn-first" id="profileEditSubmit">Сохранить</button>
-                <a href="/profile" class="btn btn-second">Отмена</a>
+                <button type="submit" class="btn btn-first" id="profileEditSubmit">
+                    Сохранить
+                </button>
+
+                <a href="/profile" class="btn btn-second">
+                    Отмена
+                </a>
+
+                <button type="button" class="btn btn-danger" id="profileDeleteButton">
+                    Удалить аккаунт
+                </button>
             </div>
         </form>
 
         <section class="profile-danger-zone" aria-labelledby="profileDangerTitle">
-            <h2 id="profileDangerTitle">Опасная зона</h2>
-            <p>Удаление аккаунта — необратимое действие. Профиль будет помечен как удалённый, а текущая сессия завершится.</p>
-            <button type="button" class="btn btn-danger" id="profileDeleteButton">Удалить аккаунт</button>
+            <h2 id="profileDangerTitle">Внимание</h2>
+            <p>
+                Удаление аккаунта — необратимое действие.
+                Профиль будет помечен как удалённый, а текущая сессия завершится.
+            </p>
         </section>
     </main>
 

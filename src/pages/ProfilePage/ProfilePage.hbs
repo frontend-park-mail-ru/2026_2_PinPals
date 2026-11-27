@@ -4,11 +4,22 @@
             <h1 class="profile-title">{{profileTitle}}</h1>
 
             <div class="profile-user-card">
-                {{#if userAvatarUrl}}
-                    <img class="profile-avatar" src="{{userAvatarUrl}}" alt="Аватар пользователя">
+                {{#if isOwnProfile}}
+                    <a class="profile-avatar-link" href="/profile/edit" aria-label="Редактировать профиль">
+                        {{#if userAvatarUrl}}
+                            <img class="profile-avatar" src="{{userAvatarUrl}}" alt="Аватар пользователя">
+                        {{else}}
+                            <div class="profile-avatar profile-avatar--placeholder" aria-hidden="true">{{userInitial}}</div>
+                        {{/if}}
+                    </a>
                 {{else}}
-                    <div class="profile-avatar profile-avatar--placeholder" aria-hidden="true">{{userInitial}}</div>
+                    {{#if userAvatarUrl}}
+                        <img class="profile-avatar" src="{{userAvatarUrl}}" alt="Аватар пользователя">
+                    {{else}}
+                        <div class="profile-avatar profile-avatar--placeholder" aria-hidden="true">{{userInitial}}</div>
+                    {{/if}}
                 {{/if}}
+
                 <div class="profile-user-info">
                     <span class="profile-user-name">{{userName}}</span>
                     <span class="profile-followers">{{followersLabel}}</span>
@@ -33,9 +44,17 @@
             {{#if isOwnProfile}}
             <div class="profile-toolbar-actions">
                 <a class="profile-edit-link" href="/profile/edit">Редактировать профиль</a>
-                <button class="profile-create-button" id="profileActionButton" type="button">
-                    {{actionText}}
-                </button>
+                <div class="profile-create-dropdown">
+                    <button class="profile-create-button" id="profileCreateToggle" type="button" aria-expanded="false">
+                        Создать
+                        <span class="profile-create-arrow">▾</span>
+                    </button>
+
+                    <div class="profile-create-menu" id="profileCreateMenu" hidden>
+                        <button type="button" id="createPinOption">Создать пин</button>
+                        <button type="button" id="createBoardOption">Создать доску</button>
+                    </div>
+                </div>
             </div>
             {{/if}}
         </section>

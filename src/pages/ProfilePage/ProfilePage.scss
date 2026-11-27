@@ -222,3 +222,67 @@
     .profile-pins-grid > .pin-card { margin-bottom: 8px; border-radius: 12px; }
     .profile-boards-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+.profile-avatar-link {
+    display: block;
+    flex-shrink: 0;
+    border-radius: 50%;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.profile-avatar-link .profile-avatar {
+    transition: transform 0.2s ease;
+}
+
+.profile-avatar-link:hover .profile-avatar {
+    transform: scale(1.05);
+}
+
+.profile-create-dropdown {
+    position: relative;
+}
+
+.profile-create-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+
+    min-width: 140px;
+    padding: 8px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    background: rgba(255, 255, 252, 0.92);
+    backdrop-filter: blur(12px);
+
+    border: none;
+    border-radius: 20px;
+
+    box-shadow: 0 8px 24px rgba(102, 81, 64, 0.15);
+    z-index: 200;
+}
+
+.profile-create-menu[hidden] {
+    display: none;
+}
+
+.profile-create-menu button {
+    border: none;
+    border-radius: 20px;
+    padding: 10px 10px;
+
+    background: transparent;
+    color: var(--color-text);
+
+    font-family: var(--font-main), sans-serif;
+    font-size: 16px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.profile-create-menu button:hover {
+    background: var(--color-search);
+}

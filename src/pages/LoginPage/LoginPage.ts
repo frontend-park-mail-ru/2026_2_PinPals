@@ -57,6 +57,12 @@ export class LoginPage {
         this.loginInput.element.classList.add('password-gap');
         formContainer.append(this.passInput.render());
 
+        const usernameInput = this.loginInput.element.querySelector<HTMLInputElement>('input');
+
+        if (usernameInput) {
+            usernameInput.maxLength = 32;
+        }
+
         const buttonsContainer = wrapper.querySelector('.buttons-container');
         buttonsContainer.append(this.loginBtn.render());
         buttonsContainer.append(this.registerBtn.render());

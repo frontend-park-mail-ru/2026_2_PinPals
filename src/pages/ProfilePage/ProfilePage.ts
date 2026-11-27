@@ -243,12 +243,33 @@ export class ProfilePage {
     /** Подключает обработчики элементов страницы. */
     setupEvents() {
         if (this.userId) return;
-        this.element.querySelector('#profileActionButton').addEventListener('click', () => {
-            if (this.activeTab === 'pins') {
-                this.router.navigateTo('/create-pin');
-                return;
-            }
+
+        const toggle = this.element.querySelector<HTMLButtonElement>('#profileCreateToggle');
+        const menu = this.element.querySelector<HTMLDivElement>('#profileCreateMenu');
+        const createPin = this.element.querySelector<HTMLButtonElement>('#createPinOption');
+        const createBoard = this.element.querySelector<HTMLButtonElement>('#createBoardOption');
+
+        toggle.addEventListener('click', () => {
+            const isOpen = !menu.hidden;
+            menu.hidden = isOpen;
+            toggle.setAttribute('aria-expanded', String(!isOpen));
+        });
+
+        createPin.addEventListener('click', () => {
+            this.router.navigateTo('/create-pin');
+        });
+
+        createBoard.addEventListener('click', () => {
             this.router.navigateTo('/create-board');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!this.element?.isConnected) return;
+
+            if (!toggle.contains(event.target as Node) && !menu.contains(event.target as Node)) {
+                menu.hidden = true;
+                toggle.setAttribute('aria-expanded', 'false');
+            }
         });
     }
 

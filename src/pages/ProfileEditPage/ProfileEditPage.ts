@@ -262,6 +262,24 @@ export class ProfileEditPage {
             return;
         }
 
+        if (name.length > 32) {
+            this.showMessage('Имя не должно превышать 32 символа.');
+            nameInput.focus();
+            return;
+        }
+
+        if (userTag.length > 32) {
+            this.showMessage('Никнейм не должен превышать 32 символа.');
+            tagInput.focus();
+            return;
+        }
+
+        if (description.length > 300) {
+            this.showMessage('Описание профиля не должно превышать 300 символов.');
+            descriptionInput.focus();
+            return;
+        }
+
         // Патч только из изменённых текстовых полей.
         const patch: Partial<Pick<User, 'name' | 'user_tag' | 'description' | 'avatar_url'>> = {};
         const prev = this.profile;

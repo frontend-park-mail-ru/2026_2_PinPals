@@ -9,7 +9,6 @@
 
 .create-pin-title-wrap {
     padding: 10px 14px 12px;
-    border-bottom: 3px solid var(--color-accent);
 }
 
 .create-pin-title {
@@ -264,4 +263,22 @@
     background: var(--color-search);
     outline: 2px dashed var(--color-accent);
     outline-offset: -8px;
+}
+
+#createPinForm #pinNameInput {
+    max-width: 100%;
+}
+
+#createPinForm #pinDescriptionInput {
+    min-height: 260px;
+    max-height: 260px;
+    resize: none;
+    box-sizing: border-box;
+}
+
+.create-pin-description-counter {
+    text-align: right;
+    font-size: 14px;
+    color: var(--overlay-input);
+    margin-top: 4px;
 }

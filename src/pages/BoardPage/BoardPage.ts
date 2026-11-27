@@ -111,9 +111,10 @@ export class BoardPage {
             this.isOwner = String(this.board.creator_id) === String(currentUserId);
 
             this.element.querySelector('#boardTitle').textContent = this.board.name || 'Без названия';
-            this.element.querySelector('#boardVisibility').textContent = getVisibilityLabel(this.board.entry_status);
-            this.element.querySelector('#boardPinsCount').textContent = getPinsLabel(pins.length || result.pins_count || 0);
-            this.element.querySelector('#boardDescription').textContent = this.board.description || '';
+this.element.querySelector('#boardVisibility').textContent = getVisibilityLabel(this.board.entry_status);
+this.element.querySelector('#boardPinsCount').textContent = getPinsLabel(pins.length || result.pins_count || 0);
+this.element.querySelector('#boardDescription').textContent = this.board.description || '';
+
 
             this.element.querySelector('#boardDelete').hidden = !this.isOwner;
             this.element.querySelector('#boardAddPins').hidden = !this.isOwner;
@@ -240,9 +241,20 @@ export class BoardPage {
         const saveBtn = this.element.querySelector<HTMLButtonElement>('#editBoardSave');
 
         const name = nameInput.value.trim();
+        const description = descriptionInput.value.trim();
+
         if (!name) {
             this.showEditMessage('Название не может быть пустым.');
             nameInput.focus();
+            return;
+        }
+        if (name.length > 40) {
+            this.showMessage('Название доски не должно превышать 40 символов.');
+            return;
+        }
+
+        if (description.length > 500) {
+            this.showMessage('Описание доски не должно превышать 500 символов.');
             return;
         }
 
@@ -252,7 +264,6 @@ export class BoardPage {
 
         if (name !== (prev.name || '')) patch.name = name;
 
-        const description = descriptionInput.value.trim();
         if (description !== (prev.description || '')) {
             patch.description = description || null;
         }

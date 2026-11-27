@@ -38,6 +38,9 @@
 
 .profile-edit-actions {
     display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
     margin-top: 8px;
 }
@@ -258,14 +261,18 @@
 }
 
 @media (max-width: 520px) {
-    .profile-avatar-editor {
+    .profile-edit-heading {
         flex-direction: column;
         align-items: flex-start;
+        gap: 6px;
     }
-    .profile-avatar-actions {
-        flex-direction: row;
+
+    .profile-edit-actions {
+        flex-direction: column;
+        align-items: stretch;
     }
-    .profile-avatar-actions .btn {
+
+    .profile-edit-actions .btn {
         width: 100%;
     }
 }

@@ -93,29 +93,6 @@
   box-sizing: border-box;
 }
 
-
-.pin-back-button {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-    display: grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 0 0 15px;
-    background: rgba(255, 255, 252);
-    color: var(--color-text);
-    text-decoration: none;
-    font: 32px/1 Arial, sans-serif;
-    transition: background-color .2s ease;
-}
-
-.pin-back-button:hover {
-    background: #F6DFC9;
-}
-
-
 .pin-detail-panel {
     display: flex;
     flex-direction: column;
@@ -313,7 +290,6 @@
 
 .pin-description {
   display: -webkit-box;
-  -webkit-line-clamp: 15;
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
@@ -479,12 +455,6 @@
     white-space: nowrap;
 }
 
-.pin-back-button .icon {
-    width: 26px;
-    height: 26px;
-    stroke-width: 2.2;
-}
-
 @media (max-width: 1050px) {
     .pin-layout { grid-template-columns: minmax(0, 1fr); }
     .pin-primary-column { order: 1; }
@@ -579,3 +549,49 @@
     height: 1px;
     pointer-events: none;
 }
+
+.pin-back-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+
+    display: grid;
+    place-items: center;
+
+    width: 44px;
+    height: 44px;
+
+    border-radius: 50%;
+    border: 3px solid var(--color-search);
+
+    background: rgba(255, 255, 255, 0.88);
+    color: var(--color-text);
+
+    text-decoration: none;
+    cursor: pointer;
+
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.pin-back-button:hover {
+    background: var(--color-search);
+    transform: translateX(-2px);
+}
+
+.pin-back-button .icon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+#pinEditDescription {
+    min-height: 260px;
+    max-height: 260px;
+    resize: none;
+}
+

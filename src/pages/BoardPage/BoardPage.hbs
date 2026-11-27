@@ -4,16 +4,25 @@
             <div class="board-heading-copy">
                 <div class="board-title-row">
                     <h1 class="board-title" id="boardTitle"></h1>
-                    <span class="board-visibility" id="boardVisibility"></span>
                     <span class="board-pins-count" id="boardPinsCount"></span>
+                    <span class="board-visibility" id="boardVisibility"></span>
                 </div>
+
                 <p class="board-description" id="boardDescription"></p>
             </div>
 
             <div class="board-actions">
-                <button class="btn btn-first" id="boardEdit" type="button" hidden>Редактировать</button>
-                <button class="btn btn-first" id="boardAddPins" type="button" hidden>Добавить пины</button>
-                <button class="btn btn-second" id="boardDelete" type="button" hidden>Удалить доску</button>
+                <button class="btn btn-first" id="boardAddPins" type="button" hidden>
+                    Добавить пин
+                </button>
+
+                <button class="btn btn-first" id="boardEdit" type="button" hidden>
+                    Редактировать
+                </button>
+
+                <button class="btn btn-danger" id="boardDelete" type="button" hidden>
+                    Удалить доску
+                </button>
             </div>
         </section>
 
@@ -53,12 +62,12 @@
             <div class="profile-modal-form profile-modal-form--stack">
                 <label class="profile-modal-field">
                     <span>Название</span>
-                    <input type="text" id="editBoardName" maxlength="255">
+                    <input type="text" id="editBoardName" maxlength="40">
                 </label>
 
                 <label class="profile-modal-field">
                     <span>Описание</span>
-                    <textarea id="editBoardDescription" rows="3"></textarea>
+                    <textarea id="editBoardDescription" rows="6" maxlength="500"></textarea>
                 </label>
 
                 <fieldset class="create-board-visibility">

@@ -415,12 +415,27 @@ export class PinPage {
     async saveEditPin(event: Event): Promise<void> {
         event.preventDefault();
         const submitButton = this.element.querySelector<HTMLButtonElement>('#pinEditSubmit');
-        const name = this.element.querySelector<HTMLInputElement>('#pinEditName').value.trim();
-        const description = this.element.querySelector<HTMLInputElement>('#pinEditDescription').value.trim();
+        const nameInput = this.element.querySelector<HTMLInputElement>('#pinEditName');
+        const descriptionInput = this.element.querySelector<HTMLTextAreaElement>('#pinEditDescription');
+
+        const name = nameInput.value.trim();
+        const description = descriptionInput.value.trim();
         if (!name) {
             this.showEditMessage('Укажите название пина.');
             return;
         }
+        if (name.length > 40) {
+            this.showEditMessage('Название пина не должно превышать 40 символов.');
+            nameInput.focus();
+            return;
+        }
+
+        if (description.length > 500) {
+            this.showEditMessage('Описание пина не должно превышать 500 символов.');
+            descriptionInput.focus();
+            return;
+        }
+
         submitButton.disabled = true;
         try {
             const updatedPin = await updatePin(this.pinId, { name, description });

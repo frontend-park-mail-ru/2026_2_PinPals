@@ -23,12 +23,29 @@
             <div class="create-pin-fields">
                 <div class="create-pin-field">
                     <label for="pinNameInput">Название</label>
-                    <input id="pinNameInput" name="name" type="text" maxlength="100" placeholder="Добавьте название" required>
+                    <input
+                        id="pinNameInput"
+                        name="name"
+                        type="text"
+                        maxlength="40"
+                        placeholder="Добавьте название"
+                        required
+                    >
                 </div>
 
                 <div class="create-pin-field">
                     <label for="pinDescriptionInput">Описание</label>
-                    <textarea id="pinDescriptionInput" name="description" maxlength="1000" placeholder="Опишите ваш пин" rows="4"></textarea>
+                    <textarea
+                        id="pinDescriptionInput"
+                        name="description"
+                        maxlength="500"
+                        placeholder="Опишите ваш пин"
+                        rows="10"
+                    ></textarea>
+
+                    <div class="create-pin-description-counter">
+                        <span id="pinDescriptionCounter">0</span>/500
+                    </div>
                 </div>
 
                 <div class="create-pin-field" hidden>

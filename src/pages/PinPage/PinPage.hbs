@@ -49,9 +49,14 @@
                                     </div>
                                     <form id="pinEditForm" class="pin-owner-form">
                                         <label for="pinEditName">Название</label>
-                                        <input id="pinEditName" name="name" type="text" maxlength="255" required>
+                                        <input id="pinEditName" name="name" type="text" maxlength="40" required>
                                         <label for="pinEditDescription">Описание</label>
-                                        <textarea id="pinEditDescription" name="description" rows="4" maxlength="2000"></textarea>
+                                        <textarea
+                                            id="pinEditDescription"
+                                            name="description"
+                                            rows="10"
+                                            maxlength="500"
+                                        ></textarea>
                                         <p class="profile-modal-message" id="pinEditMessage" role="alert" hidden></p>
                                         <div class="profile-modal-actions">
                                             <button class="btn btn-second" id="pinEditCancel" type="button">Отмена</button>

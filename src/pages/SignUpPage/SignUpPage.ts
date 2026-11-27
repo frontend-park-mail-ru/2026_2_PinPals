@@ -9,7 +9,17 @@ import type { Router } from '../../routes';
 import type { DomRoot } from '../../types/dom';
 import { getErrorMessage } from '../../utils/errors';
 
-const validateRequired = (val: string): string => val.trim().length > 0 ? '' : 'Поле обязательно';
+const validateLogin = (val: string): string => {
+    if (!val.trim()) {
+        return 'Поле обязательно';
+    }
+
+    if (val.length > 32) {
+        return 'Логин не должен превышать 32 символа';
+    }
+
+    return '';
+};
 
 const validatePassword = (val: string): string => {
     if (val.length < 8) return 'Пароль минимум 8 символов';
@@ -110,7 +120,7 @@ export class SignUpPage {
             type: 'text',
             name: 'username',
             placeholder: 'Логин',
-            validator: validateRequired,
+            validator: validateLogin,
         });
 
         this.passInput = new Input({
@@ -162,7 +172,10 @@ export class SignUpPage {
         // 1. Логин + подсказка снизу
         formContainer.append(this.loginInput.render());
         const usernameInput = this.loginInput.element.querySelector<HTMLInputElement>('input');
-        if (usernameInput) usernameInput.maxLength = 64;
+
+        if (usernameInput) {
+            usernameInput.maxLength = 32;
+        }
         const loginHint = document.createElement('div');
         loginHint.className = 'field-hint';
         loginHint.textContent = 'Логин должен быть уникальным';
