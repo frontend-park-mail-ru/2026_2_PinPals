@@ -1,6 +1,8 @@
-<div class="search-container">
+<form class="search-container" role="search" action="/search">
+    <button class="search-submit" type="submit" aria-label="Найти">
     <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
     </svg>
-    <input type="text" placeholder="{{placeholder}}" value="{{value}}" class="search-input">
-</div>
+    </button>
+    <input name="q" type="search" aria-label="Поисковый запрос" maxlength="100" required placeholder="{{placeholder}}" value="{{value}}" class="search-input">
+</form>

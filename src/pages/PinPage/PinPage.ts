@@ -1,4 +1,4 @@
-
+import { PAGE_SIZE } from '../../api/pageSize';
 import './PinPage.scss';
 import { resolveImageUrl, resolveAvatarUrl, DEFAULT_AVATAR_URL } from '../../api/user';
 import {
@@ -13,7 +13,7 @@ import {
     updatePin,
     deletePin,
 } from '../../api/user';
-import { PinCard } from '../../components/PinCard/PinCard';
+import { PinColumns } from '../../components/PinCard/pinColumns';
 import { Comment as CommentComponent } from '../../components/Comment/Comment';
 import { Header } from '../../components/Header/Header';
 import template from './PinPage.hbs';
@@ -41,6 +41,7 @@ async function copyToClipboard(text: string): Promise<void> {
 
 /** Страница просмотра одного пина. */
 export class PinPage {
+    private pinColumns = new PinColumns();
     router?: Router;
     pinId: string;
     pin: Pin | null;
@@ -192,8 +193,6 @@ export class PinPage {
      * Две независимые бесконечные ленты рекомендаций
      */
     async loadRecommendations() {
-        const PAGE_SIZE = 30;
-        const BATCH_SIZE = 8;
 
         const sideBox = this.element?.querySelector('#pinSideRecommendations');
         const bottomBox = this.element?.querySelector('#pinBottomRecommendations');
@@ -207,33 +206,10 @@ export class PinPage {
         let hasMore = true;
         const seen = new Set<string>([this.pinId]);
 
-        const columnCount = (container: Element) => container.id === 'pinSideRecommendations' ? 2 : 4;
-        const columnsByContainer = new Map<Element, HTMLElement[]>();
-        const nextColumnByContainer = new Map<Element, number>();
-        const getColumns = (container: Element) => {
-            let columns = columnsByContainer.get(container);
-            if (!columns) {
-                columns = Array.from({ length: columnCount(container) }, () => {
-                    const column = document.createElement('div');
-                    column.className = 'pin-masonry-column';
-                    container.appendChild(column);
-                    return column;
-                });
-                columnsByContainer.set(container, columns);
-                nextColumnByContainer.set(container, 0);
-            }
-            return columns;
-        };
-        const appendTo = (container: Element, pins: Pin[]): void => {
-            const columns = getColumns(container);
-            let next = nextColumnByContainer.get(container) || 0;
-            pins.forEach((pin) => {
-                // Не пересчитываем раскладку при догрузке: уже показанные карточки остаются на месте.
-                columns[next % columns.length].appendChild(new PinCard(pin).render());
-                next += 1;
-            });
-            nextColumnByContainer.set(container, next);
-        };
+        sideSentinel.dataset.loadMore = '';
+        bottomSentinel.dataset.loadMore = '';
+        sideBox.append(sideSentinel);
+        bottomBox.append(bottomSentinel);
 
         const ensureQueue = async () => {
             if (queue.length || !hasMore || this.isDestroyed) return;
@@ -306,28 +282,28 @@ export class PinPage {
             await pagePromise;
         };
 
-        const appendBatch = async (container: Element, count = BATCH_SIZE) => {
-            let remaining = count;
+        const appendBatch = async (container: HTMLElement) => {
+            let remaining = PAGE_SIZE;
             while (remaining > 0 && hasMore && !this.isDestroyed && this.element?.isConnected) {
                 if (!queue.length) await ensureQueue();
                 if (!queue.length) break;
                 const portion = queue.splice(0, Math.min(remaining, queue.length));
-                appendTo(container, portion);
+                this.pinColumns.append(container, portion);
                 remaining -= portion.length;
             }
         };
 
         // Сначала наполняем обе колонки, чтобы лента была видна без прокрутки.
         try {
-            await appendBatch(sideBox, BATCH_SIZE);
-            await appendBatch(bottomBox, BATCH_SIZE);
+            await appendBatch(sideBox);
+            await appendBatch(bottomBox);
         } catch (error: unknown) {
             console.warn('Не удалось загрузить рекомендации', error);
         }
 
         if (!('IntersectionObserver' in window) || this.isDestroyed) return;
 
-        const observeFeed = (container: Element, sentinel: Element): void => {
+        const observeFeed = (container: HTMLElement, sentinel: Element): void => {
             const observer = new IntersectionObserver((entries) => {
                 if (this.isDestroyed || !sentinel.isConnected) {
                     observer.disconnect();
@@ -336,7 +312,7 @@ export class PinPage {
                 }
                 if (!entries.some((entry) => entry.isIntersecting)) return;
 
-                void appendBatch(container, BATCH_SIZE)
+                void appendBatch(container)
                     .catch((error: unknown) => console.warn('Не удалось догрузить рекомендации', error))
                     .finally(() => {
                         // Повторное наблюдение важно, если после вставки карточек
@@ -622,6 +598,7 @@ export class PinPage {
 
     /** Очищает таймеры и ресурсы страницы. */
     destroy() {
+        this.pinColumns.disconnect();
         this.isDestroyed = true;
         clearTimeout(this.loadingTimer);
         this.recommendationsObservers.forEach((observer) => observer.disconnect());

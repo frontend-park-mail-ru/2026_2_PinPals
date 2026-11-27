@@ -9,6 +9,7 @@ import {
     updateBoard,
 } from '../../api/user';
 import { Header } from '../../components/Header/Header';
+import { PinColumns } from '../../components/PinCard/pinColumns';
 import { PinCard } from '../../components/PinCard/PinCard';
 import { SavedPinsPicker } from '../../components/SavedPinsPicker/SavedPinsPicker';
 import template from './BoardPage.hbs';
@@ -46,6 +47,7 @@ type BoardWithPins = Desk & {
 };
 
 export class BoardPage {
+    private pinColumns = new PinColumns();
     boardId: string;
     router?: Router;
     board: BoardWithPins | null;
@@ -134,20 +136,8 @@ export class BoardPage {
         const grid = this.element.querySelector('#boardPinsGrid');
         grid.replaceChildren();
 
-        // Динамически определяем количество колонок в зависимости от ширины экрана
-        const columnCount = window.innerWidth <= 600 ? 2 : window.innerWidth <= 900 ? 3 : window.innerWidth <= 1200 ? 4 : 6;
-
-        // Создаем элементы колонок внутри сетки
-        const columns = Array.from({ length: columnCount }, () => {
-            const column = document.createElement('div');
-            column.className = 'pin-masonry-column';
-            grid.appendChild(column);
-            return column;
-        });
-
-        let nextColumn = 0;
-
-        pins.forEach((pin) => {
+        this.pinColumns.disconnect();
+        this.pinColumns.append(grid, pins, pin => {
             const card = new PinCard(pin).render();
             // Кнопка удаления пина с доски — только для владельца
             if (this.isOwner) {
@@ -160,9 +150,7 @@ export class BoardPage {
                 card.append(removeBtn);
             }
 
-            // Распределяем пины поочередно по колонкам
-            columns[nextColumn % columns.length].appendChild(card);
-            nextColumn += 1;
+            return card;
         });
 
         this.showMessage(pins.length ? '' : 'В этой доске пока нет пинов.');
@@ -315,6 +303,7 @@ export class BoardPage {
     refreshHeader() { this.header?.refresh(); }
 
     destroy() {
+        this.pinColumns.disconnect();
         this.isDestroyed = true;
         this.header?.destroy();
         this.header = null;

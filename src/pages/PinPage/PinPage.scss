@@ -434,13 +434,7 @@
     min-width: 0;
 }
 .pin-recommendations-grid--bottom { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.pin-recommendations-grid .pin-masonry-column {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    min-width: 0;
-}
+
 .pin-bottom-recommendations {
     width: 100%;
     min-width: 0;
@@ -452,7 +446,7 @@
     vertical-align: top;
     width: 100%;
     min-width: 0;
-    margin: 0 0 12px;
+    margin: 0;
     break-inside: avoid;
     overflow: hidden;
     border-radius: 14px;
@@ -503,8 +497,6 @@
     .pin-layout { padding: 0; }
     .pin-recommendations-grid--side,
     .pin-recommendations-grid--bottom { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-    .pin-recommendations-grid .pin-masonry-column { gap: 8px; }
-    .pin-page .pin-card { margin-bottom: 8px; }
 }
 
 

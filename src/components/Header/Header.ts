@@ -83,8 +83,18 @@ export class Header {
         if (this.center) {
             centerSlot.append(this.center);
         } else {
-            this.searchBar = new SearchBar();
-            centerSlot.append(this.searchBar.render());
+            const params = new URLSearchParams(location.pathname === '/search' ? location.search : '');
+            this.searchBar = new SearchBar({ initialQuery: params.get('q') || '' });
+            const form = this.searchBar.render() as HTMLFormElement;
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const query = String(new FormData(form).get('q') || '').trim();
+                if (!query) return;
+                const search = new URLSearchParams({ q: query });
+                if (params.has('type')) search.set('type', params.get('type'));
+                this.router.navigateTo('/search?' + search);
+            });
+            centerSlot.append(form);
         }
 
         return element;
