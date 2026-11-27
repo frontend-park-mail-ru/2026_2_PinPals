@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from './pageSize';
 import { isApiError } from '../utils/errors';
 
 import { apiRequest } from './client';
@@ -91,7 +92,7 @@ export async function logoutUser() {
 
 // ===== Pins =====
 
-export async function fetchPins(limit = 20, cursor: PinCursor | null = null): Promise<PinSearchResponse> {
+export async function fetchPins(limit = PAGE_SIZE, cursor: PinCursor | null = null): Promise<PinSearchResponse> {
     return apiRequest<PinSearchResponse>('/api/v1/pins/search', {
         method: 'POST',
         body: JSON.stringify({ limit, cursor }),
@@ -290,8 +291,8 @@ export async function fetchUserSavedPins(userId: string | number): Promise<Pin[]
     const seenCursors = new Set<string>();
     let cursor: PinCursor | null = null;
 
-    for (let page = 0; page < 20; page += 1) {
-        const data = await fetchPins(100, cursor);
+    for (let page = 0; page < Math.ceil(2000 / PAGE_SIZE); page += 1) {
+        const data = await fetchPins(PAGE_SIZE, cursor);
         const pagePins = data.pins || [];
         result.push(...pagePins.filter((pin) => String(pin.creator_id) === String(userId)));
 

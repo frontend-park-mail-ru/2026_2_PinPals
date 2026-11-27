@@ -1,0 +1,7 @@
+{{#each items}}
+    <a class="search-card" href="{{href}}">
+        {{#if image}}<img src="{{image}}" loading="lazy" alt="">{{/if}}
+        <strong>{{title}}</strong>
+        {{#if detail}}<span>{{detail}}</span>{{/if}}
+    </a>
+{{/each}}

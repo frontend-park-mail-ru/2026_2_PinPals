@@ -1,0 +1,12 @@
+<main>
+    <h1>Результаты поиска</h1>
+    <nav aria-label="Категории поиска">
+        {{#each tabs}}
+            <a href="{{href}}" {{#if active}}aria-current="page"{{/if}}>{{label}}</a>
+        {{/each}}
+    </nav>
+    {{#if needsLogin}}<p><a href="/login">Войдите</a>, чтобы искать людей по тегу.</p>{{/if}}
+    <p role="status"></p>
+    <div class="search-results"></div>
+    <button type="button" class="search-retry" hidden>Повторить</button>
+</main>

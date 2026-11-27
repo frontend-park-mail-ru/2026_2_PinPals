@@ -664,6 +664,32 @@ app.post('/api/v1/users/me/avatar', requireAuth, requireCsrf, requireActiveUser,
 // -----------------------------------------------------------------------------
 // Pins — соответствие PR #62.
 // -----------------------------------------------------------------------------
+function searchCollection(req, res, key, records, field, serialize) {
+    const q = String(req.query.q || '').trim().toLowerCase();
+    const limit = Number(req.query.limit ?? 20);
+    const offset = Number(req.query.offset ?? 0);
+    if (!q || Array.from(q).length > 100 || !Number.isInteger(limit) || limit < 1 || limit > 100 ||
+        !Number.isSafeInteger(offset) || offset < 0) {
+        return res.status(400).json({ error: 'invalid_search_parameters' });
+    }
+    const matches = records.filter(item => item[field]?.toLowerCase().includes(q));
+    return res.json({ [key]: matches.slice(offset, offset + limit).map(item => serialize(item)) });
+}
+
+app.get('/api/v1/users/search', requireAuth, requireActiveUser, (req, res) => {
+    const active = Array.from(usersById.values()).filter(user => !user.deleted_at);
+    return searchCollection(req, res, 'users', active, 'user_tag', ({ user_id, name, user_tag, description, avatar_url }) =>
+        ({ user_id, name, user_tag, description, avatar_url }));
+});
+
+app.get('/api/v1/pins/search', (req, res) =>
+    searchCollection(req, res, 'pins', Array.from(pins.values()), 'name', serializePin));
+
+app.get('/api/v1/desks/search', (req, res) => {
+    const visible = Array.from(desks.values()).filter(desk => desk.entry_status === 0);
+    return searchCollection(req, res, 'desks', visible, 'name', serializeDesk);
+});
+
 app.post('/api/v1/pins/search', (req, res) => {
     const requestedLimit = req.body?.limit == null ? 20 : Number(req.body.limit);
     if (!Number.isInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > 100) {

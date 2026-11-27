@@ -92,14 +92,7 @@
   box-sizing: border-box;
 }
 
-/* Обертка колонки Masonry, предотвращающая пустые отступы */
-.pin-masonry-column {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-  min-width: 0;
-}
+
 
 .board-pins-grid .pin-card {
   position: relative;

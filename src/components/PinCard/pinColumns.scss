@@ -1,0 +1,22 @@
+/* У карточек одна колонка по ширине и столько строк, сколько нужно изображению. */
+.pin-columns[class] {
+    display: grid;
+    align-items: start;
+    grid-auto-rows: var(--pin-row-height);
+    row-gap: 0;
+}
+
+.pin-columns > .pin-card {
+    margin: 0;
+    grid-row-end: span 24;
+}
+
+.pin-columns > .pin-card img {
+    aspect-ratio: auto 1 / 1;
+}
+
+.pin-columns > [data-load-more] {
+    order: 1;
+    overflow-anchor: none;
+    height: 1px;
+}

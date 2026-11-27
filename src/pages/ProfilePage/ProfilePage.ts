@@ -10,7 +10,7 @@ import {
     DEFAULT_AVATAR_URL
 } from '../../api/user';
 import { Header } from '../../components/Header/Header';
-import { PinCard } from '../../components/PinCard/PinCard';
+import { PinColumns } from '../../components/PinCard/pinColumns';
 import { BoardCard } from '../../components/BoardCard/BoardCard';
 import template from './ProfilePage.hbs';
 import type { Desk, Pin, User } from '../../types/models';
@@ -42,6 +42,7 @@ function formatFollowers(count: number): string {
  * Страница профиля с вкладками «Пины» и «Доски».
  */
 export class ProfilePage {
+    private pinColumns = new PinColumns();
     router?: Router;
     activeTab: 'pins' | 'boards';
     element: DomRoot | null;
@@ -207,9 +208,8 @@ export class ProfilePage {
         const grid = this.element.querySelector<HTMLElement>('#profilePinsGrid');
         grid.replaceChildren();
 
-        const fragment = document.createDocumentFragment();
-        pins.forEach((pin) => fragment.append(new PinCard(pin).render()));
-        grid.append(fragment);
+        this.pinColumns.disconnect();
+        this.pinColumns.append(grid, pins);
         this.showContentMessage(pins.length ? '' : (this.userId ? 'У автора пока нет пинов.' : 'Пока нет сохранённых пинов.'));
     }
 
@@ -259,6 +259,7 @@ export class ProfilePage {
 
     /** Освобождает ресурсы страницы. */
     destroy() {
+        this.pinColumns.disconnect();
         this.isDestroyed = true;
         this.header?.destroy();
         this.header = null;

@@ -1,3 +1,4 @@
+import { renderPinBatches } from '../../utils/renderPinBatches';
 
 import './SavedPinsPicker.scss';
 import template from './SavedPinsPicker.hbs';
@@ -100,8 +101,7 @@ export class SavedPinsPicker {
             }
 
             grid.classList.remove('is-empty');
-            const fragment = document.createDocumentFragment();
-            for (const pin of this.pins) {
+            renderPinBatches(grid, this.pins, pin => {
                 const card = document.createElement('button');
                 card.type = 'button';
                 card.className = 'saved-pin-option';
@@ -124,9 +124,8 @@ export class SavedPinsPicker {
                 check.className = 'saved-pin-check';
                 check.setAttribute('aria-hidden', 'true');
                 card.append(image, check);
-                fragment.append(card);
-            }
-            grid.append(fragment);
+                return card;
+            });
             this.updateCount();
         } catch (cause: unknown) {
             grid.classList.remove('is-empty')

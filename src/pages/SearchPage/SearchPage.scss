@@ -1,0 +1,40 @@
+.search-page main {
+    padding: 88px 16px 32px;
+    font-family: var(--font-main), sans-serif;
+    color: var(--color-text);
+
+    h1 { margin: 0 0 8px; line-height: 1.2; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px; }
+    nav a, .search-retry {
+        padding: 8px 16px;
+        border: 0;
+        border-radius: 16px;
+        background: var(--color-input);
+        color: inherit;
+        font: inherit;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    nav [aria-current] { background: var(--color-search); }
+    .search-retry { margin-top: 16px; }
+}
+
+.search-users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
+    gap: 16px;
+}
+
+.search-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    border-radius: 16px;
+    background: var(--color-input);
+    color: inherit;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+
+    img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; }
+}

@@ -23,9 +23,7 @@ export function resolveBackendService(pathname) {
         return 'auth';
     }
 
-    // Единственный пользовательский маршрут в user_service.
-    // Остальные /users/{id}/... обслуживаются pin_service (desks и др.).
-    if (path === '/api/v1/users/me') {
+    if (path === '/api/v1/users/me' || path === '/api/v1/users/search') {
         return 'user';
     }
 
@@ -53,6 +51,7 @@ export function createViteProxyConfig(targets) {
 
     return {
         '/api/v1/auth': proxy(targets.auth),
+        '/api/v1/users/search': proxy(targets.user),
         '/api/v1/users/me': proxy(targets.user),
         '/api/v1/users': proxy(targets.pin),
         '/api/v1/pins': proxy(targets.pin),

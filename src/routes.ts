@@ -1,3 +1,4 @@
+import { SearchPage } from './pages/SearchPage/SearchPage';
 import { SignUpPage } from './pages/SignUpPage/SignUpPage';
 import { LoginPage } from './pages/LoginPage/LoginPage';
 import { HomePage } from './pages/HomePage/HomePage';
@@ -32,6 +33,10 @@ export type AppRoute = {
 };
 
 export const routes: AppRoute[] = [
+    {
+        pattern: /^\/search\/?$/,
+        pages: (_, { router }) => [{ key: 'search', instance: new SearchPage(router) }],
+    },
     {
         pattern: /^\/profile\/edit\/?$/,
         requiresAuth: true,
