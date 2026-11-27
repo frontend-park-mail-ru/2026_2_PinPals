@@ -271,6 +271,8 @@
 }
 
 .pin-author-name {
+  color: inherit;
+  text-decoration: none;
   min-width: 0;
   font-size: 15px;
   font-weight: 600;
@@ -278,6 +280,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.pin-author-name[href]:hover { text-decoration: underline; }
 
 .pin-author-avatar--image {
     overflow: hidden;
@@ -542,7 +546,6 @@
 }
 .pin-owner-form textarea { resize: vertical; }
 .pin-owner-modal .profile-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
-.pin-delete-confirm { background: var(--color-error); }
 
 .pin-action-message {
     margin: -8px 0 10px;

@@ -61,10 +61,6 @@ export class SearchBar {
         return this.element;
     }
 
-    getValue(): string {
-        return this.element?.querySelector<HTMLInputElement>('.search-input')?.value.trim() ?? '';
-    }
-
     destroy(): void {
         clearTimeout(this.timer);
     }

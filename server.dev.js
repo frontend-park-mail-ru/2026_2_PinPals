@@ -837,7 +837,17 @@ app.get('/api/v1/pins/:pinID', (req, res) => {
     if (!pinId) return res.status(400).json({ error: 'invalid_id', message: 'Некорректный ID пина.' });
     const pin = pins.get(pinId);
     if (!pin) return res.status(404).json({ error: 'not_found', message: 'Пин не найден.' });
-    return res.status(200).json(serializePin(pin));
+    const result = serializePin(pin);
+    const author = usersById.get(Number(pin.creator_id));
+    if (author) {
+        result.author = {
+            user_id: author.user_id,
+            name: author.name,
+            user_tag: author.user_tag,
+            avatar_url: assetUrl(author.avatar_url),
+        };
+    }
+    return res.status(200).json(result);
 });
 
 app.patch('/api/v1/pins/:pinID', requireAuth, requireCsrf, requireActiveUser, (req, res) => {

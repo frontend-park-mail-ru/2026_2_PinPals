@@ -13,6 +13,7 @@ export interface User {
 export interface Pin {
     pin_id: number | string;
     creator_id?: number | string;
+    author?: Pick<User, 'user_id' | 'name' | 'user_tag' | 'avatar_url'> | null;
     image_url: string;
     name?: string | null;
     description?: string | null;

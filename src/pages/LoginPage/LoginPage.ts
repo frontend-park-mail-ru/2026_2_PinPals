@@ -7,7 +7,6 @@ import { loginUser } from '../../api/user';
 import template from './LoginPage.hbs';
 import type { Router } from '../../routes';
 import type { DomRoot } from '../../types/dom';
-import { getErrorMessage } from '../../utils/errors';
 
 const validateRequired = (val: string): string => val.trim().length > 0 ? '' : 'Поле обязательно';
 const validatePassword = (val: string): string => val.length >= 8 ? '' : 'Пароль минимум 8 символов';

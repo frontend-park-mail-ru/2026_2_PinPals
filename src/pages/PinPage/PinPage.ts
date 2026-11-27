@@ -14,6 +14,7 @@ import {
     deletePin,
 } from '../../api/user';
 import { PinCard } from '../../components/PinCard/PinCard';
+import { Comment as CommentComponent } from '../../components/Comment/Comment';
 import { Header } from '../../components/Header/Header';
 import template from './PinPage.hbs';
 import type { Comment, LikeStatistics, Pin, PinCursor } from '../../types/models';
@@ -71,7 +72,7 @@ export class PinPage {
     render() {
         const backUrl = this.router?.getBackUrl('/home') || '/home';
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = template({ backUrl });
+        wrapper.innerHTML = template({ backUrl, createBoardUrl: `/create-board?pinId=${encodeURIComponent(this.pinId)}` });
         this.element = wrapper.firstElementChild as DomRoot;
         this.header = new Header({ router: this.router });
         this.element.prepend(this.header.render());
@@ -158,11 +159,20 @@ export class PinPage {
         const isMyPin = String(this.pin.creator_id) === localStorage.getItem('userId');
         const ownerActions = this.element.querySelector('#pinOwnerActions');
         if (ownerActions) ownerActions.hidden = !isMyPin;
-        const authorName = isMyPin ? (localStorage.getItem('userName') || 'Вы') : 'Автор пина';
+        const author = this.pin.author;
+        const authorName = author?.name?.trim() || author?.user_tag?.trim()
+            || (isMyPin ? (localStorage.getItem('userName') || 'Вы') : 'Автор пина');
         this.element.querySelector('#pinAuthorName').textContent = authorName;
+        const authorId = author?.user_id || this.pin.creator_id;
+        if (authorId) {
+            const profileUrl = isMyPin ? '/profile'
+                : `/profile/${encodeURIComponent(authorId)}?pinId=${encodeURIComponent(this.pinId)}`;
+            this.element.querySelector<HTMLAnchorElement>('#pinAuthorName').href = profileUrl;
+            this.element.querySelector<HTMLAnchorElement>('#pinAuthorAvatar').href = profileUrl;
+        }
 
         const avatar = this.element.querySelector('#pinAuthorAvatar');
-        const avatarUrl = isMyPin ? localStorage.getItem('userAvatarUrl') : '';
+        const avatarUrl = author ? author.avatar_url : (isMyPin ? localStorage.getItem('userAvatarUrl') : '');
         avatar.replaceChildren();
         const avatarImage = document.createElement('img');
         avatarImage.src = resolveAvatarUrl(avatarUrl);
@@ -415,7 +425,7 @@ export class PinPage {
         try {
             const updatedPin = await updatePin(this.pinId, { name, description });
             if (this.isDestroyed || !this.element?.isConnected) return;
-            this.pin = updatedPin;
+            this.pin = { ...this.pin, ...updatedPin };
             this.renderPin();
             this.element.querySelector('#pinEditModal').hidden = true;
             this.showActionMessage('Пин обновлён.');
@@ -564,14 +574,10 @@ export class PinPage {
         list.replaceChildren();
 
         this.comments.forEach((comment) => {
-            const item = document.createElement('article');
-            item.className = 'pin-comment';
-            const author = document.createElement('strong');
-            author.textContent = comment.author || 'Пользователь';
-            const text = document.createElement('p');
-            text.textContent = comment.text || '';
-            item.append(author, text);
-            list.append(item);
+            list.append(new CommentComponent({
+                author: comment.author || 'Пользователь',
+                text: comment.text || '',
+            }).render());
         });
         if (!this.comments.length) this.renderCommentsMessage('Пока нет комментариев.');
         this.element.querySelector('#pinCommentsCount').textContent = String(this.comments.length);

@@ -29,17 +29,6 @@
     font-weight: 700;
 }
 
-.profile-edit-back {
-    color: var(--color-accent);
-    text-decoration: none;
-    font-size: 15px;
-    white-space: nowrap;
-}
-
-.profile-edit-back:hover {
-    text-decoration: underline;
-}
-
 .profile-edit-form {
     display: flex;
     flex-direction: column;

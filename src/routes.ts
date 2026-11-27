@@ -43,7 +43,7 @@ export const routes: AppRoute[] = [
         pattern: /^\/create-board\/?$/,
         requiresAuth: true,
         pages: (match, { router }) => [
-            { key: 'create-board', instance: new CreateBoardPage({ router }) },
+            { key: 'create-board', instance: new CreateBoardPage({ router, pinId: new URLSearchParams(window.location.search).get('pinId') }) },
         ],
     },
     {
@@ -78,6 +78,17 @@ export const routes: AppRoute[] = [
         requiresAuth: true,
         pages: (match, { router }) => [
             { key: 'profile-root', instance: new ProfilePage({ router, activeTab: 'pins' }) },
+        ],
+    },
+    {
+        pattern: /^\/profile\/(\d+)(?:\/(pins|boards))?\/?$/,
+        pages: (match, { router }) => [
+            { key: `profile:${match[1]}:${match[2] || 'pins'}`, instance: new ProfilePage({
+                router,
+                userId: match[1],
+                pinId: new URLSearchParams(window.location.search).get('pinId'),
+                activeTab: match[2] === 'boards' ? 'boards' : 'pins',
+            }) },
         ],
     },
     {
