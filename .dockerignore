@@ -1,0 +1,14 @@
+.git
+node_modules
+dist
+.vite
+.idea
+*.exe
+*.xml
+*.test
+*.out
+.env
+server.dev.js
+Dockerfile
+.dockerignore
+uploads/
