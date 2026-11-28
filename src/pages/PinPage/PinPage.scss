@@ -75,13 +75,16 @@
 }
 
 .pin-main-image {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: calc(100vh - 124px);
-  border-radius: 16px;
-  object-fit: contain;
+    display: block;
+
+    width: auto;
+    height: auto;
+
+    max-width: 100%;
+    max-height: min(80vh, 900px);
+
+    border-radius: 16px;
+    object-fit: contain;
 }
 
 .pin-main-image--failed {
@@ -437,7 +440,9 @@
 
 .pin-page .pin-card img {
     display: block;
+    aspect-ratio: 4 / 5;
     width: 100%;
+    object-fit: cover;
     height: auto;
     transition: transform .2s ease;
 }
@@ -552,18 +557,17 @@
 
 .pin-back-button {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: -5px;
+    left: -5px;
     z-index: 5;
 
     display: grid;
     place-items: center;
 
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
 
-    border-radius: 50%;
-    border: 3px solid var(--color-search);
+    border-radius : 0 0 20px 0;
 
     background: rgba(255, 255, 255, 0.88);
     color: var(--color-text);
@@ -590,8 +594,13 @@
 }
 
 #pinEditDescription {
-    min-height: 260px;
-    max-height: 260px;
-    resize: none;
-}
+    height: 300px;
+    min-height: 300px;
+    max-height: 300px;
 
+    resize: none;
+    overflow-y: auto;
+
+    box-sizing: border-box;
+    line-height: 20px;
+}

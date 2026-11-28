@@ -282,3 +282,15 @@
     color: var(--overlay-input);
     margin-top: 4px;
 }
+
+#pinDescriptionInput {
+    height: 300px;
+    min-height: 300px;
+    max-height: 300px;
+
+    resize: none;
+    overflow-y: auto;
+
+    box-sizing: border-box;
+    line-height: 20px;
+}

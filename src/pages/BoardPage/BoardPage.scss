@@ -231,10 +231,15 @@
 }
 
 #editBoardDescription {
-    min-height: 180px;
-    max-height: 180px;
+    height: 300px;
+    min-height: 300px;
+    max-height: 250px;
+
     resize: none;
+    overflow-y: auto;
+
     box-sizing: border-box;
+    line-height: 20px;
 }
 
 /* ===== Адаптив ===== */

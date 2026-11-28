@@ -111,9 +111,9 @@ export class BoardPage {
             this.isOwner = String(this.board.creator_id) === String(currentUserId);
 
             this.element.querySelector('#boardTitle').textContent = this.board.name || 'Без названия';
-this.element.querySelector('#boardVisibility').textContent = getVisibilityLabel(this.board.entry_status);
-this.element.querySelector('#boardPinsCount').textContent = getPinsLabel(pins.length || result.pins_count || 0);
-this.element.querySelector('#boardDescription').textContent = this.board.description || '';
+            this.element.querySelector('#boardVisibility').textContent = getVisibilityLabel(this.board.entry_status);
+            this.element.querySelector('#boardPinsCount').textContent = getPinsLabel(pins.length || result.pins_count || 0);
+            this.element.querySelector('#boardDescription').textContent = this.board.description || '';
 
 
             this.element.querySelector('#boardDelete').hidden = !this.isOwner;
@@ -208,6 +208,15 @@ this.element.querySelector('#boardDescription').textContent = this.board.descrip
 
         // Добавление пинов
         this.element.querySelector('#boardAddPins').addEventListener('click', () => void this.savedPinsPicker?.open());
+        const descriptionInput = this.element.querySelector<HTMLTextAreaElement>('#editBoardDescription');
+
+        descriptionInput.addEventListener('input', () => {
+            const lines = descriptionInput.value.split('\n');
+
+            if (lines.length > 5) {
+                descriptionInput.value = lines.slice(0, 5).join('\n');
+            }
+        });
     }
 
     openEditModal() {
@@ -253,8 +262,15 @@ this.element.querySelector('#boardDescription').textContent = this.board.descrip
             return;
         }
 
-        if (description.length > 500) {
+        if (description.split('\n').length > 5) {
+            this.showMessage('Описание доски не должно превышать 5 строк.');
+            descriptionInput.focus();
+            return;
+        }
+
+        if (description.length > 300) {
             this.showMessage('Описание доски не должно превышать 500 символов.');
+            descriptionInput.focus();
             return;
         }
 

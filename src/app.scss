@@ -70,3 +70,45 @@
 .network-status[hidden] {
     display: none;
 }
+
+.page-back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+
+    border-radius: 20px;
+
+    background: rgba(255, 255, 252, 0.9);
+    color: var(--color-text);
+
+    text-decoration: none;
+    cursor: pointer;
+
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.page-back-button:hover {
+    background: var(--color-search);
+    transform: translateX(-2px);
+}
+
+.page-back-button .icon {
+    width: 24px;
+    height: 24px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.page-back-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}

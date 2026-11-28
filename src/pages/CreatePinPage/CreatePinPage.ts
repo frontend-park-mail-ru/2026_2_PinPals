@@ -51,7 +51,10 @@ export class CreatePinPage {
      */
     setupEvents() {
         const fileInput = this.element.querySelector<HTMLInputElement>('#pinImageInput');
-        const uploadLabel = this.element.querySelector('#pinUploadLabel');
+        const uploadLabel = this.element.querySelector<HTMLElement>('#pinUploadLabel');
+
+        const descriptionInput = this.element.querySelector<HTMLTextAreaElement>('#pinDescriptionInput');
+        const descriptionCounter = this.element.querySelector<HTMLElement>('#pinDescriptionCounter');
 
         fileInput.addEventListener('change', () => {
             const [file] = fileInput.files || [];
@@ -70,25 +73,49 @@ export class CreatePinPage {
         uploadLabel.addEventListener('drop', (event: DragEvent) => {
             event.preventDefault();
             uploadLabel.classList.remove('is-dragging');
+
             const [file] = event.dataTransfer?.files || [];
-            if (file) this.setSelectedFile(file);
-        });
-        
-        const descriptionInput = this.element.querySelector<HTMLTextAreaElement>('#pinDescriptionInput');
-        const descriptionCounter = this.element.querySelector('#pinDescriptionCounter');
 
+            if (file) {
+                this.setSelectedFile(file);
+            }
+        });
+
+        // Ограничение описания: 500 символов и 15 строк
         descriptionInput.addEventListener('input', () => {
-            descriptionCounter.textContent = String(descriptionInput.value.length);
+            let value = descriptionInput.value;
+
+            // Ограничиваем число строк
+            const lines = value.split('\n');
+
+            if (lines.length > 15) {
+                value = lines.slice(0, 15).join('\n');
+            }
+
+            // Ограничиваем число символов
+            if (value.length > 500) {
+                value = value.slice(0, 500);
+            }
+
+            if (descriptionInput.value !== value) {
+                descriptionInput.value = value;
+            }
+
+            if (descriptionCounter) {
+                descriptionCounter.textContent = String(descriptionInput.value.length);
+            }
         });
 
-        this.element.querySelector<HTMLButtonElement>('#removePinImage').addEventListener('click', () => {
-            this.setSelectedFile(null);
-            fileInput.value = '';
-        });
+        this.element.querySelector<HTMLButtonElement>('#removePinImage')
+            .addEventListener('click', () => {
+                this.setSelectedFile(null);
+                fileInput.value = '';
+            });
 
-        this.element.querySelector('#createPinForm').addEventListener('submit', (event: Event) => {
-            void this.createPin(event);
-        });
+        this.element.querySelector<HTMLFormElement>('#createPinForm')
+            .addEventListener('submit', (event: Event) => {
+                void this.createPin(event);
+            });
     }
 
     /**
@@ -134,6 +161,25 @@ export class CreatePinPage {
             preview.hidden = false;
             placeholder.hidden = true;
             removeButton.hidden = false;
+
+            const image = new Image();
+
+            image.onload = () => {
+                const ratio = image.width / image.height;
+
+                if (ratio < 0.5 || ratio > 1.8) {
+                    rejectFile(
+                        'Недопустимые пропорции изображения. ' +
+                        'Загрузите изображение не слишком узкое и не слишком широкое.'
+                    );
+                }
+            };
+
+            image.onerror = () => {
+                rejectFile('Не удалось прочитать изображение.');
+            };
+
+            image.src = this.previewUrl;
         } else {
             preview.removeAttribute('src');
             preview.hidden = true;
@@ -149,13 +195,16 @@ export class CreatePinPage {
      */
     async createPin(event: Event): Promise<void> {
         event.preventDefault();
+
         const titleInput = this.element.querySelector<HTMLInputElement>('#pinNameInput');
-        const descriptionInput = this.element.querySelector<HTMLInputElement>('#pinDescriptionInput');
+        const descriptionInput = this.element.querySelector<HTMLTextAreaElement>('#pinDescriptionInput');
         const tagsInput = this.element.querySelector<HTMLInputElement>('#pinTagsInput');
-        const error = this.element.querySelector('#createPinError');
+        const error = this.element.querySelector<HTMLElement>('#createPinError');
         const submitButton = this.element.querySelector<HTMLButtonElement>('#createPinSubmit');
+        const imageError = this.element.querySelector<HTMLElement>('#pinImageError');
 
         error.hidden = true;
+        imageError.textContent = '';
 
         if (localStorage.getItem('isAuth') !== 'true') {
             error.textContent = 'Войдите в аккаунт, чтобы создать пин.';
@@ -164,9 +213,10 @@ export class CreatePinPage {
         }
 
         if (!this.selectedFile) {
-            this.element.querySelector('#pinImageError').textContent = 'Сначала загрузите изображение.';
+            imageError.textContent = 'Сначала загрузите изображение.';
             return;
         }
+
         if (!titleInput.value.trim()) {
             error.textContent = 'Введите название пина.';
             error.hidden = false;
@@ -174,28 +224,51 @@ export class CreatePinPage {
             return;
         }
 
+        if (titleInput.value.trim().length > 40) {
+            error.textContent = 'Название пина не должно превышать 40 символов.';
+            error.hidden = false;
+            titleInput.focus();
+            return;
+        }
+
+        if (descriptionInput.value.length > 500) {
+            error.textContent = 'Описание не должно превышать 500 символов.';
+            error.hidden = false;
+            descriptionInput.focus();
+            return;
+        }
+
+        if (descriptionInput.value.split('\n').length > 15) {
+            error.textContent = 'Описание не должно превышать 15 строк.';
+            error.hidden = false;
+            descriptionInput.focus();
+            return;
+        }
+
         submitButton.disabled = true;
         submitButton.textContent = 'Создание…';
 
         try {
-            // Передаем нативный сохраненный объект файла (`this.selectedFile`) прямо в API
             const createdPin = await createPin({
                 name: titleInput.value.trim(),
                 description: descriptionInput.value.trim(),
-                tags: (tagsInput?.value || '').split(',').map((tag) => tag.trim()).filter((tag: string) => Boolean(tag)),
+                tags: (tagsInput?.value || '')
+                    .split(',')
+                    .map((tag) => tag.trim())
+                    .filter(Boolean),
                 fileObject: this.selectedFile,
             });
 
             const createdPinId = createdPin?.pin_id ?? createdPin?.pin?.pin_id;
+
             if (this.boardId && createdPinId) {
                 try {
                     await addPinsToBoard(this.boardId, [createdPinId]);
                 } catch {
-                    // Пин уже загружен. Не разрешаем повторно отправить файл
-                    // из-за ошибки отдельного запроса привязки к доске.
                     this.router.navigateTo(`/pin/${encodeURIComponent(createdPinId)}`);
                     return;
                 }
+
                 this.router.navigateTo(`/board/${encodeURIComponent(this.boardId)}`);
                 return;
             }
@@ -204,6 +277,7 @@ export class CreatePinPage {
         } catch (err: unknown) {
             error.textContent = getErrorMessage(err) || 'Не удалось создать пин.';
             error.hidden = false;
+
             submitButton.disabled = false;
             submitButton.textContent = 'Создать';
         }
